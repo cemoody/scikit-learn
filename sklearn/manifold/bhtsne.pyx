@@ -70,7 +70,7 @@ cdef class QuadTree:
     # Diagnostic variable holding the depth as we visit nodes on the tree
     cdef int cur_depth
     
-    def __cinit__(self, float[:] width, verbose=False):
+    def __cinit__(self, float[:] width, int verbose=0):
         self.root_node = self.create_root(width)
         self.num_cells = 0
         self.num_part = 0
@@ -212,18 +212,12 @@ cdef class QuadTree:
                 row[ax] = pos_array[i, ax]
             self.insert(self.root_node, row, i)
             self.num_part += 1
-        if self.verbose:
-            print("tree COM %1.3e %1.3e" % (self.root_node.cum_com[0], self.root_node.cum_com[1]))
-            print("part COM %1.3e %1.3e" % (np.mean(pos_array[:,0]), np.mean(pos_array[:,1])))
 
     cdef int free(self):
         cdef int check
         cdef int[:] cnt = np.zeros(3, dtype=np.int32)
         self.free_recursive(self.root_node, cnt)
         free(self.root_node)
-        if self.verbose:
-            print("   freed %i cells out of %i" % (cnt[0], self.num_cells))
-            print("   freed %i leaves with particles of %i" % (cnt[2], self.num_part))
         check = cnt[0] == self.num_cells
         check &= cnt[2] == self.num_part
         return check
@@ -250,8 +244,8 @@ cdef class QuadTree:
     @cython.wraparound(False)
     @cython.cdivision(True)
     cdef float[:,:] compute_gradient(self, float theta,
-                                    float[:,:] val_P,
-                                    float[:,:] pos_reference):
+                                     float[:,:] val_P,
+                                     float[:,:] pos_reference):
         cdef int ax = 0
         cdef int i = 0
         cdef int j = 0
@@ -265,27 +259,20 @@ cdef class QuadTree:
         cdef float[:] iQ = np.zeros(1, dtype=np.float32)
         self.compute_edge_forces(val_P, pos_reference, pos_force)
         for point_index in range(n):
+            # Clear force array
             for ax in range(2): force[ax] = 0.0
             self.cur_depth = 0
             iQ[0] = 0.0
             self.compute_non_edge_forces(self.root_node, theta, iQ, point_index,
                                          pos_reference, force)
             sum_Q += iQ[0]
+            # Save local force into global
             for ax in range(2): neg_force[point_index, ax] = force[ax]
 
         for i in range(pos_force.shape[0]):
             for j in range(pos_force.shape[1]):
                 tot_force[i, j] = pos_force[i, j] - (neg_force[i, j] / sum_Q)
 
-        if self.verbose:
-            for point_index in range(pos_reference.shape[0]):
-                for ax in range(2):
-                    print("neg_force ", point_index, ax, neg_force[point_index, ax])
-            for i in range(pos_force.shape[0]):
-                for j in range(pos_force.shape[1]):
-                        log = "tot_force[%i, %i] = pos_force[i,j]~%1.3e - (neg_force[i,j]~%1.3e / sum_Q~%1.3e) = %1.3e" 
-                        log = log % (i, j, pos_force[i,j], neg_force[i,j], sum_Q, tot_force[i,j])
-                        print(log)
         return tot_force
 
     @cython.boundscheck(False)
@@ -407,10 +394,6 @@ cdef class QuadTree:
         cdef int check
         count = 0
         count = self.count_points(self.root_node, count)
-        if self.verbose:
-            print(" counted %i points" % count)
-            print("    root %i points" % self.root_node.cum_size)
-            print("    tree %i points" % self.num_part)
         check = count == self.root_node.cum_size
         check &= count == self.num_part
         return check
