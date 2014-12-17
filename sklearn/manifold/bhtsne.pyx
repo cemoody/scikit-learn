@@ -4,11 +4,11 @@ from cython.parallel import prange, parallel
 cimport numpy as np
 cimport cython
 cimport openmp
-
 # Implementation by Chris Moody
 # original code by Laurens van der Maaten
 # for reference implemenations and papers describing the technique:
 # http://homepage.tudelft.nl/19j49/t-SNE.html
+
 
 # TODO:
 # Include usage documentation
@@ -26,9 +26,9 @@ cdef extern from "math.h":
 
 cdef struct QuadNode:
     # Keep track of the center of mass
-    float cum_com[2]
+    float[2] cum_com
     # If this is a leaf, the position of the particle within this leaf 
-    float cur_pos[2]
+    float[2] cur_pos
     # The number of particles including all 
     # nodes below this one
     int cum_size
@@ -40,12 +40,12 @@ cdef struct QuadNode:
     # And each subdivision adds 1 to the level
     int level
     # Left edge of this node, normalized to [0,1]
-    float le[2] 
+    float[2] le
     # The center of this node, equal to le + w/2.0
-    float c[2] 
+    float[2] c
     # The width of this node -- used to calculate the opening
     # angle. Equal to width = re - le
-    float w[2]
+    float[2] w
 
     # Does this node have children?
     # Default to leaf until we add particles
@@ -80,11 +80,11 @@ cdef class QuadTree:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef inline QuadNode* create_root(self, float[:] width):
+    cdef inline QuadNode* create_root(self, float[:] width) nogil:
         # Create a default root node
         cdef int ax
         root = <QuadNode*> malloc(sizeof(QuadNode))
-        root.is_leaf = True
+        root.is_leaf = 1
         root.parent = NULL
         root.level = 0
         root.cum_size = 0
@@ -102,11 +102,11 @@ cdef class QuadTree:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef inline QuadNode* create_child(self, QuadNode *parent, int[:] offset):
+    cdef inline QuadNode* create_child(self, QuadNode *parent, int[2] offset) nogil:
         # Create a new child node with default parameters
         cdef int ax
         child = <QuadNode *> malloc(sizeof(QuadNode))
-        child.is_leaf = True
+        child.is_leaf = 1
         child.parent = parent
         child.level = parent.level + 1
         child.size = 0
@@ -124,7 +124,7 @@ cdef class QuadTree:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef inline QuadNode* select_child(self, QuadNode *node, float[:] pos):
+    cdef inline QuadNode* select_child(self, QuadNode *node, float[2] pos) nogil:
         # Find which sub-node a position should go into
         # And return the appropriate node
         cdef int offset[2]
@@ -136,11 +136,11 @@ cdef class QuadTree:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef void subdivide(self, QuadNode *node):
+    cdef void subdivide(self, QuadNode *node) nogil:
         # This instantiates 4 nodes for the current node
         cdef int i = 0
         cdef int j = 0
-        cdef int offset[2] 
+        cdef int[2] offset
         node.is_leaf = False
         offset[0] = 0
         offset[1] = 0
@@ -153,7 +153,7 @@ cdef class QuadTree:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef void insert(self, QuadNode *root, float[:] pos, int point_index):
+    cdef void insert(self, QuadNode *root, float pos[2], int point_index) nogil:
         # Introduce a new point into the quadtree
         # by recursively inserting it and subdividng as necessary
         cdef QuadNode *child
@@ -172,16 +172,10 @@ cdef class QuadTree:
             root.cum_com[ax] += pos[ax] * frac_new
         # If this node is unoccupied, fill it.
         # Otherwise, we need to insert recursively.
-        if self.verbose:
-            print('%i' % point_index, 'level', root.level, 'cum size is', root.cum_size)
-        #if root.level > 4:
-        #    print 'MAX LEVEL EXCEEDED'
-        #    return
         # Two insertion scenarios: 
         # 1) Insert into this node if it is a leaf and empty
         # 2) Subdivide this node if it is currently occupied
         if (root.size == 0) & root.is_leaf:
-            # print('%i' % point_index, 'inserting into leaf')
             for ax in range(2):
                 root.cur_pos[ax] = pos[ax]
             root.point_index = point_index
@@ -190,17 +184,12 @@ cdef class QuadTree:
             # If necessary, subdivide this node before
             # descending
             if root.is_leaf:
-                if self.verbose:
-                    print('%i' % point_index, 'subdividing', 
-                          root.cum_com[0], root.cum_com[1])
                 self.subdivide(root)
             # We have two points to relocate: the one previously
             # at this node, and the new one we're attempting
             # to insert
             if root.size > 0:
-                # print('%i' % root.point_index, 'selecting child for previous')
                 child = self.select_child(root, root.cur_pos)
-                # print('%i' % root.point_index, 'inserting for previous')
                 self.insert(child, root.cur_pos, root.point_index)
                 # Remove the point from this node
                 for ax in range(2):
@@ -208,9 +197,7 @@ cdef class QuadTree:
                 root.size = 0
                 root.point_index = -1
             # Insert the new point
-            # print('%i' % point_index, 'selecting for new')
             child = self.select_child(root, pos)
-            # print('%i' % point_index, 'inserting for new')
             self.insert(child, pos, point_index)
 
     @cython.boundscheck(False)
@@ -223,7 +210,6 @@ cdef class QuadTree:
         for i in range(nrows):
             for ax in range(2):
                 row[ax] = pos_array[i, ax]
-            # print("inserting point %i" % i)
             self.insert(self.root_node, row, i)
             self.num_part += 1
         if self.verbose:
