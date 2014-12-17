@@ -232,7 +232,7 @@ cdef class QuadTree:
 
     cdef int free(self):
         cdef int check
-        cdef int[:] cnt = np.zeros(3, dtype='i32')
+        cdef int[:] cnt = np.zeros(3, dtype=np.int32)
         self.free_recursive(self.root_node, cnt)
         free(self.root_node)
         if self.verbose:
@@ -270,13 +270,13 @@ cdef class QuadTree:
         cdef int i = 0
         cdef int j = 0
         cdef int n = pos_reference.shape[0]
-        cdef float[:,:] pos_force = np.zeros((n, 2), dtype='f32')
-        cdef float[:,:] neg_force = np.zeros((n, 2), dtype='f32')
-        cdef float[:,:] tot_force = np.zeros((n, 2), dtype='f32')
-        cdef float[:] force = np.zeros(2, dtype='f32')
+        cdef float[:,:] pos_force = np.zeros((n, 2), dtype=np.float32)
+        cdef float[:,:] neg_force = np.zeros((n, 2), dtype=np.float32)
+        cdef float[:,:] tot_force = np.zeros((n, 2), dtype=np.float32)
+        cdef float[:] force = np.zeros(2, dtype=np.float32)
         cdef int point_index
         cdef float sum_Q = 0.0
-        cdef float[:] iQ = np.zeros(1, dtype='f32')
+        cdef float[:] iQ = np.zeros(1, dtype=np.float32)
         self.compute_edge_forces(val_P, pos_reference, pos_force)
         for point_index in range(n):
             for ax in range(2): force[ax] = 0.0
@@ -313,9 +313,9 @@ cdef class QuadTree:
         cdef int i, j
 
         cdef int n = pos_reference.shape[0]
-        cdef float[:,:] dC = np.zeros((n, 2), dtype='f32')
+        cdef float[:,:] dC = np.zeros((n, 2), dtype=np.float32)
         cdef float[:,:] DD = pairwise_distances(pos_reference)
-        cdef float[:,:] Q = np.zeros((n, n), dtype='f32')
+        cdef float[:,:] Q = np.zeros((n, n), dtype=np.float32)
 
         # Computation of the Q matrix & normalization sum
         for i in range(pos_reference.shape[0]):
@@ -452,42 +452,27 @@ cdef class QuadTree:
 
 
 cdef QuadTree create_quadtree(pos_output, verbose):
-    pos_output = pos_output.astype('f32')
+    pos_output = pos_output.astype(np.float32)
     width = pos_output.max(axis=0) - pos_output.min(axis=0)
-    width = width.astype('f32')
+    width = width.astype(np.float32)
     qt = QuadTree(width, verbose=verbose)
     qt.insert_many(pos_output)
     return qt
 
 
 def consistency_checks(pos_output, verbose=0):
-    pos_output = pos_output.astype('f32')
+    pos_output = pos_output.astype(np.float32)
     qt = create_quadtree(pos_output, verbose=verbose)
     assert qt.check_consistency()
     assert qt.free()
     return True
 
-
-def quadtree_compute(pij_input, pos_output, theta=0.5, verbose=0):
-    pij_input = pij_input.astype('f32')
-    pos_output = pos_output.astype('f32')
-    qt = create_quadtree(pos_output, verbose)
-    forces1 = qt.compute_gradient(theta, pij_input, pos_output)
-    forces2 = qt.compute_gradient_exact(theta, pij_input, pos_output)
-    f1 = np.zeros(forces1.shape, dtype='f32')
-    f2 = np.zeros(forces2.shape, dtype='f32')
-    f1[:,:] = forces1
-    f2[:,:] = forces1
-    qt.free()
-    return f1, f2
-
-
 def compute_gradient(pij_input, pos_output, theta=0.5, verbose=0):
-    pij_input = pij_input.astype('f32')
-    pos_output = pos_output.astype('f32')
+    assert pij_input.dtype == np.float32
+    assert pos_output.dtype == np.float32
     qt = create_quadtree(pos_output, verbose=verbose)
     forces = qt.compute_gradient(theta, pij_input, pos_output)
-    f = np.zeros(pos_output.shape, dtype='f32')
+    f = np.zeros(pos_output.shape, dtype=np.float32)
     f[:,:] = forces
     assert qt.check_consistency()
     assert qt.free()

@@ -144,7 +144,7 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
         Unraveled gradient of the Kullback-Leibler divergence with respect to
         the embedding.
     """
-    X_embedded = params.reshape(n_samples, n_components)
+    X_embedded = params.reshape(n_samples, n_components).astype(np.float32)
 
     # Q is a heavy-tailed distribution: Student's t-distribution
     n = pdist(X_embedded, "sqeuclidean")
@@ -159,7 +159,7 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     # Objective: C (Kullback-Leibler divergence of P and Q)
     kl_divergence = 2.0 * np.dot(P, np.log(P / Q))
 
-    sP = squareform(P)
+    sP = squareform(P).astype(np.float32)
     grad = bhtsne.compute_gradient(sP, X_embedded, theta=theta,
                                    verbose=verbose)
     c = 2.0 * (alpha + 1.0) / alpha
