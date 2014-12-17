@@ -70,9 +70,7 @@ cdef class QuadTree:
     # Diagnostic variable holding the depth as we visit nodes on the tree
     cdef int cur_depth
     
-    def __cinit__(self, verbose=False, width=None):
-        if width is None:
-            width = np.array([1., 1.])
+    def __cinit__(self, float[:] width, verbose=False):
         self.root_node = self.create_root(width)
         self.num_cells = 0
         self.num_part = 0
@@ -289,14 +287,19 @@ cdef class QuadTree:
             sum_Q += iQ[0]
             for ax in range(2): neg_force[point_index, ax] = force[ax]
 
+        for i in range(pos_force.shape[0]):
+            for j in range(pos_force.shape[1]):
+                tot_force[i, j] = pos_force[i, j] - (neg_force[i, j] / sum_Q)
+
         if self.verbose:
             for point_index in range(pos_reference.shape[0]):
                 for ax in range(2):
                     print("neg_force ", point_index, ax, neg_force[point_index, ax])
-        for i in range(pos_force.shape[0]):
-            for j in range(pos_force.shape[1]):
-                tot_force[i, j] = pos_force[i, j] - (neg_force[i, j] / sum_Q)
-                print("tot_force[%i, %i] = pos_force[i,j]~%1.3e - (neg_force[i,j]~%1.3e / sum_Q~%1.3e) = %1.3e" % (i, j, pos_force[i,j], neg_force[i,j], sum_Q, tot_force[i,j]))
+            for i in range(pos_force.shape[0]):
+                for j in range(pos_force.shape[1]):
+                        log = "tot_force[%i, %i] = pos_force[i,j]~%1.3e - (neg_force[i,j]~%1.3e / sum_Q~%1.3e) = %1.3e" 
+                        log = log % (i, j, pos_force[i,j], neg_force[i,j], sum_Q, tot_force[i,j])
+                        print(log)
         return tot_force
 
     @cython.boundscheck(False)
@@ -448,10 +451,11 @@ cdef class QuadTree:
         return count
 
 
-cdef QuadTree create_quadtree(pos_output, verbose=0):
+cdef QuadTree create_quadtree(pos_output, verbose):
     pos_output = pos_output.astype('f32')
     width = pos_output.max(axis=0) - pos_output.min(axis=0)
-    qt = QuadTree(verbose=verbose, width=width)
+    width = width.astype('f32')
+    qt = QuadTree(width, verbose=verbose)
     qt.insert_many(pos_output)
     return qt
 
@@ -467,7 +471,7 @@ def consistency_checks(pos_output, verbose=0):
 def quadtree_compute(pij_input, pos_output, theta=0.5, verbose=0):
     pij_input = pij_input.astype('f32')
     pos_output = pos_output.astype('f32')
-    qt = create_quadtree(pos_output, verbose=verbose)
+    qt = create_quadtree(pos_output, verbose)
     forces1 = qt.compute_gradient(theta, pij_input, pos_output)
     forces2 = qt.compute_gradient_exact(theta, pij_input, pos_output)
     f1 = np.zeros(forces1.shape, dtype='f32')
@@ -483,7 +487,8 @@ def compute_gradient(pij_input, pos_output, theta=0.5, verbose=0):
     pos_output = pos_output.astype('f32')
     qt = create_quadtree(pos_output, verbose=verbose)
     forces = qt.compute_gradient(theta, pij_input, pos_output)
-    f = np.zeros(forces.shape, dtype='f32')
+    f = np.zeros(pos_output.shape, dtype='f32')
     f[:,:] = forces
-    qt.free()
+    assert qt.check_consistency()
+    assert qt.free()
     return f

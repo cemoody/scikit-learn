@@ -159,7 +159,8 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     # Objective: C (Kullback-Leibler divergence of P and Q)
     kl_divergence = 2.0 * np.dot(P, np.log(P / Q))
 
-    grad = bhtsne.compute_gradient(squareform(P), X_embedded, theta=theta,
+    sP = squareform(P)
+    grad = bhtsne.compute_gradient(sP, X_embedded, theta=theta,
                                    verbose=verbose)
     c = 2.0 * (alpha + 1.0) / alpha
     grad = grad.ravel()
