@@ -113,7 +113,7 @@ def _kl_divergence(params, P, alpha, n_samples, n_components):
 
 
 def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
-                      verbose=False):
+                      verbose=False, sP=None):
     """t-SNE objective function: KL divergence of p_ijs and q_ijs.
     Uses Barnes-Hut tree methods to calculate the gradient that
     runs in O(NlogN) instead of O(N^2)
@@ -159,7 +159,8 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     # Objective: C (Kullback-Leibler divergence of P and Q)
     kl_divergence = 2.0 * np.dot(P, np.log(P / Q))
 
-    sP = squareform(P).astype(np.float32)
+    if sP is None:
+        sP = squareform(P).astype(np.float32)
     grad = bhtsne.compute_gradient(sP, X_embedded, theta=theta,
                                    verbose=verbose)
     c = 2.0 * (alpha + 1.0) / alpha
@@ -537,7 +538,9 @@ class TSNE(BaseEstimator):
         params = X_embedded.ravel()
 
         if self.barnes_hut:
-            obj_func = _kl_divergence_bh
+            sP = squareform(P).astype(np.float32)
+            kld = lambda *args: _kl_divergence_bh(*args, sP=sP)
+            obj_func = kld
         else:
             obj_func = _kl_divergence
 
