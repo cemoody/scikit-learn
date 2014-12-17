@@ -19,6 +19,7 @@ from ..utils.extmath import _ravel
 from ..decomposition import RandomizedPCA
 from ..metrics.pairwise import pairwise_distances
 from . import _utils
+from . import bhtsne
 
 
 MACHINE_EPSILON = np.finfo(np.double).eps
@@ -106,6 +107,62 @@ def _kl_divergence(params, P, alpha, n_samples, n_components):
         np.dot(_ravel(PQd[i]), X_embedded[i] - X_embedded, out=grad[i])
     grad = grad.ravel()
     c = 2.0 * (alpha + 1.0) / alpha
+    grad *= c
+
+    return kl_divergence, grad
+
+
+def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
+                      verbose=False):
+    """t-SNE objective function: KL divergence of p_ijs and q_ijs.
+    Uses Barnes-Hut tree methods to calculate the gradient that
+    runs in O(NlogN) instead of O(N^2)
+
+    Parameters
+    ----------
+    params : array, shape (n_params,)
+        Unraveled embedding.
+
+    P : array, shape (n_samples * (n_samples-1) / 2,)
+        Condensed joint probability matrix.
+
+    alpha : float
+        Degrees of freedom of the Student's-t distribution.
+
+    n_samples : int
+        Number of samples.
+
+    n_components : int
+        Dimension of the embedded space.
+
+    Returns
+    -------
+    kl_divergence : float
+        Kullback-Leibler divergence of p_ij and q_ij.
+
+    grad : array, shape (n_params,)
+        Unraveled gradient of the Kullback-Leibler divergence with respect to
+        the embedding.
+    """
+    X_embedded = params.reshape(n_samples, n_components)
+
+    # Q is a heavy-tailed distribution: Student's t-distribution
+    n = pdist(X_embedded, "sqeuclidean")
+    n += 1.
+    n /= alpha
+    n **= (alpha + 1.0) / -2.0
+    Q = np.maximum(n / (2.0 * np.sum(n)), MACHINE_EPSILON)
+
+    # Optimization trick below: np.dot(x, y) is faster than
+    # np.sum(x * y) because it calls BLAS
+
+    # Objective: C (Kullback-Leibler divergence of P and Q)
+    kl_divergence = 2.0 * np.dot(P, np.log(P / Q))
+
+    grad = bhtsne.compute_gradient(squareform(P), X_embedded, theta=theta,
+                                   verbose=verbose)
+    c = 2.0 * (alpha + 1.0) / alpha
+    grad = grad.ravel()
     grad *= c
 
     return kl_divergence, grad
@@ -391,7 +448,7 @@ class TSNE(BaseEstimator):
     def __init__(self, n_components=2, perplexity=30.0,
                  early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000,
                  metric="euclidean", init="random", verbose=0,
-                 random_state=None):
+                 random_state=None, barnes_hut=False):
         if init not in ["pca", "random"]:
             raise ValueError("'init' must be either 'pca' or 'random'")
         self.n_components = n_components
@@ -403,6 +460,7 @@ class TSNE(BaseEstimator):
         self.init = init
         self.verbose = verbose
         self.random_state = random_state
+        self.barnes_hut = barnes_hut
 
     def _fit(self, X):
         """Fit the model using X as training data.
@@ -477,15 +535,20 @@ class TSNE(BaseEstimator):
                                                    self.n_components)
         params = X_embedded.ravel()
 
+        if self.barnes_hut:
+            obj_func = _kl_divergence_bh
+        else:
+            obj_func = _kl_divergence
+
         # Early exaggeration
         P *= self.early_exaggeration
         params, error, it = _gradient_descent(
-            _kl_divergence, params, it=0, n_iter=50, momentum=0.5,
+            obj_func, params, it=0, n_iter=50, momentum=0.5,
             min_grad_norm=0.0, min_error_diff=0.0,
             learning_rate=self.learning_rate, verbose=self.verbose,
             args=[P, alpha, n_samples, self.n_components])
         params, error, it = _gradient_descent(
-            _kl_divergence, params, it=it + 1, n_iter=100, momentum=0.8,
+            obj_func, params, it=it + 1, n_iter=100, momentum=0.8,
             min_grad_norm=0.0, min_error_diff=0.0,
             learning_rate=self.learning_rate, verbose=self.verbose,
             args=[P, alpha, n_samples, self.n_components])
@@ -496,7 +559,7 @@ class TSNE(BaseEstimator):
         # Final optimization
         P /= self.early_exaggeration
         params, error, it = _gradient_descent(
-            _kl_divergence, params, it=it + 1, n_iter=self.n_iter,
+            obj_func, params, it=it + 1, n_iter=self.n_iter,
             momentum=0.8, learning_rate=self.learning_rate,
             verbose=self.verbose, args=[P, alpha, n_samples,
                                         self.n_components])
