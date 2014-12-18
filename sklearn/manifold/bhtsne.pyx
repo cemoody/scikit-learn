@@ -70,14 +70,11 @@ cdef class QuadTree:
     cdef int num_part
     # Spit out diagnostic information?
     cdef int verbose
-    # Diagnostic variable holding the depth as we visit nodes on the tree
-    cdef int cur_depth
     
     def __cinit__(self, float[:] width, int verbose=0):
         self.root_node = self.create_root(width)
         self.num_cells = 0
         self.num_part = 0
-        self.cur_depth = 0
         self.verbose = verbose
 
     @cython.boundscheck(False)
@@ -264,10 +261,9 @@ cdef class QuadTree:
         self.compute_edge_forces(val_P, pos_reference, pos_force)
         for point_index in range(n):
             # Clear force array
-            force =  <float*> malloc(sizeof(float) * 2)
+            force = <float*> malloc(sizeof(float) * 2)
             for ax in range(2): force[ax] = 0.0
-            self.cur_depth = 0
-            iQ =  <float*> malloc(sizeof(float))
+            iQ = <float*> malloc(sizeof(float))
             iQ[0] = 0.0
             self.compute_non_edge_forces(self.root_node, theta, iQ, point_index,
                                          pos_reference, force)
@@ -304,18 +300,21 @@ cdef class QuadTree:
         with nogil, parallel():
             skip = openmp.omp_get_num_threads()
             start = threadid()
-            for point_index in prange(start, n, skip, schedule='static'):
+            force = <float*> malloc(sizeof(float) * 2)
+            iQ = <float*> malloc(sizeof(float))
+            root_node = <QuadNode*> malloc(sizeof(QuadNode))
+            root_node = self.root_node
+            for point_index in prange(0, n, schedule='static'):
                 # Clear force array
-                force =  <float*> malloc(sizeof(float) * 2)
                 for ax in range(2): force[ax] = 0.0
-                self.cur_depth = 0
-                iQ =  <float*> malloc(sizeof(float))
                 iQ[0] = 0.0
-                self.compute_non_edge_forces(self.root_node, theta, iQ, point_index,
+                self.compute_non_edge_forces(root_node, theta, iQ, point_index,
                                              pos_reference, force)
                 sum_Qs[point_index] = iQ[0]
                 # Save local force into global
                 for ax in range(2): neg_force[point_index, ax] = force[ax]
+            free(iQ)
+            free(force)
         for i in range(n):
             sum_Q += sum_Qs[i]
 
@@ -433,11 +432,9 @@ cdef class QuadTree:
                         child = node.children[i][j]
                         if child.cum_size == 0: 
                             continue
-                        self.cur_depth += 1
                         self.compute_non_edge_forces(child, theta, sum_Q, 
                                                      point_index,
                                                      pos_reference, force)
-                        self.cur_depth -= 1
         
     cdef int check_consistency(self):
         cdef int count 
