@@ -257,16 +257,17 @@ cdef class QuadTree:
         cdef float[:,:] neg_force = np.zeros((n, 2), dtype=np.float32)
         cdef float[:,:] tot_force = np.zeros((n, 2), dtype=np.float32)
         cdef float* force
+        cdef float* iQ 
         #cdef float[:] force = np.zeros(2, dtype=np.float32)
         cdef int point_index
         cdef float sum_Q = 0.0
-        cdef float[:] iQ = np.zeros(1, dtype=np.float32)
         self.compute_edge_forces(val_P, pos_reference, pos_force)
         for point_index in range(n):
             # Clear force array
             force =  <float*> malloc(sizeof(float) * 2)
             for ax in range(2): force[ax] = 0.0
             self.cur_depth = 0
+            iQ =  <float*> malloc(sizeof(float))
             iQ[0] = 0.0
             self.compute_non_edge_forces(self.root_node, theta, iQ, point_index,
                                          pos_reference, force)
@@ -294,9 +295,9 @@ cdef class QuadTree:
         cdef float[:,:] neg_force = np.zeros((n, 2), dtype=np.float32)
         cdef float[:,:] tot_force = np.zeros((n, 2), dtype=np.float32)
         cdef float* force
+        cdef float* iQ 
         cdef int point_index
         cdef float sum_Q = 0.0
-        cdef float[:] iQ = np.zeros(1, dtype=np.float32)
         cdef float[:] sum_Qs = np.zeros(n, dtype=np.float32)
         cdef int skip, start
         self.compute_edge_forces(val_P, pos_reference, pos_force)
@@ -308,6 +309,7 @@ cdef class QuadTree:
                 force =  <float*> malloc(sizeof(float) * 2)
                 for ax in range(2): force[ax] = 0.0
                 self.cur_depth = 0
+                iQ =  <float*> malloc(sizeof(float))
                 iQ[0] = 0.0
                 self.compute_non_edge_forces(self.root_node, theta, iQ, point_index,
                                              pos_reference, force)
@@ -383,7 +385,7 @@ cdef class QuadTree:
     @cython.cdivision(True)
     cdef double compute_non_edge_forces(self, QuadNode* node, 
                                  float theta,
-                                 float[:] sum_Q,
+                                 float* sum_Q,
                                  int point_index,
                                  float[:, :] pos_reference,
                                  float* force) nogil:
