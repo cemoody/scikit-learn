@@ -1,9 +1,12 @@
+# distutils: extra_compile_args = -fopenmp
+# distutils: extra_link_args = -fopenmp
 import numpy as np
 from sklearn.metrics.pairwise import pairwise_distances
 from cython.parallel import prange, parallel
 cimport numpy as np
 cimport cython
 cimport openmp
+
 # Implementation by Chris Moody
 # original code by Laurens van der Maaten
 # for reference implemenations and papers describing the technique:
@@ -258,16 +261,17 @@ cdef class QuadTree:
         cdef float sum_Q = 0.0
         cdef float[:] iQ = np.zeros(1, dtype=np.float32)
         self.compute_edge_forces(val_P, pos_reference, pos_force)
-        for point_index in range(n):
-            # Clear force array
-            for ax in range(2): force[ax] = 0.0
-            self.cur_depth = 0
-            iQ[0] = 0.0
-            self.compute_non_edge_forces(self.root_node, theta, iQ, point_index,
-                                         pos_reference, force)
-            sum_Q += iQ[0]
-            # Save local force into global
-            for ax in range(2): neg_force[point_index, ax] = force[ax]
+        with nogil, parallel():
+            for point_index in prange(n, schedule='static'):
+                # Clear force array
+                for ax in range(2): force[ax] = 0.0
+                self.cur_depth = 0
+                iQ[0] = 0.0
+                self.compute_non_edge_forces(self.root_node, theta, iQ, point_index,
+                                             pos_reference, force)
+                sum_Q += iQ[0]
+                # Save local force into global
+                for ax in range(2): neg_force[point_index, ax] = force[ax]
 
         for i in range(pos_force.shape[0]):
             for j in range(pos_force.shape[1]):
@@ -338,7 +342,7 @@ cdef class QuadTree:
                                  float[:] sum_Q,
                                  int point_index,
                                  float[:, :] pos_reference,
-                                 float[:] force):
+                                 float[:] force) nogil:
         # Compute the t-SNE force on the point in pos_reference given by point_index
         cdef QuadNode* child
         cdef int i, j
