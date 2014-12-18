@@ -112,8 +112,57 @@ def _kl_divergence(params, P, alpha, n_samples, n_components):
     return kl_divergence, grad
 
 
+def _kl_divergence_error(params, P, alpha, n_samples, n_components):
+    """t-SNE objective function: KL divergence of p_ijs and q_ijs.
+
+    Parameters
+    ----------
+    params : array, shape (n_params,)
+        Unraveled embedding.
+
+    P : array, shape (n_samples * (n_samples-1) / 2,)
+        Condensed joint probability matrix.
+
+    alpha : float
+        Degrees of freedom of the Student's-t distribution.
+
+    n_samples : int
+        Number of samples.
+
+    n_components : int
+        Dimension of the embedded space.
+
+    Returns
+    -------
+    kl_divergence : float
+        Kullback-Leibler divergence of p_ij and q_ij.
+
+    grad : array, shape (n_params,)
+        Unraveled gradient of the Kullback-Leibler divergence with respect to
+        the embedding.
+    """
+    X_embedded = params.reshape(n_samples, n_components)
+
+    # Q is a heavy-tailed distribution: Student's t-distribution
+    n = pdist(X_embedded, "sqeuclidean")
+    n += 1.
+    n /= alpha
+    n **= (alpha + 1.0) / -2.0
+    Q = np.maximum(n / (2.0 * np.sum(n)), MACHINE_EPSILON)
+
+    # Optimization trick below: np.dot(x, y) is faster than
+    # np.sum(x * y) because it calls BLAS
+
+    # Objective: C (Kullback-Leibler divergence of P and Q)
+    if len(P.shape) == 2:
+        P = squareform(P)
+    kl_divergence = 2.0 * np.dot(P, np.log(P / Q))
+
+    return kl_divergence
+
+
 def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
-                      verbose=False, sP=None):
+                      verbose=False):
     """t-SNE objective function: KL divergence of p_ijs and q_ijs.
     Uses Barnes-Hut tree methods to calculate the gradient that
     runs in O(NlogN) instead of O(N^2)
@@ -146,31 +195,22 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     """
     X_embedded = params.reshape(n_samples, n_components).astype(np.float32)
 
-    # Q is a heavy-tailed distribution: Student's t-distribution
-    n = pdist(X_embedded, "sqeuclidean")
-    n += 1.
-    n /= alpha
-    n **= (alpha + 1.0) / -2.0
-    Q = np.maximum(n / (2.0 * np.sum(n)), MACHINE_EPSILON)
-
-    # Optimization trick below: np.dot(x, y) is faster than
-    # np.sum(x * y) because it calls BLAS
-
-    # Objective: C (Kullback-Leibler divergence of P and Q)
-    kl_divergence = 2.0 * np.dot(P, np.log(P / Q))
-
-    if sP is None:
+    if len(P.shape) == 1:
         sP = squareform(P).astype(np.float32)
+    else:
+        sP = P
     grad = bhtsne.compute_gradient(sP, X_embedded, theta=theta,
                                    verbose=verbose)
+
     c = 2.0 * (alpha + 1.0) / alpha
     grad = grad.ravel()
     grad *= c
 
-    return kl_divergence, grad
+    return None, grad
 
 
-def _gradient_descent(objective, p0, it, n_iter, n_iter_without_progress=30,
+def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
+                      n_iter_check=50, n_iter_without_progress=50,
                       momentum=0.5, learning_rate=1000.0, min_gain=0.01,
                       min_grad_norm=1e-7, min_error_diff=1e-7, verbose=0,
                       args=[]):
@@ -180,7 +220,9 @@ def _gradient_descent(objective, p0, it, n_iter, n_iter_without_progress=30,
     ----------
     objective : function or callable
         Should return a tuple of cost and gradient for a given parameter
-        vector.
+        vector. When expensive to compute, the cost can optionally
+        be None and can be computed every n_iter_check steps using
+        the objective_error function.
 
     p0 : array-like, shape (n_params,)
         Initial parameter vector.
@@ -191,6 +233,14 @@ def _gradient_descent(objective, p0, it, n_iter, n_iter_without_progress=30,
 
     n_iter : int
         Maximum number of gradient descent iterations.
+
+    n_iter_check : int
+        Number of iterations before evaluating the global error. If the error
+        is sufficiently low, we abort the optimization.
+
+    objective_error : function or callable
+        Should return a tuple of cost and gradient for a given parameter
+        vector.
 
     n_iter_without_progress : int, optional (default: 30)
         Maximum number of iterations without progress before we abort the
@@ -241,29 +291,6 @@ def _gradient_descent(objective, p0, it, n_iter, n_iter_without_progress=30,
 
     for i in range(it, n_iter):
         new_error, grad = objective(p, *args)
-        error_diff = np.abs(new_error - error)
-        error = new_error
-        grad_norm = linalg.norm(grad)
-
-        if error < best_error:
-            best_error = error
-            best_iter = i
-        elif i - best_iter > n_iter_without_progress:
-            if verbose >= 2:
-                print("[t-SNE] Iteration %d: did not make any progress "
-                      "during the last %d episodes. Finished."
-                      % (i + 1, n_iter_without_progress))
-            break
-        if min_grad_norm >= grad_norm:
-            if verbose >= 2:
-                print("[t-SNE] Iteration %d: gradient norm %f. Finished."
-                      % (i + 1, grad_norm))
-            break
-        if min_error_diff >= error_diff:
-            if verbose >= 2:
-                print("[t-SNE] Iteration %d: error difference %f. Finished."
-                      % (i + 1, error_diff))
-            break
 
         inc = update * grad >= 0.0
         dec = np.invert(inc)
@@ -274,9 +301,36 @@ def _gradient_descent(objective, p0, it, n_iter, n_iter_without_progress=30,
         update = momentum * update - learning_rate * grad
         p += update
 
-        if verbose >= 2 and (i+1) % 10 == 0:
-            print("[t-SNE] Iteration %d: error = %.7f, gradient norm = %.7f"
-                  % (i + 1, error, grad_norm))
+        if (i+1) % n_iter_check == 0:
+            grad_norm = linalg.norm(grad)
+            if new_error is None:
+                new_error = objective_error(p, *args)
+            error_diff = np.abs(new_error - error)
+            error = new_error
+
+            if verbose >= 2:
+                m = "[t-SNE] Iteration %d: error = %.7f, gradient norm = %.7f"
+                print(m % (i + 1, error, grad_norm))
+
+            if error < best_error:
+                best_error = error
+                best_iter = i
+            elif i - best_iter > n_iter_without_progress:
+                if verbose >= 2:
+                    print("[t-SNE] Iteration %d: did not make any progress "
+                          "during the last %d episodes. Finished."
+                          % (i + 1, n_iter_without_progress))
+                break
+            if grad_norm <= min_grad_norm:
+                if verbose >= 2:
+                    print("[t-SNE] Iteration %d: gradient norm %f. Finished."
+                          % (i + 1, grad_norm))
+                break
+            if error_diff <= min_error_diff:
+                if verbose >= 2:
+                    m = "[t-SNE] Iteration %d: error difference %f. Finished."
+                    print(m % (i + 1, error_diff))
+                break
 
     return p, error, i
 
@@ -450,7 +504,7 @@ class TSNE(BaseEstimator):
     def __init__(self, n_components=2, perplexity=30.0,
                  early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000,
                  metric="euclidean", init="random", verbose=0,
-                 random_state=None, barnes_hut=False):
+                 random_state=None, method='default'):
         if init not in ["pca", "random"]:
             raise ValueError("'init' must be either 'pca' or 'random'")
         self.n_components = n_components
@@ -462,7 +516,7 @@ class TSNE(BaseEstimator):
         self.init = init
         self.verbose = verbose
         self.random_state = random_state
-        self.barnes_hut = barnes_hut
+        self.method = method
 
     def _fit(self, X):
         """Fit the model using X as training data.
@@ -493,9 +547,9 @@ class TSNE(BaseEstimator):
         else:
             if self.verbose:
                 print("[t-SNE] Computing pairwise distances...")
-            
             if self.metric == "euclidean":
-                distances = pairwise_distances(X, metric=self.metric, squared=True)
+                distances = pairwise_distances(X, metric=self.metric,
+                                               squared=True)
             else:
                 distances = pairwise_distances(X, metric=self.metric)
 
@@ -537,36 +591,45 @@ class TSNE(BaseEstimator):
                                                    self.n_components)
         params = X_embedded.ravel()
 
-        if self.barnes_hut:
+        kwargs = {}
+        kwargs['n_iter'] = 50
+        kwargs['momentum'] = 0.5
+        kwargs['learning_rate'] = self.learning_rate
+        kwargs['verbose'] = self.verbose
+        kwargs['it'] = 0
+        if self.method == 'barnes_hut':
+            obj_func = _kl_divergence_bh
+            objective_error = _kl_divergence_error
             sP = squareform(P).astype(np.float32)
-            kld = lambda *args: _kl_divergence_bh(*args, sP=sP)
-            obj_func = kld
+            kwargs['args'] = [sP, alpha, n_samples, self.n_components]
+            kwargs['min_grad_norm'] = 1e-3
+            kwargs['n_iter_without_progress'] = 30
+            kwargs['n_iter_check'] = 25
+            # The cost functions returns unncessary intermediate arrays
+            kwargs['objective_error'] = objective_error
+            # Don't always calculate the cost since that calculation
+            # can be nearly as expensive as the gradient
         else:
             obj_func = _kl_divergence
+            kwargs['args'] = [P, alpha, n_samples, self.n_components]
+            kwargs['min_error_diff'] = 0.0
+            kwargs['min_grad_norm'] = 0.0
 
         # Early exaggeration
         P *= self.early_exaggeration
-        params, error, it = _gradient_descent(
-            obj_func, params, it=0, n_iter=50, momentum=0.5,
-            min_grad_norm=0.0, min_error_diff=0.0,
-            learning_rate=self.learning_rate, verbose=self.verbose,
-            args=[P, alpha, n_samples, self.n_components])
-        params, error, it = _gradient_descent(
-            obj_func, params, it=it + 1, n_iter=100, momentum=0.8,
-            min_grad_norm=0.0, min_error_diff=0.0,
-            learning_rate=self.learning_rate, verbose=self.verbose,
-            args=[P, alpha, n_samples, self.n_components])
+        params, error, it = _gradient_descent(obj_func, params, **kwargs)
+        kwargs['n_iter'] = 100
+        kwargs['momentum'] = 0.8
+        kwargs['it'] += it
+        params, error, it = _gradient_descent(obj_func, params, **kwargs)
         if self.verbose:
             print("[t-SNE] Error after %d iterations with early "
                   "exaggeration: %f" % (it + 1, error))
 
         # Final optimization
-        P /= self.early_exaggeration
-        params, error, it = _gradient_descent(
-            obj_func, params, it=it + 1, n_iter=self.n_iter,
-            momentum=0.8, learning_rate=self.learning_rate,
-            verbose=self.verbose, args=[P, alpha, n_samples,
-                                        self.n_components])
+        kwargs['n_iter'] = self.n_iter
+        kwargs['it'] += it
+        params, error, it = _gradient_descent(obj_func, params, **kwargs)
         if self.verbose:
             print("[t-SNE] Error after %d iterations: %f" % (it + 1, error))
 

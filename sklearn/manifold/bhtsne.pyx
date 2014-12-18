@@ -1,7 +1,6 @@
 # distutils: extra_compile_args = -fopenmp
 # distutils: extra_link_args = -fopenmp
 import numpy as np
-import time
 from sklearn.metrics.pairwise import pairwise_distances
 from cython.parallel cimport prange, parallel, threadid
 cimport numpy as np
