@@ -1,8 +1,9 @@
 # distutils: extra_compile_args = -fopenmp
 # distutils: extra_link_args = -fopenmp
 import numpy as np
+import time
 from sklearn.metrics.pairwise import pairwise_distances
-from cython.parallel cimport prange, parallel
+from cython.parallel cimport prange, parallel, threadid
 cimport numpy as np
 cimport cython
 cimport openmp
@@ -255,13 +256,15 @@ cdef class QuadTree:
         cdef float[:,:] pos_force = np.zeros((n, 2), dtype=np.float32)
         cdef float[:,:] neg_force = np.zeros((n, 2), dtype=np.float32)
         cdef float[:,:] tot_force = np.zeros((n, 2), dtype=np.float32)
-        cdef float[:] force = np.zeros(2, dtype=np.float32)
+        cdef float* force
+        #cdef float[:] force = np.zeros(2, dtype=np.float32)
         cdef int point_index
         cdef float sum_Q = 0.0
         cdef float[:] iQ = np.zeros(1, dtype=np.float32)
         self.compute_edge_forces(val_P, pos_reference, pos_force)
         for point_index in range(n):
             # Clear force array
+            force =  <float*> malloc(sizeof(float) * 2)
             for ax in range(2): force[ax] = 0.0
             self.cur_depth = 0
             iQ[0] = 0.0
@@ -276,6 +279,49 @@ cdef class QuadTree:
                 tot_force[i, j] = pos_force[i, j] - (neg_force[i, j] / sum_Q)
 
         return tot_force
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef float[:,:] compute_gradient_parallel(self, float theta,
+                                              float[:,:] val_P,
+                                              float[:,:] pos_reference):
+        cdef int ax = 0
+        cdef int i = 0
+        cdef int j = 0
+        cdef int n = pos_reference.shape[0]
+        cdef float[:,:] pos_force = np.zeros((n, 2), dtype=np.float32)
+        cdef float[:,:] neg_force = np.zeros((n, 2), dtype=np.float32)
+        cdef float[:,:] tot_force = np.zeros((n, 2), dtype=np.float32)
+        cdef float* force
+        cdef int point_index
+        cdef float sum_Q = 0.0
+        cdef float[:] iQ = np.zeros(1, dtype=np.float32)
+        cdef float[:] sum_Qs = np.zeros(n, dtype=np.float32)
+        cdef int skip, start
+        self.compute_edge_forces(val_P, pos_reference, pos_force)
+        with nogil, parallel():
+            skip = openmp.omp_get_num_threads()
+            start = threadid()
+            for point_index in prange(start, n, skip, schedule='static'):
+                # Clear force array
+                force =  <float*> malloc(sizeof(float) * 2)
+                for ax in range(2): force[ax] = 0.0
+                self.cur_depth = 0
+                iQ[0] = 0.0
+                self.compute_non_edge_forces(self.root_node, theta, iQ, point_index,
+                                             pos_reference, force)
+                sum_Qs[point_index] = iQ[0]
+                # Save local force into global
+                for ax in range(2): neg_force[point_index, ax] = force[ax]
+        for i in range(n):
+            sum_Q += sum_Qs[i]
+
+        for i in range(pos_force.shape[0]):
+            for j in range(pos_force.shape[1]):
+                tot_force[i, j] = pos_force[i, j] - (neg_force[i, j] / sum_Q)
+        return tot_force
+
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -340,7 +386,7 @@ cdef class QuadTree:
                                  float[:] sum_Q,
                                  int point_index,
                                  float[:, :] pos_reference,
-                                 float[:] force) nogil:
+                                 float* force) nogil:
         # Compute the t-SNE force on the point in pos_reference given by point_index
         cdef QuadNode* child
         cdef int i, j
@@ -438,11 +484,14 @@ def consistency_checks(pos_output, verbose=0):
     assert qt.free()
     return True
 
-def compute_gradient(pij_input, pos_output, theta=0.5, verbose=0):
+def compute_gradient(pij_input, pos_output, theta=0.5, verbose=0, do_parallel=0):
     assert pij_input.dtype == np.float32
     assert pos_output.dtype == np.float32
     qt = create_quadtree(pos_output, verbose=verbose)
-    forces = qt.compute_gradient(theta, pij_input, pos_output)
+    if do_parallel:
+        forces = qt.compute_gradient_parallel(theta, pij_input, pos_output)
+    else:
+        forces = qt.compute_gradient(theta, pij_input, pos_output)
     f = np.zeros(pos_output.shape, dtype=np.float32)
     f[:,:] = forces
     assert qt.check_consistency()
