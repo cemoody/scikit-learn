@@ -210,7 +210,7 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
 
 
 def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
-                      n_iter_check=50, n_iter_without_progress=50,
+                      n_iter_check=1, n_iter_without_progress=50,
                       momentum=0.5, learning_rate=1000.0, min_gain=0.01,
                       min_grad_norm=1e-7, min_error_diff=1e-7, verbose=0,
                       args=[]):
@@ -331,6 +331,9 @@ def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
                     m = "[t-SNE] Iteration %d: error difference %f. Finished."
                     print(m % (i + 1, error_diff))
                 break
+
+        if new_error is not None:
+            error = new_error
 
     return p, error, i
 

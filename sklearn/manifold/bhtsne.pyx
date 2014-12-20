@@ -242,23 +242,28 @@ cdef class QuadTree:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef float[:,:] compute_gradient(self, float theta,
-                                     float[:,:] val_P,
-                                     float[:,:] pos_reference):
-        cdef int ax = 0
-        cdef int i = 0
-        cdef int j = 0
+    cdef float[:,:] compute_gradient_positive(self, float[:,:] val_P,
+                                              float[:,:] pos_reference):
         cdef int n = pos_reference.shape[0]
         cdef float[:,:] pos_force = np.zeros((n, 2), dtype=np.float32)
+        self.compute_edge_forces(val_P, pos_reference, pos_force)
+        return pos_force
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef compute_gradient_negative(self, float theta,
+                                              float[:,:] val_P,
+                                              float[:,:] pos_reference,
+                                              int start=0, int skip=1):
+        cdef int ax = 0
+        cdef int n = pos_reference.shape[0]
         cdef float[:,:] neg_force = np.zeros((n, 2), dtype=np.float32)
-        cdef float[:,:] tot_force = np.zeros((n, 2), dtype=np.float32)
         cdef float* force
         cdef float* iQ 
-        #cdef float[:] force = np.zeros(2, dtype=np.float32)
         cdef int point_index
         cdef float sum_Q = 0.0
-        self.compute_edge_forces(val_P, pos_reference, pos_force)
-        for point_index in range(n):
+        for point_index in range(start, n, skip):
             # Clear force array
             force = <float*> malloc(sizeof(float) * 2)
             for ax in range(2): force[ax] = 0.0
@@ -269,11 +274,28 @@ cdef class QuadTree:
             sum_Q += iQ[0]
             # Save local force into global
             for ax in range(2): neg_force[point_index, ax] = force[ax]
+        return neg_force, sum_Q
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef float[:,:] compute_gradient(self, float theta,
+                                     float[:,:] val_P,
+                                     float[:,:] pos_reference):
+        cdef int i = 0
+        cdef int j = 0
+        cdef float sum_Q
+        cdef int n = pos_reference.shape[0]
+        cdef float[:,:] pos_force
+        cdef float[:,:] neg_force
+        cdef float[:,:] tot_force = np.zeros((n, 2), dtype=np.float32)
+
+        pos_force = self.compute_gradient_positive(val_P, pos_reference)
+        neg_force, sum_Q = self.compute_gradient_negative(theta, val_P, pos_reference)
 
         for i in range(pos_force.shape[0]):
             for j in range(pos_force.shape[1]):
                 tot_force[i, j] = pos_force[i, j] - (neg_force[i, j] / sum_Q)
-
         return tot_force
 
     @cython.boundscheck(False)
@@ -482,16 +504,38 @@ def consistency_checks(pos_output, verbose=0):
     assert qt.free()
     return True
 
-def compute_gradient(pij_input, pos_output, theta=0.5, verbose=0, do_parallel=0):
+def compute_gradient(pij_input, pos_output, theta=0.5, verbose=0):
     assert pij_input.dtype == np.float32
     assert pos_output.dtype == np.float32
     qt = create_quadtree(pos_output, verbose=verbose)
-    if do_parallel:
-        forces = qt.compute_gradient_parallel(theta, pij_input, pos_output)
-    else:
-        forces = qt.compute_gradient(theta, pij_input, pos_output)
+    forces = qt.compute_gradient(theta, pij_input, pos_output)
     f = np.zeros(pos_output.shape, dtype=np.float32)
     f[:,:] = forces
+    assert qt.check_consistency()
+    assert qt.free()
+    return f
+
+def compute_gradient_negative(pij_input, pos_output, theta=0.5, verbose=0,
+                              start=0, skip=1):
+    assert pij_input.dtype == np.float32
+    assert pos_output.dtype == np.float32
+    qt = create_quadtree(pos_output, verbose=verbose)
+    neg_f, sum_Q = qt.compute_gradient_negative(theta, pij_input, pos_output, 
+                                                start=start, skip=skip)
+    f = np.zeros(neg_f.shape, dtype=np.float32)
+    f[:,:] = neg_f
+    assert qt.check_consistency()
+    assert qt.free()
+    return f, sum_Q
+
+def compute_gradient_positive(pij_input, pos_output, theta=0.5, verbose=0,
+                              start=0, skip=1):
+    assert pij_input.dtype == np.float32
+    assert pos_output.dtype == np.float32
+    qt = create_quadtree(pos_output, verbose=verbose)
+    pos_f = qt.compute_gradient_positive(pij_input, pos_output)
+    f = np.zeros(pos_f.shape, dtype=np.float32)
+    f[:,:] = pos_f
     assert qt.check_consistency()
     assert qt.free()
     return f
