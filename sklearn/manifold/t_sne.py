@@ -13,6 +13,7 @@ from scipy import linalg
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
 from ..base import BaseEstimator
+from ..externals.joblib import Parallel, delayed
 from ..utils import check_array
 from ..utils import check_random_state
 from ..utils.extmath import _ravel
@@ -162,7 +163,7 @@ def _kl_divergence_error(params, P, alpha, n_samples, n_components):
 
 
 def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
-                      verbose=False):
+                      verbose=False, threadpool=None):
     """t-SNE objective function: KL divergence of p_ijs and q_ijs.
     Uses Barnes-Hut tree methods to calculate the gradient that
     runs in O(NlogN) instead of O(N^2)
@@ -184,6 +185,9 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     n_components : int
         Dimension of the embedded space.
 
+    threadpool : joblib.Parallel object
+        Use this threadpool to launch many threads
+
     Returns
     -------
     kl_divergence : float
@@ -199,8 +203,22 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
         sP = squareform(P).astype(np.float32)
     else:
         sP = P
-    grad = bhtsne.compute_gradient(sP, X_embedded, theta=theta,
-                                   verbose=verbose)
+
+    if threadpool:
+        pos_f = bhtsne.compute_gradient_positive(sP, X_embedded, theta=theta,
+                                                 verbose=verbose)
+        grad_delayed = delayed(bhtsne.compute_gradient_negative)
+        n_jobs = threadpool.n_jobs
+        value_tuples = threadpool(grad_delayed(sP, X_embedded, theta=theta,
+                                               verbose=verbose, start=job,
+                                               skip=n_jobs)
+                                  for job in range(n_jobs))
+        neg_f = np.vstack([v[0] for v in value_tuples])
+        sum_Q = np.sum([v[1] for v in value_tuples])
+        grad = pos_f - (neg_f / sum_Q)
+    else:
+        grad = bhtsne.compute_gradient(sP, X_embedded, theta=theta,
+                                       verbose=verbose)
 
     c = 2.0 * (alpha + 1.0) / alpha
     grad = grad.ravel()
