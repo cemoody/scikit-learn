@@ -9,6 +9,7 @@
 #   http://cseweb.ucsd.edu/~lvdmaaten/workshops/nips2010/papers/vandermaaten.pdf
 
 import numpy as np
+import math
 from scipy import linalg
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
@@ -211,9 +212,18 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
         pos_f = bhtsne.compute_gradient_positive(sP, X_embedded, theta=theta,
                                                  verbose=verbose)
         args = (sP, X_embedded)
-        kwargs = dict(theta=theta, verbose=verbose, skip=n_jobs)
+        kwargs = dict(theta=theta, verbose=verbose)
         grad_delayed = delayed(bhtsne.compute_gradient_negative)
-        jobs = [grad_delayed(*args, start=j, **kwargs) for j in range(n_jobs)]
+        start, stop = 0, 0
+        n = sP.shape[0]
+        step = int(math.ceil(n * 1.0 / n_jobs))
+        jobs = []
+        for j in range(n_jobs):
+            stop += step
+            stop = min(stop, n)
+            jobs.append(grad_delayed(*args, start=start, stop=stop, **kwargs))
+            start = stop
+        # Launch all of the jobs on separate threads
         value_tuples = threadpool(jobs)
         neg_f = np.vstack([v[0] for v in value_tuples])
         sum_Q = np.sum([v[1] for v in value_tuples])
@@ -233,7 +243,7 @@ def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
                       n_iter_check=1, n_iter_without_progress=50,
                       momentum=0.5, learning_rate=1000.0, min_gain=0.01,
                       min_grad_norm=1e-7, min_error_diff=1e-7, verbose=0,
-                      args=[]):
+                      args=[], kwargs={}):
     """Batch gradient descent with momentum and individual gains.
 
     Parameters
@@ -291,6 +301,9 @@ def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
     args : sequence
         Arguments to pass to objective function.
 
+    kwargs : dict
+        Keyword arguments to pass to objective function.
+
     Returns
     -------
     p : array, shape (n_params,)
@@ -310,7 +323,7 @@ def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
     best_iter = 0
 
     for i in range(it, n_iter):
-        new_error, grad = objective(p, *args)
+        new_error, grad = objective(p, *args, **kwargs)
 
         inc = update * grad >= 0.0
         dec = np.invert(inc)
@@ -629,8 +642,8 @@ class TSNE(BaseEstimator):
             kwargs['min_grad_norm'] = 1e-3
             kwargs['n_iter_without_progress'] = 30
             if self.n_jobs > 1 or self.n_jobs == -1:
-                kwargs['threadpool'] = Parallel(n_jobs=self.n_jobs,
-                                                backend="threading")
+                tp = Parallel(n_jobs=self.n_jobs, backend="threading")
+                kwargs['kwargs'] = dict(threadpool=tp, verbose=self.verbose)
             # Don't always calculate the cost since that calculation
             # can be nearly as expensive as the gradient
             kwargs['n_iter_check'] = 25
