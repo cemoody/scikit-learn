@@ -205,6 +205,7 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     else:
         sP = P
 
+    width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
     if threadpool:
         n_jobs = threadpool.n_jobs
         if verbose > 15:
@@ -213,7 +214,7 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
                                                  verbose=verbose)
         args = (sP, X_embedded)
         kwargs = dict(theta=theta, verbose=verbose)
-        grad_delayed = delayed(bhtsne.compute_gradient_negative)
+        grad_delayed = delayed(bhtsne.gradient_negative)
         start, stop = 0, 0
         n = sP.shape[0]
         step = int(math.ceil(n * 1.0 / n_jobs))
@@ -229,8 +230,8 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
         sum_Q = np.sum([v[1] for v in value_tuples])
         grad = pos_f - (neg_f / sum_Q)
     else:
-        grad = bhtsne.compute_gradient(sP, X_embedded, theta=theta,
-                                       verbose=verbose)
+        grad = np.zeros(X_embedded.shape, dtype=np.float32)
+        bhtsne.gradient(width, sP, X_embedded, grad, theta, verbose)
 
     c = 2.0 * (alpha + 1.0) / alpha
     grad = grad.ravel()
