@@ -205,14 +205,16 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
         sP = P
 
     if threadpool:
+        n_jobs = threadpool.n_jobs
+        if verbose > 15:
+            print("[t-SNE] Running in parallel with %i threads" % n_jobs)
         pos_f = bhtsne.compute_gradient_positive(sP, X_embedded, theta=theta,
                                                  verbose=verbose)
+        args = (sP, X_embedded)
+        kwargs = dict(theta=theta, verbose=verbose, skip=n_jobs)
         grad_delayed = delayed(bhtsne.compute_gradient_negative)
-        n_jobs = threadpool.n_jobs
-        value_tuples = threadpool(grad_delayed(sP, X_embedded, theta=theta,
-                                               verbose=verbose, start=job,
-                                               skip=n_jobs)
-                                  for job in range(n_jobs))
+        jobs = [grad_delayed(*args, start=j, **kwargs) for j in range(n_jobs)]
+        value_tuples = threadpool(jobs)
         neg_f = np.vstack([v[0] for v in value_tuples])
         sum_Q = np.sum([v[1] for v in value_tuples])
         grad = pos_f - (neg_f / sum_Q)
@@ -525,7 +527,7 @@ class TSNE(BaseEstimator):
     def __init__(self, n_components=2, perplexity=30.0,
                  early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000,
                  metric="euclidean", init="random", verbose=0,
-                 random_state=None, method='default'):
+                 random_state=None, method='barnes_hut', n_jobs=1):
         if init not in ["pca", "random"]:
             raise ValueError("'init' must be either 'pca' or 'random'")
         self.n_components = n_components
@@ -538,6 +540,7 @@ class TSNE(BaseEstimator):
         self.verbose = verbose
         self.random_state = random_state
         self.method = method
+        self.n_jobs = n_jobs
 
     def _fit(self, X):
         """Fit the model using X as training data.
@@ -625,11 +628,13 @@ class TSNE(BaseEstimator):
             kwargs['args'] = [sP, alpha, n_samples, self.n_components]
             kwargs['min_grad_norm'] = 1e-3
             kwargs['n_iter_without_progress'] = 30
-            kwargs['n_iter_check'] = 25
-            # The cost functions returns unncessary intermediate arrays
-            kwargs['objective_error'] = objective_error
+            if self.n_jobs > 1 or self.n_jobs == -1:
+                kwargs['threadpool'] = Parallel(n_jobs=self.n_jobs,
+                                                backend="threading")
             # Don't always calculate the cost since that calculation
             # can be nearly as expensive as the gradient
+            kwargs['n_iter_check'] = 25
+            kwargs['objective_error'] = objective_error
         else:
             obj_func = _kl_divergence
             kwargs['args'] = [P, alpha, n_samples, self.n_components]
