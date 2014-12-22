@@ -213,7 +213,7 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
             print("[t-SNE] Running in parallel with %i threads" % n_jobs)
         pos_f = np.zeros(X_embedded.shape, dtype=np.float32)
         args = (width.astype(np.float32), sP.astype(np.float32),
-                X_embedded.astype(np.float32), pos_f.astype(np.float32),
+                X_embedded.astype(np.float32), pos_f,
                 theta, verbose)
         bhtsne.gradient_positive(*args)
         grad_delayed = delayed(bhtsne.gradient_negative)
@@ -225,19 +225,19 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
         for j in range(n_jobs):
             stop += step
             stop = min(stop, n)
-            neg_f = np.zeros(X_embedded.shape, dtype=np.float32)
+            neg_f = np.zeros((step, 2), dtype=np.float32)
             neg_fs.append(neg_f)
             args = (width.astype(np.float32), sP.astype(np.float32),
-                    X_embedded.astype(np.float32), neg_f.astype(np.float32),
+                    X_embedded.astype(np.float32), neg_f,
                     theta, start, stop, verbose)
             jobs.append(grad_delayed(*args))
             start = stop
         # Launch all of the jobs on separate threads
-        neg_f = np.vstack(neg_f)
         # Note that gradient_negative updates the grad array inplace
         # as well as returning sum_Q
         sum_Q = threadpool(jobs)
         sum_Q = np.sum(sum_Q)
+        neg_f = np.vstack(neg_fs)
         grad = pos_f - (neg_f / sum_Q)
     else:
         grad = np.zeros(X_embedded.shape, dtype=np.float32)
@@ -653,7 +653,7 @@ class TSNE(BaseEstimator):
             kwargs['min_grad_norm'] = 1e-3
             kwargs['n_iter_without_progress'] = 30
             if self.n_jobs > 1 or self.n_jobs == -1:
-                tp = Parallel(n_jobs=self.n_jobs, backend="threading")
+                tp = Parallel(n_jobs=self.n_jobs)
                 kwargs['kwargs'] = dict(threadpool=tp, verbose=self.verbose)
             # Don't always calculate the cost since that calculation
             # can be nearly as expensive as the gradient

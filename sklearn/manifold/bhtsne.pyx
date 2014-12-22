@@ -22,11 +22,14 @@ cimport openmp
 # Include usage documentation
 # Remove extra imports, prints
 # Find all references to embedding in sklearn & see where else we can document
-# Incorporate into SKLearn
 # PEP8 the code
 # Am I using memviews or returning fulla rrays appropriately?
+# Change dim from 2->3
+# Ensure python 3 works
+# Add back tests
 # DONE:
 # Cython deallocate memory
+# Incorporate into SKLearn
 
 from libc.stdlib cimport malloc, free, abs
 
