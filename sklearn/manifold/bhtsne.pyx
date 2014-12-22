@@ -1,6 +1,6 @@
 # distutils: extra_compile_args = -fopenmp
 # distutils: extra_link_args = -fopenmp
-# cython: boundscheck=True
+# cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
 import numpy as np
@@ -77,7 +77,7 @@ cdef class QuadTree:
     # Spit out diagnostic information?
     cdef int verbose
     
-    def __cinit__(self, int verbose=0):
+    def __cinit__(self, int verbose):
         self.num_cells = 0
         self.num_part = 0
         self.verbose = verbose
@@ -261,13 +261,16 @@ cdef void compute_gradient(float[:,:] val_P,
                            float theta):
     cdef int i, ax
     cdef int n = pos_reference.shape[0]
-    cdef float[1] sum_Q
-    cdef float[:,:] neg_force = cvarray((n, 2), sizeof(float), "f")
-    cdef float[:,:] pos_force = cvarray((n, 2), sizeof(float), "f")
+    cdef float* sum_Q = <float*> malloc(sizeof(float))
+    cdef float* neg_fc = <float*> malloc(sizeof(float) * n * 2)
+    cdef float* pos_fc = <float*> malloc(sizeof(float) * n * 2)
+    cdef float[:,:] neg_force = <float[:n,:2]> neg_fc
+    cdef float[:,:] pos_force = <float[:n,:2]> pos_fc
 
     sum_Q[0] = 0.0
     compute_gradient_positive(val_P, pos_reference, pos_force)
-    compute_gradient_negative(val_P, pos_reference, neg_force, root_node, sum_Q, theta)
+    compute_gradient_negative(val_P, pos_reference, neg_force, root_node, sum_Q, theta, 0, -1)
+    #compute_gradient_negative_parallel(val_P, pos_reference, neg_force, root_node, sum_Q, theta, 0, -1)
 
     for i in range(n):
         for ax in range(2):
@@ -275,7 +278,7 @@ cdef void compute_gradient(float[:,:] val_P,
 
 cdef void compute_gradient_positive(float[:,:] val_P,
                                     float[:,:] pos_reference,
-                                    float[:,:] pos_f):
+                                    float[:,:] pos_f) nogil:
     # Sum over the following expression for i not equal to j
     # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
     cdef:
@@ -301,10 +304,10 @@ cdef void compute_gradient_negative(float[:,:] val_P,
                                     float[:,:] pos_reference,
                                     float[:,:] neg_f,
                                     QuadNode *root_node,
-                                    float[:] sum_Q,
+                                    float* sum_Q,
                                     float theta, 
-                                    int start=0, 
-                                    int stop=-1) nogil:
+                                    int start, 
+                                    int stop) nogil:
     if stop == -1:
         stop = pos_reference.shape[0] 
     cdef:
@@ -327,6 +330,39 @@ cdef void compute_gradient_negative(float[:,:] val_P,
         # Save local force into global
         for ax in range(2): 
             neg_f[i, ax] = force[ax]
+
+cdef void compute_gradient_negative_parallel(float[:,:] val_P, 
+                                             float[:,:] pos_reference,
+                                             float[:,:] neg_f,
+                                             QuadNode *root_node,
+                                             float* sum_Q,
+                                             float theta, 
+                                             int start, 
+                                             int stop) nogil:
+    if stop == -1:
+        stop = pos_reference.shape[0] 
+    cdef:
+        int ax
+        int n = stop - start
+        float* force
+        float* iQ 
+        int* i
+        int point_index
+
+    with parallel():
+        for point_index in prange(start, stop, schedule='static'):
+            iQ = <float*> malloc(sizeof(float))
+            force = <float*> malloc(sizeof(float) * 2)
+            # Clear the arrays
+            for ax in range(2): 
+                force[ax] = 0.0
+            iQ[0] = 0.0
+            compute_non_edge_forces(root_node, theta, iQ, point_index,
+                                         pos_reference, force)
+            sum_Q[0] += iQ[0]
+            # Save local force into global
+            for ax in range(2): 
+                neg_f[point_index, ax] = force[ax]
 
 cdef void compute_non_edge_forces(QuadNode* node, 
                                   float theta,
@@ -393,9 +429,10 @@ def gradient(float[:] width,
              float[:,:] forces, 
              float theta,
              int verbose):
-    # input arrays must by np.float32
-    # assert pij_input.dtype == np.float32
-    # assert pos_output.dtype == np.float32
+    assert width.itemsize == 4
+    assert pij_input.itemsize == 4
+    assert pos_output.itemsize == 4
+    assert forces.itemsize == 4
     cdef QuadTree qt = QuadTree(verbose)
     qt.create_root(width)
     qt.insert_many(pos_output)
@@ -403,35 +440,39 @@ def gradient(float[:] width,
     qt.check_consistency()
     qt.free()
 
-cdef void gradient_negative(float[:] width, 
-                            float[:,:] pij_input, 
-                            float[:,:] pos_output, 
-                            float[:,:] forces, 
-                            float[:] sum_Q, 
-                            float theta,
-                            int start,
-                            int stop,
-                            int verbose):
-    # input arrays must by np.float32
-    # assert pij_input.dtype == np.float32
-    # assert pos_output.dtype == np.float32
+def gradient_negative(float[:] width, 
+                      float[:,:] pij_input, 
+                      float[:,:] pos_output, 
+                      float[:,:] forces, 
+                      float theta,
+                      int start,
+                      int stop,
+                      int verbose):
+    assert width.itemsize == 4
+    assert pij_input.itemsize == 4
+    assert pos_output.itemsize == 4
+    assert forces.itemsize == 4
     cdef QuadTree qt = QuadTree(verbose)
     qt.create_root(width)
     qt.insert_many(pos_output)
+    cdef float* sum_Q = <float*> malloc(sizeof(float))
+    sum_Q[0] = 0.0
     compute_gradient_negative(pij_input, pos_output, forces, qt.root_node, 
-                              sum_Q, theta, start=start, stop=stop)
+                              sum_Q, theta, start, stop)
     qt.check_consistency()
     qt.free()
+    return sum_Q[0]
 
-cdef void gradient_positive(float[:] width, 
-                            float[:,:] pij_input, 
-                            float[:,:] pos_output, 
-                            float[:,:] forces, 
-                            float theta, 
-                            int verbose):
-    # input arrays must by np.float32
-    # assert pij_input.dtype == np.float32
-    # assert pos_output.dtype == np.float32
+def gradient_positive(float[:] width, 
+                      float[:,:] pij_input, 
+                      float[:,:] pos_output, 
+                      float[:,:] forces, 
+                      float theta, 
+                      int verbose):
+    assert width.itemsize == 4
+    assert pij_input.itemsize == 4
+    assert pos_output.itemsize == 4
+    assert forces.itemsize == 4
     cdef QuadTree qt = QuadTree(verbose)
     qt.create_root(width)
     qt.insert_many(pos_output)

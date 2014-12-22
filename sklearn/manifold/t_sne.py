@@ -206,28 +206,38 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
         sP = P
 
     width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
+    sum_Q = np.zeros(1, dtype=np.float32)
     if threadpool:
         n_jobs = threadpool.n_jobs
         if verbose > 15:
             print("[t-SNE] Running in parallel with %i threads" % n_jobs)
-        pos_f = bhtsne.compute_gradient_positive(sP, X_embedded, theta=theta,
-                                                 verbose=verbose)
-        args = (sP, X_embedded)
-        kwargs = dict(theta=theta, verbose=verbose)
+        pos_f = np.zeros(X_embedded.shape, dtype=np.float32)
+        args = (width.astype(np.float32), sP.astype(np.float32),
+                X_embedded.astype(np.float32), pos_f.astype(np.float32),
+                theta, verbose)
+        bhtsne.gradient_positive(*args)
         grad_delayed = delayed(bhtsne.gradient_negative)
         start, stop = 0, 0
         n = sP.shape[0]
         step = int(math.ceil(n * 1.0 / n_jobs))
         jobs = []
+        neg_fs = []
         for j in range(n_jobs):
             stop += step
             stop = min(stop, n)
-            jobs.append(grad_delayed(*args, start=start, stop=stop, **kwargs))
+            neg_f = np.zeros(X_embedded.shape, dtype=np.float32)
+            neg_fs.append(neg_f)
+            args = (width.astype(np.float32), sP.astype(np.float32),
+                    X_embedded.astype(np.float32), neg_f.astype(np.float32),
+                    theta, start, stop, verbose)
+            jobs.append(grad_delayed(*args))
             start = stop
         # Launch all of the jobs on separate threads
-        value_tuples = threadpool(jobs)
-        neg_f = np.vstack([v[0] for v in value_tuples])
-        sum_Q = np.sum([v[1] for v in value_tuples])
+        neg_f = np.vstack(neg_f)
+        # Note that gradient_negative updates the grad array inplace
+        # as well as returning sum_Q
+        sum_Q = threadpool(jobs)
+        sum_Q = np.sum(sum_Q)
         grad = pos_f - (neg_f / sum_Q)
     else:
         grad = np.zeros(X_embedded.shape, dtype=np.float32)
