@@ -35,6 +35,7 @@ from libc.stdlib cimport malloc, free, abs
 
 cdef extern from "math.h":
     double sqrt(double x) nogil
+    double ceil(double x) nogil
 
 cdef struct QuadNode:
     # Keep track of the center of mass
@@ -212,6 +213,7 @@ cdef class QuadTree:
         free(self.root_node)
         check = cnt[0] == self.num_cells
         check &= cnt[2] == self.num_part
+        free(cnt)
         return check
 
     cdef void free_recursive(self, QuadNode *root, int* counts) nogil:
@@ -261,7 +263,9 @@ cdef void compute_gradient(float[:,:] val_P,
                            float[:,:] pos_reference,
                            float[:,:] tot_force,
                            QuadNode* root_node,
-                           float theta):
+                           float theta,
+                           int start,
+                           int stop):
     cdef int i, ax
     cdef int n = pos_reference.shape[0]
     cdef float* sum_Q = <float*> malloc(sizeof(float))
@@ -271,13 +275,16 @@ cdef void compute_gradient(float[:,:] val_P,
     cdef float[:,:] pos_force = <float[:n,:2]> pos_fc
 
     sum_Q[0] = 0.0
-    compute_gradient_positive(val_P, pos_reference, pos_force)
-    compute_gradient_negative(val_P, pos_reference, neg_force, root_node, sum_Q, theta, 0, -1)
-    #compute_gradient_negative_parallel(val_P, pos_reference, neg_force, root_node, sum_Q, theta, 0, -1)
+    with nogil:
+        compute_gradient_positive(val_P, pos_reference, pos_force)
+        compute_gradient_negative(val_P, pos_reference, neg_force, root_node, sum_Q, theta, start, stop)
 
-    for i in range(n):
-        for ax in range(2):
-            tot_force[i, ax] = pos_force[i, ax] - (neg_force[i, ax] / sum_Q[0])
+        for i in range(n):
+            for ax in range(2):
+                tot_force[i, ax] = pos_force[i, ax] - (neg_force[i, ax] / sum_Q[0])
+    free(sum_Q)
+    free(neg_fc)
+    free(pos_fc)
 
 cdef void compute_gradient_positive(float[:,:] val_P,
                                     float[:,:] pos_reference,
@@ -320,19 +327,25 @@ cdef void compute_gradient_negative(float[:,:] val_P,
         float* iQ 
         int point_index
 
+    iQ = <float*> malloc(sizeof(float))
+    force = <float*> malloc(sizeof(float) * 2)
+    pos = <float*> malloc(sizeof(float) * 2)
     for i, point_index in enumerate(range(start, stop)):
-        iQ = <float*> malloc(sizeof(float))
-        force = <float*> malloc(sizeof(float) * 2)
         # Clear the arrays
         for ax in range(2): 
             force[ax] = 0.0
+            pos[ax] = pos_reference[point_index, ax]
         iQ[0] = 0.0
         compute_non_edge_forces(root_node, theta, iQ, point_index,
-                                     pos_reference, force)
+                                pos, force)
         sum_Q[0] += iQ[0]
         # Save local force into global
         for ax in range(2): 
             neg_f[i, ax] = force[ax]
+    free(iQ)
+    free(force)
+    free(pos)
+
 
 cdef void compute_gradient_negative_parallel(float[:,:] val_P, 
                                              float[:,:] pos_reference,
@@ -347,33 +360,46 @@ cdef void compute_gradient_negative_parallel(float[:,:] val_P,
     cdef:
         int ax
         int n = stop - start
+        int step = <int> (ceil(n / 4.0))
         float* force
+        float* pos
         float* iQ 
+        float* nf = <float*> malloc(sizeof(float) * n * 2)
         int* i
-        int point_index
+        int point_index, chunk
+        int tid
 
-    with parallel():
+    with parallel(num_threads=4):
+        iQ = <float*> malloc(sizeof(float))
+        force = <float*> malloc(sizeof(float) * 2)
+        pos = <float*> malloc(sizeof(float) * 2)
         for point_index in prange(start, stop, schedule='static'):
-            iQ = <float*> malloc(sizeof(float))
-            force = <float*> malloc(sizeof(float) * 2)
             # Clear the arrays
             for ax in range(2): 
                 force[ax] = 0.0
+                pos[ax] = pos_reference[point_index, ax]
             iQ[0] = 0.0
             compute_non_edge_forces(root_node, theta, iQ, point_index,
-                                         pos_reference, force)
+                                    pos, force)
             sum_Q[0] += iQ[0]
             # Save local force into global
             for ax in range(2): 
-                neg_f[point_index, ax] = force[ax]
+                nf[point_index + ax] = force[ax]
+        free(iQ)
+        free(force)
+        free(pos)
+    for point_index in range(start, stop):
+        for ax in range(2): 
+            neg_f[point_index, ax] = nf[point_index + ax] 
+    free(nf)
 
 cdef void compute_non_edge_forces(QuadNode* node, 
                                   float theta,
                                   float* sum_Q,
                                   int point_index,
-                                  float[:, :] pos_reference,
+                                  float* pos,
                                   float* force) nogil:
-    # Compute the t-SNE force on the point in pos_reference given by point_index
+    # Compute the t-SNE force on the point in pos given by point_index
     cdef:
         QuadNode* child
         int i, j
@@ -392,7 +418,7 @@ cdef void compute_non_edge_forces(QuadNode* node,
         dist2 = 0.0
         # Compute distance between node center of mass and the reference point
         for i in range(2):
-            delta[i] += pos_reference[point_index, i] - node.cum_com[i] 
+            delta[i] += pos[i] - node.cum_com[i] 
             dist2 += delta[i]**2.0
         # Check whether we can use this node as a summary
         # It's a summary node if the angular size as measured from the point
@@ -420,7 +446,7 @@ cdef void compute_non_edge_forces(QuadNode* node,
                         continue
                     compute_non_edge_forces(child, theta, sum_Q, 
                                                  point_index,
-                                                 pos_reference, force)
+                                                 pos, force)
     
 
 
@@ -439,7 +465,7 @@ def gradient(float[:] width,
     cdef QuadTree qt = QuadTree(verbose)
     qt.create_root(width)
     qt.insert_many(pos_output)
-    compute_gradient(pij_input, pos_output, forces, qt.root_node, theta)
+    compute_gradient(pij_input, pos_output, forces, qt.root_node, theta, 0, -1)
     qt.check_consistency()
     qt.free()
 
