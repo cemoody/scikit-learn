@@ -9,24 +9,12 @@ from libc.stdio cimport printf
 cimport numpy as np
 cimport cython
 cimport openmp
-# Implementation by Chris Moody
+
+# Implementation by Chris Moody & Nick Travers
 # original code by Laurens van der Maaten
 # for reference implemenations and papers describing the technique:
 # http://homepage.tudelft.nl/19j49/t-SNE.html
 
-
-# TODO:
-# Ensure python 3 works
-# Add back tests
-# Include usage documentation
-# Remove extra imports, prints
-# Find all references to embedding in sklearn & see where else we can document
-# PEP8 the code
-# DONE:
-# Change dim from 2->3
-# Am I using memviews or returning fulla rrays appropriately?
-# Cython deallocate memory
-# Incorporate into SKLearn
 
 from libc.stdlib cimport malloc, free, abs
 
@@ -149,7 +137,7 @@ cdef Node* select_child(Node *node, float[3] pos) nogil:
     return node.children[offset[0]][offset[1]][offset[2]]
 
 cdef void subdivide(Node* node) nogil:
-    # This instantiates 4 nodes for the current node
+    # This instantiates 4 or 8 nodes for the current node
     cdef int i = 0
     cdef int j = 0
     cdef int k = 0
@@ -171,7 +159,7 @@ cdef void subdivide(Node* node) nogil:
                 node.children[i][j][k] = create_child(node, offset)
 
 cdef void insert(Node *root, float pos[3], int point_index) nogil:
-    # Introduce a new point into the quadtree
+    # Introduce a new point into the tree
     # by recursively inserting it and subdividng as necessary
     cdef Node *child
     cdef int i
@@ -219,6 +207,7 @@ cdef void insert(Node *root, float pos[3], int point_index) nogil:
         insert(child, pos, point_index)
 
 cdef void insert_many(Tree* tree, float[:,:] pos_array) nogil:
+    # Insert each data point into the tree one at a time
     cdef int nrows = pos_array.shape[0]
     cdef int i, ax
     cdef float row[3]
@@ -241,6 +230,9 @@ cdef int free_tree(Tree* tree) nogil:
     return check
 
 cdef void free_recursive(Tree* tree, Node *root, int* counts) nogil:
+    # Free up all of the tree nodes recursively
+    # while counting the number of nodes visited
+    # and total number of data points removed
     cdef int i, j, krange
     cdef int k = 0
     cdef Node* child
@@ -262,6 +254,9 @@ cdef void free_recursive(Tree* tree, Node *root, int* counts) nogil:
                     free(child)
 
 cdef int check_consistency(Tree* tree) nogil:
+    # Ensure that the number of cells and data
+    # points removed are equal to the number
+    # removed
     cdef int count 
     cdef int check
     count = 0
@@ -300,6 +295,8 @@ cdef void compute_gradient(float[:,:] val_P,
                            float theta,
                            int start,
                            int stop) nogil:
+    # Having created the tree, calculate the gradient
+    # in two components, the positive and negative forces
     cdef int i, ax, coord
     cdef int n = pos_reference.shape[0]
     cdef int dimension = root_node.tree.dimension
@@ -313,24 +310,13 @@ cdef void compute_gradient(float[:,:] val_P,
     compute_gradient_positive(val_P, pos_reference, pos_f, dimension)
     t2 = clock()
     if root_node.tree.verbose > 15:
-        printf("001 : %e sec\n", ((float) (t2 - t1)))
-    t1 = clock()
-    #compute_gradient_positive_parallel(val_P, pos_reference, pos_f, dimension)
-    t2 = clock()
-    if root_node.tree.verbose > 15:
-        printf("001 : %e sec\n", ((float) (t2 - t1)))
+        printf("positive: %e sec\n", ((float) (t2 - t1)))
     t1 = clock()
     compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q, 
                               theta, start, stop)
     t2 = clock()
     if root_node.tree.verbose > 15:
-        printf("001 : %e sec\n", ((float) (t2 - t1)))
-    t1 = clock()
-    #compute_gradient_negative_parallel(val_P, pos_reference, neg_f, root_node, sum_Q, 
-    #                                   theta, start, stop)
-    t2 = clock()
-    if root_node.tree.verbose > 15:
-        printf("002p: %e sec\n", ((float) (t2 - t1)))
+        printf("negative: %e sec\n", ((float) (t2 - t1)))
 
     for i in range(n):
         for ax in range(dimension):
@@ -346,6 +332,7 @@ cdef void compute_gradient_positive(float[:,:] val_P,
                                     int dimension) nogil:
     # Sum over the following expression for i not equal to j
     # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
+    # This is equivalent to compute_edge_forces in the authors' code
     cdef:
         int i, j, ax
         int n = val_P.shape[0]
@@ -552,6 +539,9 @@ def gradient(float[:] width,
              float theta,
              int dimension,
              int verbose):
+    # This function is designed to be called from external Python
+    # it passes the 'forces' array by reference and fills thats array
+    # up in-place
     assert width.itemsize == 4
     assert pij_input.itemsize == 4
     assert pos_output.itemsize == 4

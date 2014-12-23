@@ -9,12 +9,10 @@
 #   http://cseweb.ucsd.edu/~lvdmaaten/workshops/nips2010/papers/vandermaaten.pdf
 
 import numpy as np
-import math
 from scipy import linalg
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
 from ..base import BaseEstimator
-from ..externals.joblib import Parallel, delayed
 from ..utils import check_array
 from ..utils import check_random_state
 from ..utils.extmath import _ravel
@@ -164,7 +162,7 @@ def _kl_divergence_error(params, P, alpha, n_samples, n_components):
 
 
 def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
-                      verbose=False, threadpool=None):
+                      verbose=False):
     """t-SNE objective function: KL divergence of p_ijs and q_ijs.
     Uses Barnes-Hut tree methods to calculate the gradient that
     runs in O(NlogN) instead of O(N^2)
@@ -186,9 +184,6 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     n_components : int
         Dimension of the embedded space.
 
-    threadpool : joblib.Parallel object
-        Use this threadpool to launch many threads
-
     Returns
     -------
     kl_divergence : float
@@ -207,42 +202,8 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
 
     dimension = X_embedded.shape[1]
     width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
-    sum_Q = np.zeros(1, dtype=np.float32)
-    if threadpool:
-        n_jobs = threadpool.n_jobs
-        if verbose > 15:
-            print("[t-SNE] Running in parallel with %i threads" % n_jobs)
-        pos_f = np.zeros(X_embedded.shape, dtype=np.float32)
-        args = (width.astype(np.float32), sP.astype(np.float32),
-                X_embedded.astype(np.float32), pos_f,
-                theta, verbose)
-        bhtsne.gradient_positive(*args)
-        grad_delayed = delayed(bhtsne.gradient_negative)
-        start, stop = 0, 0
-        n = sP.shape[0]
-        step = int(math.ceil(n * 1.0 / n_jobs))
-        jobs = []
-        neg_fs = []
-        for j in range(n_jobs):
-            stop += step
-            stop = min(stop, n)
-            neg_f = np.zeros((step, 2), dtype=np.float32)
-            neg_fs.append(neg_f)
-            args = (width.astype(np.float32), sP.astype(np.float32),
-                    X_embedded.astype(np.float32), neg_f,
-                    theta, start, stop, verbose)
-            jobs.append(grad_delayed(*args))
-            start = stop
-        # Launch all of the jobs on separate threads
-        # Note that gradient_negative updates the grad array inplace
-        # as well as returning sum_Q
-        sum_Q = threadpool(jobs)
-        sum_Q = np.sum(sum_Q)
-        neg_f = np.vstack(neg_fs)
-        grad = pos_f - (neg_f / sum_Q)
-    else:
-        grad = np.zeros(X_embedded.shape, dtype=np.float32)
-        bhtsne.gradient(width, sP, X_embedded, grad, theta, dimension, verbose)
+    grad = np.zeros(X_embedded.shape, dtype=np.float32)
+    bhtsne.gradient(width, sP, X_embedded, grad, theta, dimension, verbose)
 
     c = 2.0 * (alpha + 1.0) / alpha
     grad = grad.ravel()
@@ -519,6 +480,21 @@ class TSNE(BaseEstimator):
         numpy.random singleton. Note that different initializations
         might result in different local minima of the cost function.
 
+    method : string (default: 'barnes_hut')
+        By default the gradient calculation algorithm uses Barnes-Hut
+        approximation running in O(NlogN) time. method='standard' will use
+        will run on the slower, but exact, algorithm in O(N^2) time. The
+        exact algorithm should be used when nearest-neighbor errors need
+        to be better than 3%. However, the exact method cannot scale to
+        millions of examples.
+
+    theta : float (default: 0.5)
+        Theta is the trade-off between speed and accuracy for Barnes-Hut T-SNE
+        This method is not very sensitive to changes in this parameter
+        in the range of 0.2 - 0.8. Theta less than 0.2 has quickly increasing
+        computation time and theta greater 0.8 has quickly increasing error.
+
+
     Attributes
     ----------
     embedding_ : array-like, shape (n_samples, n_components)
@@ -548,11 +524,15 @@ class TSNE(BaseEstimator):
 
     [2] van der Maaten, L.J.P. t-Distributed Stochastic Neighbor Embedding
         http://homepage.tudelft.nl/19j49/t-SNE.html
+
+    [3] L.J.P. van der Maaten. Accelerating t-SNE using Tree-Based Algorithms.
+        Journal of Machine Learning Research 15(Oct):3221-3245, 2014.
+        http://lvdmaaten.github.io/publications/papers/JMLR_2014.pdf
     """
     def __init__(self, n_components=2, perplexity=30.0,
                  early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000,
                  metric="euclidean", init="random", verbose=0,
-                 random_state=None, method='barnes_hut', n_jobs=1):
+                 random_state=None, method='barnes_hut', theta=0.5):
         if init not in ["pca", "random"]:
             raise ValueError("'init' must be either 'pca' or 'random'")
         self.n_components = n_components
@@ -564,8 +544,12 @@ class TSNE(BaseEstimator):
         self.init = init
         self.verbose = verbose
         self.random_state = random_state
+        if method not in ['barnes_hut', 'standard']:
+            raise ValueError("'method' must be 'barnes_hut' or 'standard'")
         self.method = method
-        self.n_jobs = n_jobs
+        if theta < 0.0 or theta > 1.0:
+            raise ValueError("'theta' must be between 0.0 - 1.0")
+        self.theta = theta
 
     def _fit(self, X):
         """Fit the model using X as training data.
@@ -653,13 +637,11 @@ class TSNE(BaseEstimator):
             kwargs['args'] = [sP, alpha, n_samples, self.n_components]
             kwargs['min_grad_norm'] = 1e-3
             kwargs['n_iter_without_progress'] = 30
-            if self.n_jobs > 1 or self.n_jobs == -1:
-                tp = Parallel(n_jobs=self.n_jobs)
-                kwargs['kwargs'] = dict(threadpool=tp, verbose=self.verbose)
             # Don't always calculate the cost since that calculation
             # can be nearly as expensive as the gradient
             kwargs['n_iter_check'] = 25
             kwargs['objective_error'] = objective_error
+            kwargs['kwargs'] = dict(theta=self.theta)
         else:
             obj_func = _kl_divergence
             kwargs['args'] = [P, alpha, n_samples, self.n_components]
@@ -671,7 +653,7 @@ class TSNE(BaseEstimator):
         params, error, it = _gradient_descent(obj_func, params, **kwargs)
         kwargs['n_iter'] = 100
         kwargs['momentum'] = 0.8
-        kwargs['it'] += it
+        kwargs['it'] += it + 1
         params, error, it = _gradient_descent(obj_func, params, **kwargs)
         if self.verbose:
             print("[t-SNE] Error after %d iterations with early "
@@ -679,7 +661,7 @@ class TSNE(BaseEstimator):
 
         # Final optimization
         kwargs['n_iter'] = self.n_iter
-        kwargs['it'] += it
+        kwargs['it'] += it + 1
         params, error, it = _gradient_descent(obj_func, params, **kwargs)
         if self.verbose:
             print("[t-SNE] Error after %d iterations: %f" % (it + 1, error))
