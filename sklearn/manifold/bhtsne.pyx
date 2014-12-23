@@ -4,10 +4,7 @@
 # cython: wraparound=False
 # cython: cdivision=True
 import numpy as np
-from sklearn.metrics.pairwise import pairwise_distances
-from cython.parallel cimport prange, parallel, threadid
-from cython.view cimport array as cvarray
-from cpython.array cimport array, clone
+from cython.parallel cimport prange, parallel
 from libc.stdio cimport printf
 cimport numpy as np
 cimport cython
@@ -19,15 +16,15 @@ cimport openmp
 
 
 # TODO:
+# Change dim from 2->3
+# Ensure python 3 works
+# Add back tests
 # Include usage documentation
 # Remove extra imports, prints
 # Find all references to embedding in sklearn & see where else we can document
 # PEP8 the code
-# Am I using memviews or returning fulla rrays appropriately?
-# Change dim from 2->3
-# Ensure python 3 works
-# Add back tests
 # DONE:
+# Am I using memviews or returning fulla rrays appropriately?
 # Cython deallocate memory
 # Incorporate into SKLearn
 
@@ -295,7 +292,7 @@ cdef void compute_gradient(float[:,:] val_P,
     t2 = clock()
     printf("001 : %e sec\n", ((float) (t2 - t1)))
     t1 = clock()
-    compute_gradient_positive_parallel(val_P, pos_reference, pos_f, dimension)
+    #compute_gradient_positive_parallel(val_P, pos_reference, pos_f, dimension)
     t2 = clock()
     printf("001p: %e sec\n", ((float) (t2 - t1)))
     t1 = clock()
@@ -304,8 +301,8 @@ cdef void compute_gradient(float[:,:] val_P,
     t2 = clock()
     printf("002 : %e sec\n", ((float) (t2 - t1)))
     t1 = clock()
-    compute_gradient_negative_parallel(val_P, pos_reference, neg_f, root_node, sum_Q, 
-                                       theta, start, stop)
+    #compute_gradient_negative_parallel(val_P, pos_reference, neg_f, root_node, sum_Q, 
+    #                                   theta, start, stop)
     t2 = clock()
     printf("002p: %e sec\n", ((float) (t2 - t1)))
 
@@ -344,6 +341,7 @@ cdef void compute_gradient_positive(float[:,:] val_P,
                 pos_f[i * dimension + ax] += D * buff[ax]
                 temp = i * dimension + ax
 
+
 cdef void compute_gradient_positive_parallel(float[:,:] val_P,
                                              float[:,:] pos_reference,
                                              float* pos_f,
@@ -378,6 +376,7 @@ cdef void compute_gradient_positive_parallel(float[:,:] val_P,
         free(buff)
         free(pos_f_buff)
         free(D)
+
 
 cdef void compute_gradient_negative(float[:,:] val_P, 
                                     float[:,:] pos_reference,
@@ -456,6 +455,7 @@ cdef void compute_gradient_negative_parallel(float[:,:] val_P,
         free(force)
         free(pos)
 
+
 cdef void compute_non_edge_forces(Node* node, 
                                   float theta,
                                   float* sum_Q,
@@ -511,8 +511,6 @@ cdef void compute_non_edge_forces(Node* node,
                                                  point_index,
                                                  pos, force)
 
-
-# EXTERNAL Python interfaces
 
 def gradient(float[:] width, 
              float[:,:] pij_input, 
