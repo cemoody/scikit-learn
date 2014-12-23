@@ -1,6 +1,6 @@
 # distutils: extra_compile_args = -fopenmp
 # distutils: extra_link_args = -fopenmp
-# cython: boundscheck=False
+# cython: boundscheck=True
 # cython: wraparound=False
 # cython: cdivision=True
 import numpy as np
@@ -37,11 +37,13 @@ cdef extern from "math.h":
     double sqrt(double x) nogil
     double ceil(double x) nogil
 
-cdef struct QuadNode:
+cdef struct Node:
+    # Reserve three elements in each array
+    # If the tree dimensionality is just 2, skip the last element
     # Keep track of the center of mass
-    float[2] cum_com
+    float[3] cum_com
     # If this is a leaf, the position of the particle within this leaf 
-    float[2] cur_pos
+    float[3] cur_pos
     # The number of particles including all 
     # nodes below this one
     int cum_size
@@ -53,26 +55,28 @@ cdef struct QuadNode:
     # And each subdivision adds 1 to the level
     int level
     # Left edge of this node, normalized to [0,1]
-    float[2] le
+    float[3] le
     # The center of this node, equal to le + w/2.0
-    float[2] c
+    float[3] c
     # The width of this node -- used to calculate the opening
     # angle. Equal to width = re - le
-    float[2] w
+    float[3] w
 
     # Does this node have children?
     # Default to leaf until we add particles
     int is_leaf
     # Keep pointers to the child nodes
-    QuadNode *children[2][2]
+    Node *children[2][2][2]
     # Keep a pointer to the parent
-    QuadNode *parent
+    Node *parent
     # Pointer to the tree this node belongs too
     Tree* tree
 
 cdef struct Tree:
+    # The output dimensionality<=3
+    cdef int dimension
     # Holds a pointer to the root node
-    cdef QuadNode* root_node 
+    cdef Node* root_node 
     # Total number of cells
     cdef int num_cells
     # Total number of particles
@@ -80,8 +84,10 @@ cdef struct Tree:
     # Spit out diagnostic information?
     cdef int verbose
 
-cdef Tree* init_tree(float[:] width, int verbose) nogil:
+
+cdef Tree* init_tree(float[:] width, int dimension, int verbose) nogil:
     cdef tree = <Tree*> malloc(sizeof(Tree))
+    tree.dimension = dimension
     tree.num_cells = 0
     tree.num_part = 0
     tree.verbose = verbose
@@ -90,17 +96,17 @@ cdef Tree* init_tree(float[:] width, int verbose) nogil:
     tree.num_cells += 1
     return tree
 
-cdef QuadNode* create_root(float[:] width) nogil:
+cdef Node* create_root(float[:] width) nogil:
     # Create a default root node
     cdef int ax
-    root = <QuadNode*> malloc(sizeof(QuadNode))
+    root = <Node*> malloc(sizeof(Node))
     root.is_leaf = 1
     root.parent = NULL
     root.level = 0
     root.cum_size = 0
     root.size = 0
     root.point_index = -1
-    for ax in range(2):
+    for ax in range(3):
         root.w[ax] = width[ax]
         root.le[ax] = 0. - root.w[ax] / 2.0
         root.c[ax] = 0.0
@@ -108,10 +114,10 @@ cdef QuadNode* create_root(float[:] width) nogil:
         root.cur_pos[ax] = -1.
     return root
 
-cdef QuadNode* create_child(QuadNode *parent, int[2] offset) nogil:
+cdef Node* create_child(Node *parent, int[3] offset) nogil:
     # Create a new child node with default parameters
     cdef int ax
-    child = <QuadNode *> malloc(sizeof(QuadNode))
+    child = <Node *> malloc(sizeof(Node))
     child.is_leaf = 1
     child.parent = parent
     child.level = parent.level + 1
@@ -119,7 +125,7 @@ cdef QuadNode* create_child(QuadNode *parent, int[2] offset) nogil:
     child.cum_size = 0
     child.point_index = -1
     child.tree = parent.tree
-    for ax in range(2):
+    for ax in range(parent.tree.dimension):
         child.w[ax] = parent.w[ax] / 2.0
         child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0
         child.c[ax] = child.le[ax] + child.w[ax] / 2.0
@@ -128,33 +134,37 @@ cdef QuadNode* create_child(QuadNode *parent, int[2] offset) nogil:
     child.tree.num_cells += 1
     return child
 
-cdef QuadNode* select_child(QuadNode *node, float[2] pos) nogil:
+cdef Node* select_child(Node *node, float[3] pos) nogil:
     # Find which sub-node a position should go into
     # And return the appropriate node
-    cdef int offset[2]
+    cdef int offset[3]
     cdef int ax
-    for ax in range(2):
-        offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
-    return node.children[offset[0]][offset[1]]
+    for ax in range(3):
+        offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.0
+    return node.children[offset[0]][offset[1]][offset[2]]
 
-cdef void subdivide(QuadNode* node) nogil:
+cdef void subdivide(Node* node) nogil:
     # This instantiates 4 nodes for the current node
-    cdef int i = 0
-    cdef int j = 0
-    cdef int[2] offset
+    cdef int i, j, k
+    cdef int[3] offset
     node.is_leaf = False
-    offset[0] = 0
-    offset[1] = 0
+    for i in range(3):
+        offset[i] = 0
     for i in range(2):
         offset[0] = i
         for j in range(2):
             offset[1] = j
-            node.children[i][j] = create_child(tree, node, offset)
+            if node.dimension > 2:
+                for k in range(2):
+                    offset[2] = k
+                    node.children[i][j][k] = create_child(node, offset)
+            else:
+                node.children[i][j][0] = create_child(node, offset)
 
-cdef void insert(QuadNode *root, float pos[2], int point_index) nogil:
+cdef void insert(Node *root, float pos[2], int point_index) nogil:
     # Introduce a new point into the quadtree
     # by recursively inserting it and subdividng as necessary
-    cdef QuadNode *child
+    cdef Node *child
     cdef int i
     cdef int ax
     # Increment the total number points including this
@@ -220,9 +230,9 @@ cdef int free_tree(Tree* tree) nogil:
     free(cnt)
     return check
 
-cdef void free_recursive(Tree* tree, QuadNode *root, int* counts) nogil:
+cdef void free_recursive(Tree* tree, Node *root, int* counts) nogil:
     cdef int i, j    
-    cdef QuadNode* child
+    cdef Node* child
     if not root.is_leaf:
         for i in range(2):
             for j in range(2):
@@ -244,10 +254,10 @@ cdef int check_consistency(Tree* tree) nogil:
     check &= count == tree.num_part
     return check
 
-cdef int count_points(QuadNode* root, int count) nogil:
+cdef int count_points(Node* root, int count) nogil:
     # Walk through the whole tree and count the number 
     # of points at the leaf nodes
-    cdef QuadNode* child
+    cdef Node* child
     cdef int i, j
     for i in range(2):
         for j in range(2):
@@ -266,7 +276,7 @@ cdef int count_points(QuadNode* root, int count) nogil:
 cdef void compute_gradient(float[:,:] val_P,
                            float[:,:] pos_reference,
                            float[:,:] tot_force,
-                           QuadNode* root_node,
+                           Node* root_node,
                            float theta,
                            int start,
                            int stop) nogil:
@@ -317,7 +327,7 @@ cdef void compute_gradient_positive(float[:,:] val_P,
 cdef void compute_gradient_negative(float[:,:] val_P, 
                                     float[:,:] pos_reference,
                                     float[:,:] neg_f,
-                                    QuadNode *root_node,
+                                    Node *root_node,
                                     float* sum_Q,
                                     float theta, 
                                     int start, 
@@ -354,7 +364,7 @@ cdef void compute_gradient_negative(float[:,:] val_P,
 cdef void compute_gradient_negative_parallel(float[:,:] val_P, 
                                              float[:,:] pos_reference,
                                              float[:,:] neg_f,
-                                             QuadNode *root_node,
+                                             Node *root_node,
                                              float* sum_Q,
                                              float theta, 
                                              int start, 
@@ -392,7 +402,7 @@ cdef void compute_gradient_negative_parallel(float[:,:] val_P,
         free(force)
         free(pos)
 
-cdef void compute_non_edge_forces(QuadNode* node, 
+cdef void compute_non_edge_forces(Node* node, 
                                   float theta,
                                   float* sum_Q,
                                   int point_index,
@@ -400,7 +410,7 @@ cdef void compute_non_edge_forces(QuadNode* node,
                                   float* force) nogil:
     # Compute the t-SNE force on the point in pos given by point_index
     cdef:
-        QuadNode* child
+        Node* child
         int i, j
         int summary = 0
         float dist2, mult, qijZ
