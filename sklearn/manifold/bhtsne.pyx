@@ -37,6 +37,15 @@ cdef extern from "math.h":
     double sqrt(double x) nogil
     double ceil(double x) nogil
 
+cdef extern from "omp.h":
+    int omp_get_thread_num() nogil
+
+cdef extern from "time.h":
+    # Declare only what is necessary from `tm` structure.
+    ctypedef long clock_t
+    clock_t clock() nogil
+    double CLOCKS_PER_SEC
+
 cdef struct Node:
     # Keep track of the center of mass
     float[2] cum_com
@@ -278,13 +287,27 @@ cdef void compute_gradient(float[:,:] val_P,
     cdef float* sum_Q = <float*> malloc(sizeof(float))
     cdef float* neg_f = <float*> malloc(sizeof(float) * n * dimension)
     cdef float* pos_f = <float*> malloc(sizeof(float) * n * dimension)
+    cdef clock_t t1, t2
 
     sum_Q[0] = 0.0
+    t1 = clock()
     compute_gradient_positive(val_P, pos_reference, pos_f, dimension)
-    #compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q, 
-    #                          theta, start, stop)
+    t2 = clock()
+    printf("001 : %e sec\n", ((float) (t2 - t1)))
+    t1 = clock()
+    compute_gradient_positive_parallel(val_P, pos_reference, pos_f, dimension)
+    t2 = clock()
+    printf("001p: %e sec\n", ((float) (t2 - t1)))
+    t1 = clock()
+    compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q, 
+                              theta, start, stop)
+    t2 = clock()
+    printf("002 : %e sec\n", ((float) (t2 - t1)))
+    t1 = clock()
     compute_gradient_negative_parallel(val_P, pos_reference, neg_f, root_node, sum_Q, 
                                        theta, start, stop)
+    t2 = clock()
+    printf("002p: %e sec\n", ((float) (t2 - t1)))
 
     for i in range(n):
         for ax in range(2):
@@ -305,19 +328,56 @@ cdef void compute_gradient_positive(float[:,:] val_P,
         int n = val_P.shape[0]
         float buff[2]
         float D
-    for i in range(pos_reference.shape[0]):
+        int temp
+    for i in range(n):
         for ax in range(2):
             pos_f[i * dimension + ax] = 0.0
-        for j in range(pos_reference.shape[0]):
+        for j in range(n):
             if i == j : 
                 continue
             D = 0.0
-            for dim in range(2):
-                buff[dim] = pos_reference[i, dim] - pos_reference[j, dim]
-                D += buff[dim] ** 2.0  
+            for ax in range(2):
+                buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
+                D += buff[ax] ** 2.0  
             D = val_P[i, j] / (1.0 + D)
             for ax in range(2):
                 pos_f[i * dimension + ax] += D * buff[ax]
+                temp = i * dimension + ax
+
+cdef void compute_gradient_positive_parallel(float[:,:] val_P,
+                                             float[:,:] pos_reference,
+                                             float* pos_f,
+                                             int dimension) nogil:
+    # Sum over the following expression for i not equal to j
+    # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
+    cdef:
+        int i, j, ax
+        int n = val_P.shape[0]
+        float* buff
+        float* pos_f_buff
+        float* D
+    with parallel():
+        buff = <float*> malloc(sizeof(float) * 2)
+        pos_f_buff = <float*> malloc(sizeof(float) * 2)
+        D = <float*> malloc(sizeof(float) )
+        for i in prange(n, schedule='static'):
+            for ax in range(2):
+                pos_f_buff[ax] = 0.0
+            for j in range(n):
+                if i == j : 
+                    continue
+                D[0] = 0.0
+                for ax in range(2):
+                    buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
+                    D[0] += buff[ax] ** 2.0  
+                D[0] = val_P[i, j] / (1.0 + D[0])
+                for ax in range(2):
+                    pos_f_buff[ax] += D[0] * buff[ax]
+            for ax in range(2):
+                pos_f[i * dimension + ax] = pos_f_buff[ax]
+        free(buff)
+        free(pos_f_buff)
+        free(D)
 
 cdef void compute_gradient_negative(float[:,:] val_P, 
                                     float[:,:] pos_reference,
@@ -376,7 +436,7 @@ cdef void compute_gradient_negative_parallel(float[:,:] val_P,
         int dimension = root_node.tree.dimension
         int step = <int> (ceil(n / 4.0))
 
-    with parallel(num_threads=4):
+    with parallel():
         iQ = <float*> malloc(sizeof(float))
         force = <float*> malloc(sizeof(float) * 2)
         pos = <float*> malloc(sizeof(float) * 2)

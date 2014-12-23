@@ -205,7 +205,7 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     else:
         sP = P
 
-    dimension = sP.shape[1]
+    dimension = X_embedded.shape[1]
     width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
     sum_Q = np.zeros(1, dtype=np.float32)
     if threadpool:
