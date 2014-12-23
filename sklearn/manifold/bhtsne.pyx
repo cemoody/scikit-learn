@@ -1,6 +1,6 @@
 # distutils: extra_compile_args = -fopenmp
 # distutils: extra_link_args = -fopenmp
-# cython: boundscheck=True
+# cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
 import numpy as np
@@ -38,12 +38,10 @@ cdef extern from "math.h":
     double ceil(double x) nogil
 
 cdef struct Node:
-    # Reserve three elements in each array
-    # If the tree dimensionality is just 2, skip the last element
     # Keep track of the center of mass
-    float[3] cum_com
+    float[2] cum_com
     # If this is a leaf, the position of the particle within this leaf 
-    float[3] cur_pos
+    float[2] cur_pos
     # The number of particles including all 
     # nodes below this one
     int cum_size
@@ -55,38 +53,37 @@ cdef struct Node:
     # And each subdivision adds 1 to the level
     int level
     # Left edge of this node, normalized to [0,1]
-    float[3] le
+    float[2] le
     # The center of this node, equal to le + w/2.0
-    float[3] c
+    float[2] c
     # The width of this node -- used to calculate the opening
     # angle. Equal to width = re - le
-    float[3] w
+    float[2] w
 
     # Does this node have children?
     # Default to leaf until we add particles
     int is_leaf
     # Keep pointers to the child nodes
-    Node *children[2][2][2]
+    Node *children[2][2]
     # Keep a pointer to the parent
     Node *parent
     # Pointer to the tree this node belongs too
     Tree* tree
 
 cdef struct Tree:
-    # The output dimensionality<=3
-    cdef int dimension
     # Holds a pointer to the root node
-    cdef Node* root_node 
+    Node* root_node 
+    # Number of dimensions in the ouput
+    int dimension
     # Total number of cells
-    cdef int num_cells
+    int num_cells
     # Total number of particles
-    cdef int num_part
+    int num_part
     # Spit out diagnostic information?
-    cdef int verbose
-
+    int verbose
 
 cdef Tree* init_tree(float[:] width, int dimension, int verbose) nogil:
-    cdef tree = <Tree*> malloc(sizeof(Tree))
+    cdef Tree* tree = <Tree*> malloc(sizeof(Tree))
     tree.dimension = dimension
     tree.num_cells = 0
     tree.num_part = 0
@@ -106,7 +103,7 @@ cdef Node* create_root(float[:] width) nogil:
     root.cum_size = 0
     root.size = 0
     root.point_index = -1
-    for ax in range(3):
+    for ax in range(2):
         root.w[ax] = width[ax]
         root.le[ax] = 0. - root.w[ax] / 2.0
         root.c[ax] = 0.0
@@ -125,7 +122,7 @@ cdef Node* create_child(Node *parent, int[3] offset) nogil:
     child.cum_size = 0
     child.point_index = -1
     child.tree = parent.tree
-    for ax in range(parent.tree.dimension):
+    for ax in range(2):
         child.w[ax] = parent.w[ax] / 2.0
         child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0
         child.c[ax] = child.le[ax] + child.w[ax] / 2.0
@@ -134,32 +131,28 @@ cdef Node* create_child(Node *parent, int[3] offset) nogil:
     child.tree.num_cells += 1
     return child
 
-cdef Node* select_child(Node *node, float[3] pos) nogil:
+cdef Node* select_child(Node *node, float[2] pos) nogil:
     # Find which sub-node a position should go into
     # And return the appropriate node
-    cdef int offset[3]
+    cdef int offset[2]
     cdef int ax
-    for ax in range(3):
-        offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.0
-    return node.children[offset[0]][offset[1]][offset[2]]
+    for ax in range(2):
+        offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
+    return node.children[offset[0]][offset[1]]
 
 cdef void subdivide(Node* node) nogil:
     # This instantiates 4 nodes for the current node
-    cdef int i, j, k
-    cdef int[3] offset
+    cdef int i = 0
+    cdef int j = 0
+    cdef int[2] offset
     node.is_leaf = False
-    for i in range(3):
-        offset[i] = 0
+    offset[0] = 0
+    offset[1] = 0
     for i in range(2):
         offset[0] = i
         for j in range(2):
             offset[1] = j
-            if node.dimension > 2:
-                for k in range(2):
-                    offset[2] = k
-                    node.children[i][j][k] = create_child(node, offset)
-            else:
-                node.children[i][j][0] = create_child(node, offset)
+            node.children[i][j] = create_child(node, offset)
 
 cdef void insert(Node *root, float pos[2], int point_index) nogil:
     # Introduce a new point into the quadtree
@@ -272,7 +265,6 @@ cdef int count_points(Node* root, int count) nogil:
             # don't get filled in
     return count
 
-
 cdef void compute_gradient(float[:,:] val_P,
                            float[:,:] pos_reference,
                            float[:,:] tot_force,
@@ -280,39 +272,42 @@ cdef void compute_gradient(float[:,:] val_P,
                            float theta,
                            int start,
                            int stop) nogil:
-    cdef int i, ax
+    cdef int i, ax, coord
     cdef int n = pos_reference.shape[0]
+    cdef int dimension = root_node.tree.dimension
     cdef float* sum_Q = <float*> malloc(sizeof(float))
-    cdef float* neg_fc = <float*> malloc(sizeof(float) * n * 2)
-    cdef float* pos_fc = <float*> malloc(sizeof(float) * n * 2)
-    cdef float[:,:] neg_force = <float[:n,:2]> neg_fc
-    cdef float[:,:] pos_force = <float[:n,:2]> pos_fc
+    cdef float* neg_f = <float*> malloc(sizeof(float) * n * dimension)
+    cdef float* pos_f = <float*> malloc(sizeof(float) * n * dimension)
 
     sum_Q[0] = 0.0
-    with nogil:
-        compute_gradient_positive(val_P, pos_reference, pos_force)
-        compute_gradient_negative(val_P, pos_reference, neg_force, root_node, sum_Q, theta, start, stop)
+    compute_gradient_positive(val_P, pos_reference, pos_f, dimension)
+    #compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q, 
+    #                          theta, start, stop)
+    compute_gradient_negative_parallel(val_P, pos_reference, neg_f, root_node, sum_Q, 
+                                       theta, start, stop)
 
-        for i in range(n):
-            for ax in range(2):
-                tot_force[i, ax] = pos_force[i, ax] - (neg_force[i, ax] / sum_Q[0])
+    for i in range(n):
+        for ax in range(2):
+            coord = i * dimension + ax
+            tot_force[i, ax] = pos_f[coord] - (neg_f[coord] / sum_Q[0])
     free(sum_Q)
-    free(neg_fc)
-    free(pos_fc)
+    free(neg_f)
+    free(pos_f)
 
 cdef void compute_gradient_positive(float[:,:] val_P,
                                     float[:,:] pos_reference,
-                                    float[:,:] pos_f) nogil:
+                                    float* pos_f,
+                                    int dimension) nogil:
     # Sum over the following expression for i not equal to j
     # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
     cdef:
-        int i, j, dim
-        int n = pos_f.shape[0]
+        int i, j, ax
+        int n = val_P.shape[0]
         float buff[2]
         float D
     for i in range(pos_reference.shape[0]):
-        for dim in range(2):
-            pos_f[i, dim] = 0.0
+        for ax in range(2):
+            pos_f[i * dimension + ax] = 0.0
         for j in range(pos_reference.shape[0]):
             if i == j : 
                 continue
@@ -321,12 +316,12 @@ cdef void compute_gradient_positive(float[:,:] val_P,
                 buff[dim] = pos_reference[i, dim] - pos_reference[j, dim]
                 D += buff[dim] ** 2.0  
             D = val_P[i, j] / (1.0 + D)
-            for dim in range(2):
-                pos_f[i, dim] += D * buff[dim]
+            for ax in range(2):
+                pos_f[i * dimension + ax] += D * buff[ax]
 
 cdef void compute_gradient_negative(float[:,:] val_P, 
                                     float[:,:] pos_reference,
-                                    float[:,:] neg_f,
+                                    float* neg_f,
                                     Node *root_node,
                                     float* sum_Q,
                                     float theta, 
@@ -339,23 +334,24 @@ cdef void compute_gradient_negative(float[:,:] val_P,
         int n = stop - start
         float* force
         float* iQ 
-        int point_index
+        float* pos
+        int dimension = root_node.tree.dimension
 
     iQ = <float*> malloc(sizeof(float))
     force = <float*> malloc(sizeof(float) * 2)
     pos = <float*> malloc(sizeof(float) * 2)
-    for i, point_index in enumerate(range(start, stop)):
+    for i in range(start, stop):
         # Clear the arrays
         for ax in range(2): 
             force[ax] = 0.0
-            pos[ax] = pos_reference[point_index, ax]
+            pos[ax] = pos_reference[i, ax]
         iQ[0] = 0.0
-        compute_non_edge_forces(root_node, theta, iQ, point_index,
+        compute_non_edge_forces(root_node, theta, iQ, i,
                                 pos, force)
         sum_Q[0] += iQ[0]
         # Save local force into global
         for ax in range(2): 
-            neg_f[i, ax] = force[ax]
+            neg_f[i * dimension + ax] = force[ax]
     free(iQ)
     free(force)
     free(pos)
@@ -363,7 +359,7 @@ cdef void compute_gradient_negative(float[:,:] val_P,
 
 cdef void compute_gradient_negative_parallel(float[:,:] val_P, 
                                              float[:,:] pos_reference,
-                                             float[:,:] neg_f,
+                                             float* neg_f,
                                              Node *root_node,
                                              float* sum_Q,
                                              float theta, 
@@ -372,32 +368,30 @@ cdef void compute_gradient_negative_parallel(float[:,:] val_P,
     if stop == -1:
         stop = pos_reference.shape[0] 
     cdef:
-        int ax
+        int ax, i
         int n = stop - start
-        int step = <int> (ceil(n / 4.0))
         float* force
-        float* pos
         float* iQ 
-        int* i
-        int point_index, chunk
-        int tid
+        float* pos
+        int dimension = root_node.tree.dimension
+        int step = <int> (ceil(n / 4.0))
 
     with parallel(num_threads=4):
         iQ = <float*> malloc(sizeof(float))
         force = <float*> malloc(sizeof(float) * 2)
         pos = <float*> malloc(sizeof(float) * 2)
-        for point_index in prange(start, stop, schedule='static'):
+        for i in prange(start, stop, schedule='static'):
             # Clear the arrays
             for ax in range(2): 
                 force[ax] = 0.0
-                pos[ax] = pos_reference[point_index, ax]
+                pos[ax] = pos_reference[i, ax]
             iQ[0] = 0.0
-            compute_non_edge_forces(root_node, theta, iQ, point_index,
+            compute_non_edge_forces(root_node, theta, iQ, i,
                                     pos, force)
             sum_Q[0] += iQ[0]
             # Save local force into global
             for ax in range(2): 
-                neg_f[point_index + ax] = force[ax]
+                neg_f[i * dimension + ax] = force[ax]
         free(iQ)
         free(force)
         free(pos)
@@ -465,50 +459,14 @@ def gradient(float[:] width,
              float[:,:] pos_output, 
              float[:,:] forces, 
              float theta,
+             int dimension,
              int verbose):
     assert width.itemsize == 4
     assert pij_input.itemsize == 4
     assert pos_output.itemsize == 4
     assert forces.itemsize == 4
-    cdef Tree* qt = init_tree(width, verbose)
+    cdef Tree* qt = init_tree(width, dimension, verbose)
     insert_many(qt, pos_output)
     compute_gradient(pij_input, pos_output, forces, qt.root_node, theta, 0, -1)
     check_consistency(qt)
     free_tree(qt)
-
-def gradient_negative(float[:] width, 
-                      float[:,:] pij_input, 
-                      float[:,:] pos_output, 
-                      float[:,:] forces, 
-                      float theta,
-                      int start,
-                      int stop,
-                      int verbose):
-    assert width.itemsize == 4
-    assert pij_input.itemsize == 4
-    assert pos_output.itemsize == 4
-    assert forces.itemsize == 4
-    cdef Tree* qt = init_tree(width, verbose)
-    insert_many(qt, pos_output)
-    cdef float* sum_Q = <float*> malloc(sizeof(float))
-    sum_Q[0] = 0.0
-    compute_gradient_negative(pij_input, pos_output, forces, qt.root_node, 
-                              sum_Q, theta, start, stop)
-    check_consistency(qt)
-    free_tree(qt)
-
-def gradient_positive(float[:] width, 
-                      float[:,:] pij_input, 
-                      float[:,:] pos_output, 
-                      float[:,:] forces, 
-                      float theta, 
-                      int verbose):
-    assert width.itemsize == 4
-    assert pij_input.itemsize == 4
-    assert pos_output.itemsize == 4
-    assert forces.itemsize == 4
-    cdef Tree* qt = init_tree(width, verbose)
-    insert_many(qt, pos_output)
-    compute_gradient_positive(pij_input, pos_output, forces)
-    check_consistency(qt)
-    free(qt)

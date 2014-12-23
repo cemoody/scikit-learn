@@ -205,6 +205,7 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     else:
         sP = P
 
+    dimension = sP.shape[1]
     width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
     sum_Q = np.zeros(1, dtype=np.float32)
     if threadpool:
@@ -241,7 +242,7 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
         grad = pos_f - (neg_f / sum_Q)
     else:
         grad = np.zeros(X_embedded.shape, dtype=np.float32)
-        bhtsne.gradient(width, sP, X_embedded, grad, theta, verbose)
+        bhtsne.gradient(width, sP, X_embedded, grad, theta, dimension, verbose)
 
     c = 2.0 * (alpha + 1.0) / alpha
     grad = grad.ravel()
