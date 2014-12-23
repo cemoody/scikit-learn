@@ -67,11 +67,10 @@ cdef struct QuadNode:
     QuadNode *children[2][2]
     # Keep a pointer to the parent
     QuadNode *parent
-    # Keep a pointer to the node
-    # to visit next when visting every QuadNode
-    # QuadNode *next
+    # Pointer to the tree this node belongs too
+    Tree* tree
 
-cdef class QuadTree:
+cdef struct Tree:
     # Holds a pointer to the root node
     cdef QuadNode* root_node 
     # Total number of cells
@@ -80,183 +79,188 @@ cdef class QuadTree:
     cdef int num_part
     # Spit out diagnostic information?
     cdef int verbose
-    
-    def __cinit__(self, int verbose):
-        self.num_cells = 0
-        self.num_part = 0
-        self.verbose = verbose
 
-    cdef void create_root(self, float[:] width):
-        # Create a default root node
-        cdef int ax
-        root = <QuadNode*> malloc(sizeof(QuadNode))
-        root.is_leaf = 1
-        root.parent = NULL
-        root.level = 0
-        root.cum_size = 0
-        root.size = 0
-        root.point_index = -1
-        for ax in range(2):
-            root.w[ax] = width[ax]
-            root.le[ax] = 0. - root.w[ax] / 2.0
-            root.c[ax] = 0.0
-            root.cum_com[ax] = 0.
-            root.cur_pos[ax] = -1.
-        self.num_cells += 1
-        self.root_node = root
+cdef Tree* init_tree(float[:] width, int verbose) nogil:
+    cdef tree = <Tree*> malloc(sizeof(Tree))
+    tree.num_cells = 0
+    tree.num_part = 0
+    tree.verbose = verbose
+    tree.root_node = create_root(width)
+    tree.root_node.tree = tree
+    tree.num_cells += 1
+    return tree
 
-    cdef inline QuadNode* create_child(self, QuadNode *parent, int[2] offset) nogil:
-        # Create a new child node with default parameters
-        cdef int ax
-        child = <QuadNode *> malloc(sizeof(QuadNode))
-        child.is_leaf = 1
-        child.parent = parent
-        child.level = parent.level + 1
-        child.size = 0
-        child.cum_size = 0
-        child.point_index = -1
-        for ax in range(2):
-            child.w[ax] = parent.w[ax] / 2.0
-            child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0
-            child.c[ax] = child.le[ax] + child.w[ax] / 2.0
-            child.cum_com[ax] = 0.
-            child.cur_pos[ax] = -1.
-        self.num_cells += 1
-        return child
+cdef QuadNode* create_root(float[:] width) nogil:
+    # Create a default root node
+    cdef int ax
+    root = <QuadNode*> malloc(sizeof(QuadNode))
+    root.is_leaf = 1
+    root.parent = NULL
+    root.level = 0
+    root.cum_size = 0
+    root.size = 0
+    root.point_index = -1
+    for ax in range(2):
+        root.w[ax] = width[ax]
+        root.le[ax] = 0. - root.w[ax] / 2.0
+        root.c[ax] = 0.0
+        root.cum_com[ax] = 0.
+        root.cur_pos[ax] = -1.
+    return root
 
-    cdef inline QuadNode* select_child(self, QuadNode *node, float[2] pos) nogil:
-        # Find which sub-node a position should go into
-        # And return the appropriate node
-        cdef int offset[2]
-        cdef int ax
-        for ax in range(2):
-            offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
-        return node.children[offset[0]][offset[1]]
+cdef QuadNode* create_child(QuadNode *parent, int[2] offset) nogil:
+    # Create a new child node with default parameters
+    cdef int ax
+    child = <QuadNode *> malloc(sizeof(QuadNode))
+    child.is_leaf = 1
+    child.parent = parent
+    child.level = parent.level + 1
+    child.size = 0
+    child.cum_size = 0
+    child.point_index = -1
+    child.tree = parent.tree
+    for ax in range(2):
+        child.w[ax] = parent.w[ax] / 2.0
+        child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0
+        child.c[ax] = child.le[ax] + child.w[ax] / 2.0
+        child.cum_com[ax] = 0.
+        child.cur_pos[ax] = -1.
+    child.tree.num_cells += 1
+    return child
 
-    cdef void subdivide(self, QuadNode *node) nogil:
-        # This instantiates 4 nodes for the current node
-        cdef int i = 0
-        cdef int j = 0
-        cdef int[2] offset
-        node.is_leaf = False
-        offset[0] = 0
-        offset[1] = 0
-        for i in range(2):
-            offset[0] = i
-            for j in range(2):
-                offset[1] = j
-                node.children[i][j] = self.create_child(node, offset)
+cdef QuadNode* select_child(QuadNode *node, float[2] pos) nogil:
+    # Find which sub-node a position should go into
+    # And return the appropriate node
+    cdef int offset[2]
+    cdef int ax
+    for ax in range(2):
+        offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
+    return node.children[offset[0]][offset[1]]
 
-    cdef void insert(self, QuadNode *root, float pos[2], int point_index) nogil:
-        # Introduce a new point into the quadtree
-        # by recursively inserting it and subdividng as necessary
-        cdef QuadNode *child
-        cdef int i
-        cdef int ax
-        # Increment the total number points including this
-        # node and below it
-        root.cum_size += 1
-        # Evaluate the new center of mass, weighting the previous
-        # center of mass against the new point data
-        cdef double frac_seen = <double>(root.cum_size - 1) / (<double> root.cum_size)
-        cdef double frac_new  = 1.0 / <double> root.cum_size
+cdef void subdivide(QuadNode* node) nogil:
+    # This instantiates 4 nodes for the current node
+    cdef int i = 0
+    cdef int j = 0
+    cdef int[2] offset
+    node.is_leaf = False
+    offset[0] = 0
+    offset[1] = 0
+    for i in range(2):
+        offset[0] = i
+        for j in range(2):
+            offset[1] = j
+            node.children[i][j] = create_child(tree, node, offset)
+
+cdef void insert(QuadNode *root, float pos[2], int point_index) nogil:
+    # Introduce a new point into the quadtree
+    # by recursively inserting it and subdividng as necessary
+    cdef QuadNode *child
+    cdef int i
+    cdef int ax
+    # Increment the total number points including this
+    # node and below it
+    root.cum_size += 1
+    # Evaluate the new center of mass, weighting the previous
+    # center of mass against the new point data
+    cdef double frac_seen = <double>(root.cum_size - 1) / (<double> root.cum_size)
+    cdef double frac_new  = 1.0 / <double> root.cum_size
+    for ax in range(2):
+        root.cum_com[ax] *= frac_seen
+    for ax in range(2):
+        root.cum_com[ax] += pos[ax] * frac_new
+    # If this node is unoccupied, fill it.
+    # Otherwise, we need to insert recursively.
+    # Two insertion scenarios: 
+    # 1) Insert into this node if it is a leaf and empty
+    # 2) Subdivide this node if it is currently occupied
+    if (root.size == 0) & root.is_leaf:
         for ax in range(2):
-            root.cum_com[ax] *= frac_seen
-        for ax in range(2):
-            root.cum_com[ax] += pos[ax] * frac_new
-        # If this node is unoccupied, fill it.
-        # Otherwise, we need to insert recursively.
-        # Two insertion scenarios: 
-        # 1) Insert into this node if it is a leaf and empty
-        # 2) Subdivide this node if it is currently occupied
-        if (root.size == 0) & root.is_leaf:
+            root.cur_pos[ax] = pos[ax]
+        root.point_index = point_index
+        root.size = 1
+    else:
+        # If necessary, subdivide this node before
+        # descending
+        if root.is_leaf:
+            subdivide(root)
+        # We have two points to relocate: the one previously
+        # at this node, and the new one we're attempting
+        # to insert
+        if root.size > 0:
+            child = select_child(root, root.cur_pos)
+            insert(child, root.cur_pos, root.point_index)
+            # Remove the point from this node
             for ax in range(2):
-                root.cur_pos[ax] = pos[ax]
-            root.point_index = point_index
-            root.size = 1
-        else:
-            # If necessary, subdivide this node before
-            # descending
-            if root.is_leaf:
-                self.subdivide(root)
-            # We have two points to relocate: the one previously
-            # at this node, and the new one we're attempting
-            # to insert
-            if root.size > 0:
-                child = self.select_child(root, root.cur_pos)
-                self.insert(child, root.cur_pos, root.point_index)
-                # Remove the point from this node
-                for ax in range(2):
-                    root.cur_pos[ax] = -1
-                root.size = 0
-                root.point_index = -1
-            # Insert the new point
-            child = self.select_child(root, pos)
-            self.insert(child, pos, point_index)
+                root.cur_pos[ax] = -1
+            root.size = 0
+            root.point_index = -1
+        # Insert the new point
+        child = select_child(root, pos)
+        insert(child, pos, point_index)
 
-    cdef void insert_many(self, float[:,:] pos_array) nogil:
-        cdef int nrows = pos_array.shape[0]
-        cdef int i, ax
-        cdef float row[2]
-        for i in range(nrows):
-            for ax in range(2):
-                row[ax] = pos_array[i, ax]
-            self.insert(self.root_node, row, i)
-            self.num_part += 1
+cdef void insert_many(Tree* tree, float[:,:] pos_array) nogil:
+    cdef int nrows = pos_array.shape[0]
+    cdef int i, ax
+    cdef float row[2]
+    for i in range(nrows):
+        for ax in range(2):
+            row[ax] = pos_array[i, ax]
+        insert(tree.root_node, row, i)
+        tree.num_part += 1
 
-    cdef int free(self) nogil:
-        cdef int check
-        cdef int* cnt = <int*> malloc(sizeof(int) * 3)
-        for i in range(3):
-            cnt[i] = 0
-        self.free_recursive(self.root_node, cnt)
-        free(self.root_node)
-        check = cnt[0] == self.num_cells
-        check &= cnt[2] == self.num_part
-        free(cnt)
-        return check
+cdef int free_tree(Tree* tree) nogil:
+    cdef int check
+    cdef int* cnt = <int*> malloc(sizeof(int) * 3)
+    for i in range(3):
+        cnt[i] = 0
+    free_recursive(tree, tree.root_node, cnt)
+    free(tree.root_node)
+    check = cnt[0] == tree.num_cells
+    check &= cnt[2] == tree.num_part
+    free(cnt)
+    return check
 
-    cdef void free_recursive(self, QuadNode *root, int* counts) nogil:
-        cdef int i, j    
-        cdef QuadNode* child
-        if not root.is_leaf:
-            for i in range(2):
-                for j in range(2):
-                    child = root.children[i][j]
-                    self.free_recursive(child, counts)
-                    counts[0] += 1
-                    if child.is_leaf:
-                        counts[1] += 1
-                        if child.size > 0:
-                            counts[2] +=1
-                    free(child)
-
-    cdef int check_consistency(self):
-        cdef int count 
-        cdef int check
-        count = 0
-        count = self.count_points(self.root_node, count)
-        check = count == self.root_node.cum_size
-        check &= count == self.num_part
-        return check
-
-    cdef int count_points(self, QuadNode* root, int count):
-        # Walk through the whole tree and count the number 
-        # of points at the leaf nodes
-        cdef QuadNode* child
-        cdef int i, j
+cdef void free_recursive(Tree* tree, QuadNode *root, int* counts) nogil:
+    cdef int i, j    
+    cdef QuadNode* child
+    if not root.is_leaf:
         for i in range(2):
             for j in range(2):
                 child = root.children[i][j]
-                if child.is_leaf and child.size > 0:
-                    count += 1
-                elif not child.is_leaf:
-                    count = self.count_points(child, count)
-                # else case is we have an empty leaf node
-                # which happens when we create a quadtree for
-                # one point, and then the other neighboring cells
-                # don't get filled in
-        return count
+                free_recursive(tree, child, counts)
+                counts[0] += 1
+                if child.is_leaf:
+                    counts[1] += 1
+                    if child.size > 0:
+                        counts[2] +=1
+                free(child)
+
+cdef int check_consistency(Tree* tree) nogil:
+    cdef int count 
+    cdef int check
+    count = 0
+    count = count_points(tree.root_node, count)
+    check = count == tree.root_node.cum_size
+    check &= count == tree.num_part
+    return check
+
+cdef int count_points(QuadNode* root, int count) nogil:
+    # Walk through the whole tree and count the number 
+    # of points at the leaf nodes
+    cdef QuadNode* child
+    cdef int i, j
+    for i in range(2):
+        for j in range(2):
+            child = root.children[i][j]
+            if child.is_leaf and child.size > 0:
+                count += 1
+            elif not child.is_leaf:
+                count = count_points(child, count)
+            # else case is we have an empty leaf node
+            # which happens when we create a quadtree for
+            # one point, and then the other neighboring cells
+            # don't get filled in
+    return count
 
 
 cdef void compute_gradient(float[:,:] val_P,
@@ -265,7 +269,7 @@ cdef void compute_gradient(float[:,:] val_P,
                            QuadNode* root_node,
                            float theta,
                            int start,
-                           int stop):
+                           int stop) nogil:
     cdef int i, ax
     cdef int n = pos_reference.shape[0]
     cdef float* sum_Q = <float*> malloc(sizeof(float))
@@ -364,7 +368,6 @@ cdef void compute_gradient_negative_parallel(float[:,:] val_P,
         float* force
         float* pos
         float* iQ 
-        float* nf = <float*> malloc(sizeof(float) * n * 2)
         int* i
         int point_index, chunk
         int tid
@@ -384,14 +387,10 @@ cdef void compute_gradient_negative_parallel(float[:,:] val_P,
             sum_Q[0] += iQ[0]
             # Save local force into global
             for ax in range(2): 
-                nf[point_index + ax] = force[ax]
+                neg_f[point_index + ax] = force[ax]
         free(iQ)
         free(force)
         free(pos)
-    for point_index in range(start, stop):
-        for ax in range(2): 
-            neg_f[point_index, ax] = nf[point_index + ax] 
-    free(nf)
 
 cdef void compute_non_edge_forces(QuadNode* node, 
                                   float theta,
@@ -447,7 +446,6 @@ cdef void compute_non_edge_forces(QuadNode* node,
                     compute_non_edge_forces(child, theta, sum_Q, 
                                                  point_index,
                                                  pos, force)
-    
 
 
 # EXTERNAL Python interfaces
@@ -462,12 +460,11 @@ def gradient(float[:] width,
     assert pij_input.itemsize == 4
     assert pos_output.itemsize == 4
     assert forces.itemsize == 4
-    cdef QuadTree qt = QuadTree(verbose)
-    qt.create_root(width)
-    qt.insert_many(pos_output)
+    cdef Tree* qt = init_tree(width, verbose)
+    insert_many(qt, pos_output)
     compute_gradient(pij_input, pos_output, forces, qt.root_node, theta, 0, -1)
-    qt.check_consistency()
-    qt.free()
+    check_consistency(qt)
+    free_tree(qt)
 
 def gradient_negative(float[:] width, 
                       float[:,:] pij_input, 
@@ -481,16 +478,14 @@ def gradient_negative(float[:] width,
     assert pij_input.itemsize == 4
     assert pos_output.itemsize == 4
     assert forces.itemsize == 4
-    cdef QuadTree qt = QuadTree(verbose)
-    qt.create_root(width)
-    qt.insert_many(pos_output)
+    cdef Tree* qt = init_tree(width, verbose)
+    insert_many(qt, pos_output)
     cdef float* sum_Q = <float*> malloc(sizeof(float))
     sum_Q[0] = 0.0
     compute_gradient_negative(pij_input, pos_output, forces, qt.root_node, 
                               sum_Q, theta, start, stop)
-    qt.check_consistency()
-    qt.free()
-    return sum_Q[0]
+    check_consistency(qt)
+    free_tree(qt)
 
 def gradient_positive(float[:] width, 
                       float[:,:] pij_input, 
@@ -502,9 +497,8 @@ def gradient_positive(float[:] width,
     assert pij_input.itemsize == 4
     assert pos_output.itemsize == 4
     assert forces.itemsize == 4
-    cdef QuadTree qt = QuadTree(verbose)
-    qt.create_root(width)
-    qt.insert_many(pos_output)
+    cdef Tree* qt = init_tree(width, verbose)
+    insert_many(qt, pos_output)
     compute_gradient_positive(pij_input, pos_output, forces)
-    qt.check_consistency()
-    qt.free()
+    check_consistency(qt)
+    free(qt)
