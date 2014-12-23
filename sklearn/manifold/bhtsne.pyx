@@ -16,7 +16,6 @@ cimport openmp
 
 
 # TODO:
-# Change dim from 2->3
 # Ensure python 3 works
 # Add back tests
 # Include usage documentation
@@ -24,6 +23,7 @@ cimport openmp
 # Find all references to embedding in sklearn & see where else we can document
 # PEP8 the code
 # DONE:
+# Change dim from 2->3
 # Am I using memviews or returning fulla rrays appropriately?
 # Cython deallocate memory
 # Incorporate into SKLearn
@@ -45,9 +45,9 @@ cdef extern from "time.h":
 
 cdef struct Node:
     # Keep track of the center of mass
-    float[2] cum_com
+    float[3] cum_com
     # If this is a leaf, the position of the particle within this leaf 
-    float[2] cur_pos
+    float[3] cur_pos
     # The number of particles including all 
     # nodes below this one
     int cum_size
@@ -59,18 +59,18 @@ cdef struct Node:
     # And each subdivision adds 1 to the level
     int level
     # Left edge of this node, normalized to [0,1]
-    float[2] le
+    float[3] le
     # The center of this node, equal to le + w/2.0
-    float[2] c
+    float[3] c
     # The width of this node -- used to calculate the opening
     # angle. Equal to width = re - le
-    float[2] w
+    float[3] w
 
     # Does this node have children?
     # Default to leaf until we add particles
     int is_leaf
     # Keep pointers to the child nodes
-    Node *children[2][2]
+    Node *children[2][2][2]
     # Keep a pointer to the parent
     Node *parent
     # Pointer to the tree this node belongs too
@@ -94,12 +94,12 @@ cdef Tree* init_tree(float[:] width, int dimension, int verbose) nogil:
     tree.num_cells = 0
     tree.num_part = 0
     tree.verbose = verbose
-    tree.root_node = create_root(width)
+    tree.root_node = create_root(width, dimension)
     tree.root_node.tree = tree
     tree.num_cells += 1
     return tree
 
-cdef Node* create_root(float[:] width) nogil:
+cdef Node* create_root(float[:] width, int dimension) nogil:
     # Create a default root node
     cdef int ax
     root = <Node*> malloc(sizeof(Node))
@@ -109,7 +109,7 @@ cdef Node* create_root(float[:] width) nogil:
     root.cum_size = 0
     root.size = 0
     root.point_index = -1
-    for ax in range(2):
+    for ax in range(dimension):
         root.w[ax] = width[ax]
         root.le[ax] = 0. - root.w[ax] / 2.0
         root.c[ax] = 0.0
@@ -128,7 +128,7 @@ cdef Node* create_child(Node *parent, int[3] offset) nogil:
     child.cum_size = 0
     child.point_index = -1
     child.tree = parent.tree
-    for ax in range(2):
+    for ax in range(parent.tree.dimension):
         child.w[ax] = parent.w[ax] / 2.0
         child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0
         child.c[ax] = child.le[ax] + child.w[ax] / 2.0
@@ -137,35 +137,46 @@ cdef Node* create_child(Node *parent, int[3] offset) nogil:
     child.tree.num_cells += 1
     return child
 
-cdef Node* select_child(Node *node, float[2] pos) nogil:
+cdef Node* select_child(Node *node, float[3] pos) nogil:
     # Find which sub-node a position should go into
     # And return the appropriate node
-    cdef int offset[2]
+    cdef int offset[3]
     cdef int ax
-    for ax in range(2):
+    # In case we don't have 3D data, set it to zero
+    offset[2] = 0
+    for ax in range(node.tree.dimension):
         offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
-    return node.children[offset[0]][offset[1]]
+    return node.children[offset[0]][offset[1]][offset[2]]
 
 cdef void subdivide(Node* node) nogil:
     # This instantiates 4 nodes for the current node
     cdef int i = 0
     cdef int j = 0
-    cdef int[2] offset
+    cdef int k = 0
+    cdef int[3] offset
     node.is_leaf = False
     offset[0] = 0
     offset[1] = 0
+    offset[2] = 0
+    if node.tree.dimension > 2:
+        krange = 2
+    else:
+        krange = 1
     for i in range(2):
         offset[0] = i
         for j in range(2):
             offset[1] = j
-            node.children[i][j] = create_child(node, offset)
+            for k in range(krange):
+                offset[2] = k
+                node.children[i][j][k] = create_child(node, offset)
 
-cdef void insert(Node *root, float pos[2], int point_index) nogil:
+cdef void insert(Node *root, float pos[3], int point_index) nogil:
     # Introduce a new point into the quadtree
     # by recursively inserting it and subdividng as necessary
     cdef Node *child
     cdef int i
     cdef int ax
+    cdef int dimension = root.tree.dimension
     # Increment the total number points including this
     # node and below it
     root.cum_size += 1
@@ -173,9 +184,9 @@ cdef void insert(Node *root, float pos[2], int point_index) nogil:
     # center of mass against the new point data
     cdef double frac_seen = <double>(root.cum_size - 1) / (<double> root.cum_size)
     cdef double frac_new  = 1.0 / <double> root.cum_size
-    for ax in range(2):
+    for ax in range(dimension):
         root.cum_com[ax] *= frac_seen
-    for ax in range(2):
+    for ax in range(dimension):
         root.cum_com[ax] += pos[ax] * frac_new
     # If this node is unoccupied, fill it.
     # Otherwise, we need to insert recursively.
@@ -183,7 +194,7 @@ cdef void insert(Node *root, float pos[2], int point_index) nogil:
     # 1) Insert into this node if it is a leaf and empty
     # 2) Subdivide this node if it is currently occupied
     if (root.size == 0) & root.is_leaf:
-        for ax in range(2):
+        for ax in range(dimension):
             root.cur_pos[ax] = pos[ax]
         root.point_index = point_index
         root.size = 1
@@ -199,7 +210,7 @@ cdef void insert(Node *root, float pos[2], int point_index) nogil:
             child = select_child(root, root.cur_pos)
             insert(child, root.cur_pos, root.point_index)
             # Remove the point from this node
-            for ax in range(2):
+            for ax in range(dimension):
                 root.cur_pos[ax] = -1
             root.size = 0
             root.point_index = -1
@@ -210,9 +221,9 @@ cdef void insert(Node *root, float pos[2], int point_index) nogil:
 cdef void insert_many(Tree* tree, float[:,:] pos_array) nogil:
     cdef int nrows = pos_array.shape[0]
     cdef int i, ax
-    cdef float row[2]
+    cdef float row[3]
     for i in range(nrows):
-        for ax in range(2):
+        for ax in range(tree.dimension):
             row[ax] = pos_array[i, ax]
         insert(tree.root_node, row, i)
         tree.num_part += 1
@@ -230,19 +241,25 @@ cdef int free_tree(Tree* tree) nogil:
     return check
 
 cdef void free_recursive(Tree* tree, Node *root, int* counts) nogil:
-    cdef int i, j    
+    cdef int i, j, krange
+    cdef int k = 0
     cdef Node* child
+    if root.tree.dimension > 2:
+        krange = 2
+    else:
+        krange = 1
     if not root.is_leaf:
         for i in range(2):
             for j in range(2):
-                child = root.children[i][j]
-                free_recursive(tree, child, counts)
-                counts[0] += 1
-                if child.is_leaf:
-                    counts[1] += 1
-                    if child.size > 0:
-                        counts[2] +=1
-                free(child)
+                for k in range(krange):
+                    child = root.children[i][j][k]
+                    free_recursive(tree, child, counts)
+                    counts[0] += 1
+                    if child.is_leaf:
+                        counts[1] += 1
+                        if child.size > 0:
+                            counts[2] +=1
+                    free(child)
 
 cdef int check_consistency(Tree* tree) nogil:
     cdef int count 
@@ -258,17 +275,22 @@ cdef int count_points(Node* root, int count) nogil:
     # of points at the leaf nodes
     cdef Node* child
     cdef int i, j
+    if root.tree.dimension > 2:
+        krange = 2
+    else:
+        krange = 1
     for i in range(2):
         for j in range(2):
-            child = root.children[i][j]
-            if child.is_leaf and child.size > 0:
-                count += 1
-            elif not child.is_leaf:
-                count = count_points(child, count)
-            # else case is we have an empty leaf node
-            # which happens when we create a quadtree for
-            # one point, and then the other neighboring cells
-            # don't get filled in
+            for k in range(krange):
+                child = root.children[i][j][k]
+                if child.is_leaf and child.size > 0:
+                    count += 1
+                elif not child.is_leaf:
+                    count = count_points(child, count)
+                # else case is we have an empty leaf node
+                # which happens when we create a quadtree for
+                # one point, and then the other neighboring cells
+                # don't get filled in
     return count
 
 cdef void compute_gradient(float[:,:] val_P,
@@ -290,24 +312,28 @@ cdef void compute_gradient(float[:,:] val_P,
     t1 = clock()
     compute_gradient_positive(val_P, pos_reference, pos_f, dimension)
     t2 = clock()
-    printf("001 : %e sec\n", ((float) (t2 - t1)))
+    if root_node.tree.verbose > 15:
+        printf("001 : %e sec\n", ((float) (t2 - t1)))
     t1 = clock()
     #compute_gradient_positive_parallel(val_P, pos_reference, pos_f, dimension)
     t2 = clock()
-    printf("001p: %e sec\n", ((float) (t2 - t1)))
+    if root_node.tree.verbose > 15:
+        printf("001 : %e sec\n", ((float) (t2 - t1)))
     t1 = clock()
     compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q, 
                               theta, start, stop)
     t2 = clock()
-    printf("002 : %e sec\n", ((float) (t2 - t1)))
+    if root_node.tree.verbose > 15:
+        printf("001 : %e sec\n", ((float) (t2 - t1)))
     t1 = clock()
     #compute_gradient_negative_parallel(val_P, pos_reference, neg_f, root_node, sum_Q, 
     #                                   theta, start, stop)
     t2 = clock()
-    printf("002p: %e sec\n", ((float) (t2 - t1)))
+    if root_node.tree.verbose > 15:
+        printf("002p: %e sec\n", ((float) (t2 - t1)))
 
     for i in range(n):
-        for ax in range(2):
+        for ax in range(dimension):
             coord = i * dimension + ax
             tot_force[i, ax] = pos_f[coord] - (neg_f[coord] / sum_Q[0])
     free(sum_Q)
@@ -323,21 +349,21 @@ cdef void compute_gradient_positive(float[:,:] val_P,
     cdef:
         int i, j, ax
         int n = val_P.shape[0]
-        float buff[2]
+        float buff[3]
         float D
         int temp
     for i in range(n):
-        for ax in range(2):
+        for ax in range(dimension):
             pos_f[i * dimension + ax] = 0.0
         for j in range(n):
             if i == j : 
                 continue
             D = 0.0
-            for ax in range(2):
+            for ax in range(dimension):
                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
                 D += buff[ax] ** 2.0  
             D = val_P[i, j] / (1.0 + D)
-            for ax in range(2):
+            for ax in range(dimension):
                 pos_f[i * dimension + ax] += D * buff[ax]
                 temp = i * dimension + ax
 
@@ -355,23 +381,23 @@ cdef void compute_gradient_positive_parallel(float[:,:] val_P,
         float* pos_f_buff
         float* D
     with parallel():
-        buff = <float*> malloc(sizeof(float) * 2)
-        pos_f_buff = <float*> malloc(sizeof(float) * 2)
+        buff = <float*> malloc(sizeof(float) * dimension)
+        pos_f_buff = <float*> malloc(sizeof(float) * dimension)
         D = <float*> malloc(sizeof(float) )
         for i in prange(n, schedule='static'):
-            for ax in range(2):
+            for ax in range(dimension):
                 pos_f_buff[ax] = 0.0
             for j in range(n):
                 if i == j : 
                     continue
                 D[0] = 0.0
-                for ax in range(2):
+                for ax in range(dimension):
                     buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
                     D[0] += buff[ax] ** 2.0  
                 D[0] = val_P[i, j] / (1.0 + D[0])
-                for ax in range(2):
+                for ax in range(dimension):
                     pos_f_buff[ax] += D[0] * buff[ax]
-            for ax in range(2):
+            for ax in range(dimension):
                 pos_f[i * dimension + ax] = pos_f_buff[ax]
         free(buff)
         free(pos_f_buff)
@@ -397,11 +423,11 @@ cdef void compute_gradient_negative(float[:,:] val_P,
         int dimension = root_node.tree.dimension
 
     iQ = <float*> malloc(sizeof(float))
-    force = <float*> malloc(sizeof(float) * 2)
-    pos = <float*> malloc(sizeof(float) * 2)
+    force = <float*> malloc(sizeof(float) * dimension)
+    pos = <float*> malloc(sizeof(float) * dimension)
     for i in range(start, stop):
         # Clear the arrays
-        for ax in range(2): 
+        for ax in range(dimension): 
             force[ax] = 0.0
             pos[ax] = pos_reference[i, ax]
         iQ[0] = 0.0
@@ -409,7 +435,7 @@ cdef void compute_gradient_negative(float[:,:] val_P,
                                 pos, force)
         sum_Q[0] += iQ[0]
         # Save local force into global
-        for ax in range(2): 
+        for ax in range(dimension): 
             neg_f[i * dimension + ax] = force[ax]
     free(iQ)
     free(force)
@@ -437,11 +463,11 @@ cdef void compute_gradient_negative_parallel(float[:,:] val_P,
 
     with parallel():
         iQ = <float*> malloc(sizeof(float))
-        force = <float*> malloc(sizeof(float) * 2)
-        pos = <float*> malloc(sizeof(float) * 2)
+        force = <float*> malloc(sizeof(float) * dimension)
+        pos = <float*> malloc(sizeof(float) * dimension)
         for i in prange(start, stop, schedule='static'):
             # Clear the arrays
-            for ax in range(2): 
+            for ax in range(dimension): 
                 force[ax] = 0.0
                 pos[ax] = pos_reference[i, ax]
             iQ[0] = 0.0
@@ -449,7 +475,7 @@ cdef void compute_gradient_negative_parallel(float[:,:] val_P,
                                     pos, force)
             sum_Q[0] += iQ[0]
             # Save local force into global
-            for ax in range(2): 
+            for ax in range(dimension): 
                 neg_f[i * dimension + ax] = force[ax]
         free(iQ)
         free(force)
@@ -467,11 +493,17 @@ cdef void compute_non_edge_forces(Node* node,
         Node* child
         int i, j
         int summary = 0
+        int dimension = node.tree.dimension
         float dist2, mult, qijZ
-        float delta[2] 
         float wmax = 0.0
+        float* delta  = <float*> malloc(sizeof(float) * dimension)
+    
+    if node.tree.dimension > 2:
+        krange = 2
+    else:
+        krange = 1
 
-    for i in range(2):
+    for i in range(dimension):
         delta[i] = 0.0
 
     # There are no points below this node if cum_size == 0
@@ -480,7 +512,7 @@ cdef void compute_non_edge_forces(Node* node,
     if node.cum_size > 0 and not (node.is_leaf and (node.point_index == point_index)):
         dist2 = 0.0
         # Compute distance between node center of mass and the reference point
-        for i in range(2):
+        for i in range(dimension):
             delta[i] += pos[i] - node.cum_com[i] 
             dist2 += delta[i]**2.0
         # Check whether we can use this node as a summary
@@ -488,7 +520,7 @@ cdef void compute_non_edge_forces(Node* node,
         # is relatively small (w.r.t. to theta) or if it is a leaf node.
         # If it can be summarized, we use the cell center of mass 
         # Otherwise, we go a higher level of resolution and into the leaves.
-        for i in range(2):
+        for i in range(dimension):
             wmax = max(wmax, node.w[i])
 
         summary = (wmax / sqrt(dist2) < theta)
@@ -498,18 +530,19 @@ cdef void compute_non_edge_forces(Node* node,
             qijZ = 1.0 / (1.0 + dist2)
             sum_Q[0] += node.cum_size * qijZ
             mult = node.cum_size * qijZ * qijZ
-            for ax in range(2):
+            for ax in range(dimension):
                 force[ax] += mult * delta[ax]
         else:
             # Recursively apply Barnes-Hut to child nodes
-            for i in range(2):
-                for j in range(2):
-                    child = node.children[i][j]
-                    if child.cum_size == 0: 
-                        continue
-                    compute_non_edge_forces(child, theta, sum_Q, 
-                                                 point_index,
-                                                 pos, force)
+            for i in range(dimension):
+                for j in range(dimension):
+                    for k in range(krange):
+                        child = node.children[i][j][k]
+                        if child.cum_size == 0: 
+                            continue
+                        compute_non_edge_forces(child, theta, sum_Q, 
+                                                     point_index,
+                                                     pos, force)
 
 
 def gradient(float[:] width, 
