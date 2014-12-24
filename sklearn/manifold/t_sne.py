@@ -653,15 +653,16 @@ class TSNE(BaseEstimator):
         params, error, it = _gradient_descent(obj_func, params, **kwargs)
         kwargs['n_iter'] = 100
         kwargs['momentum'] = 0.8
-        kwargs['it'] += it + 1
+        kwargs['it'] = it + 1
         params, error, it = _gradient_descent(obj_func, params, **kwargs)
         if self.verbose:
             print("[t-SNE] Error after %d iterations with early "
                   "exaggeration: %f" % (it + 1, error))
 
         # Final optimization
+        P /= self.early_exaggeration
         kwargs['n_iter'] = self.n_iter
-        kwargs['it'] += it + 1
+        kwargs['it'] = it + 1
         params, error, it = _gradient_descent(obj_func, params, **kwargs)
         if self.verbose:
             print("[t-SNE] Error after %d iterations: %f" % (it + 1, error))
