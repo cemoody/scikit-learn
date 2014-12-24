@@ -1,10 +1,10 @@
 # Author: Alexander Fabisch  -- <afabisch@informatik.uni-bremen.de>
+# Author: Christopher Moodu <chrisemoody@gmail.com>
+# Author: Nick Travers <nickt@squareup.com>
 # License: BSD 3 clause (C) 2014
 
-# This is the standard t-SNE implementation. There are faster modifications of
-# the algorithm:
-# * Barnes-Hut-SNE: reduces the complexity of the gradient computation from
-#   N^2 to N log N (http://arxiv.org/abs/1301.3342)
+# This is the standard and Barnes-Hut t-SNE implementation. There are other
+# modifications of the algorithm:
 # * Fast Optimization for t-SNE:
 #   http://cseweb.ucsd.edu/~lvdmaaten/workshops/nips2010/papers/vandermaaten.pdf
 
@@ -297,6 +297,7 @@ def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
 
     for i in range(it, n_iter):
         new_error, grad = objective(p, *args, **kwargs)
+        grad_norm = linalg.norm(grad)
 
         inc = update * grad >= 0.0
         dec = np.invert(inc)
@@ -308,7 +309,6 @@ def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
         p += update
 
         if (i+1) % n_iter_check == 0:
-            grad_norm = linalg.norm(grad)
             if new_error is None:
                 new_error = objective_error(p, *args)
             error_diff = np.abs(new_error - error)
