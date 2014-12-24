@@ -13,12 +13,12 @@ from sklearn.manifold.t_sne import _kl_divergence
 from sklearn.manifold.t_sne import _gradient_descent
 from sklearn.manifold.t_sne import trustworthiness
 from sklearn.manifold.t_sne import TSNE
+from sklearn.manifold import bhtsne
 from sklearn.manifold._utils import _binary_search_perplexity
 from scipy.optimize import check_grad
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
 from sklearn.metrics.pairwise import pairwise_distances
-import bhtsne
 
 
 def test_gradient_descent_stops():
@@ -176,7 +176,7 @@ def test_fit_csr_matrix():
     X[(np.random.randint(0, 100, 50), np.random.randint(0, 2, 50))] = 0.0
     X_csr = sp.csr_matrix(X)
     tsne = TSNE(n_components=2, perplexity=10, learning_rate=100.0,
-                random_state=0)
+                random_state=0, method='standard')
     X_embedded = tsne.fit_transform(X_csr)
     assert_almost_equal(trustworthiness(X_csr, X_embedded, n_neighbors=1), 1.0,
                         decimal=1)
@@ -245,7 +245,7 @@ def test_answer_gradient_two_particles():
                            [9.259460e-05, 2.702024e-04]])
     grad_output = np.array([[-2.37012478e-05, -6.29044398e-05],
                             [2.37012478e-05, 6.29044398e-05]])
-    test(pos_input, pos_output, grad_output)
+    yield _run_answer_test, pos_input, pos_output, grad_output
 
 
 def test_answer_gradient_four_particles():
@@ -262,17 +262,21 @@ def test_answer_gradient_four_particles():
                             [-5.81526851e-05, 7.80976444e-06],
                             [4.24275173e-08, -3.69569698e-08],
                             [-2.58720939e-09, 7.52706374e-09]])
-    test(pos_input, pos_output, grad_output)
+    yield _run_answer_test, pos_input, pos_output, grad_output
 
 
-def test(pos_input, pos_output, grad_output, verbose=False, perplexity=0.1):
+def _run_answer_test(pos_input, pos_output, grad_output, verbose=False,
+                     perplexity=0.1):
     distances = pairwise_distances(pos_input)
     args = distances, perplexity, verbose
+    pos_output = pos_output.astype(np.float32)
     pij_input = _joint_probabilities(*args)
-    pij_input = squareform(pij_input)
+    pij_input = squareform(pij_input).astype(np.float32)
+    width = pos_output.max(axis=0) - pos_output.min(axis=0)
+    width = width.astype(np.float32)
+    grad_bh = np.zeros(pos_output.shape, dtype=np.float32)
 
-    grad_bh, grad_exact = bhtsne.quadtree_compute(pij_input, pos_output,
-                                                  verbose=verbose)
+    bhtsne.gradient(width, pij_input, pos_output, grad_bh, 0.5, 2, 1)
     assert_array_almost_equal(grad_bh, grad_output, decimal=4)
 
 
