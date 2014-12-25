@@ -533,8 +533,9 @@ class TSNE(BaseEstimator):
                  early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000,
                  metric="euclidean", init="random", verbose=0,
                  random_state=None, method='barnes_hut', theta=0.5):
-        if init not in ["pca", "random"]:
-            raise ValueError("'init' must be either 'pca' or 'random'")
+        if init not in ["pca", "random"] or isinstance(init, np.ndarray):
+            msg = "'init' must be either 'pca', 'random' or a NumPy array"
+            raise ValueError(msg)
         self.n_components = n_components
         self.perplexity = perplexity
         self.early_exaggeration = early_exaggeration
@@ -598,6 +599,8 @@ class TSNE(BaseEstimator):
             pca = RandomizedPCA(n_components=self.n_components,
                                 random_state=random_state)
             X_embedded = pca.fit_transform(X)
+        elif isinstance(self.init, np.ndarray):
+            X_embedded = self.init
         elif self.init == 'random':
             X_embedded = None
         else:
