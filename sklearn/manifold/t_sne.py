@@ -144,7 +144,7 @@ def _kl_divergence(params, P, alpha, n_samples, n_components):
     return kl_divergence, grad
 
 
-def _kl_divergence_error(params, P, alpha, n_samples, n_components):
+def _kl_divergence_error(params, P, neighbors, alpha, n_samples, n_components):
     """t-SNE objective function: KL divergence of p_ijs and q_ijs.
 
     Parameters
@@ -154,6 +154,11 @@ def _kl_divergence_error(params, P, alpha, n_samples, n_components):
 
     P : array, shape (n_samples * (n_samples-1) / 2,)
         Condensed joint probability matrix.
+
+    neighbors : array (n_samples, K)
+        The neighbors is not actually required to calculate the
+        divergence, but is here to match the signature of the
+        gradient function
 
     alpha : float
         Degrees of freedom of the Student's-t distribution.
@@ -627,17 +632,19 @@ class TSNE(BaseEstimator):
         n_samples = X.shape[0]
         self.training_data_ = X
 
-        neighbors = None
+        neighbors_nn = None
         if self.method == 'barnes_hut':
+            if self.verbose:
+                print("[t-SNE] Computing nearest neighbors...")
             # Find the nearest neighbors for every point
-            bt = BallTree(distances)
+            bt = BallTree(X)
             # LVDM uses 3 * perplexity as the number of neighbors
             # And we add one to not count the data point itself
-            neighbors = 3. * self.perplexity + 1
+            neighbors = int(3. * self.perplexity + 1)
             distances_nn, neighbors_nn = bt.query(X, k=neighbors)
             # Skip the closest
-            distances_nn = distances_nn[1:]
-            neighbors_nn = neighbors_nn[1:]
+            distances_nn = distances_nn[:, 1:]
+            neighbors_nn = neighbors_nn[:, 1:]
             P = _joint_probabilities_nn(distances, neighbors_nn,
                                         self.perplexity, self.verbose)
         else:
@@ -682,21 +689,22 @@ class TSNE(BaseEstimator):
         kwargs['learning_rate'] = self.learning_rate
         kwargs['verbose'] = self.verbose
         kwargs['it'] = 0
+        kwargs['n_iter_check'] = 25
         if self.method == 'barnes_hut':
             m = "Must provide an array of neighbors to use Barnes-Hut"
             assert neighbors is not None, m
             obj_func = _kl_divergence_bh
             objective_error = _kl_divergence_error
             sP = squareform(P).astype(np.float32)
+            neighbors = neighbors.astype(np.int32)
             args = [sP, neighbors, alpha, n_samples, self.n_components]
             kwargs['args'] = args
             kwargs['min_grad_norm'] = 1e-3
             kwargs['n_iter_without_progress'] = 30
             # Don't always calculate the cost since that calculation
             # can be nearly as expensive as the gradient
-            kwargs['n_iter_check'] = 25
             kwargs['objective_error'] = objective_error
-            kwargs['kwargs'] = dict(theta=self.theta, neighbors=neighbors)
+            kwargs['kwargs'] = dict(theta=self.theta, verbose=self.verbose)
         else:
             obj_func = _kl_divergence
             kwargs['args'] = [P, alpha, n_samples, self.n_components]
@@ -713,6 +721,8 @@ class TSNE(BaseEstimator):
         if self.verbose:
             print("[t-SNE] Error after %d iterations with early "
                   "exaggeration: %f" % (it + 1, error))
+        # Save the final number of iterations
+        self.n_iter_final = it
 
         # Final optimization
         P /= self.early_exaggeration

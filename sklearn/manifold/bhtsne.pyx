@@ -308,11 +308,6 @@ cdef void compute_gradient(float[:,:] val_P,
 
     sum_Q[0] = 0.0
     t1 = clock()
-    compute_gradient_positive(val_P, pos_reference, pos_f, dimension)
-    t2 = clock()
-    if root_node.tree.verbose > 15:
-        printf("positive: %e ticks\n", ((float) (t2 - t1)))
-    t1 = clock()
     compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f, dimension)
     t2 = clock()
     if root_node.tree.verbose > 15:
@@ -323,7 +318,6 @@ cdef void compute_gradient(float[:,:] val_P,
     t2 = clock()
     if root_node.tree.verbose > 15:
         printf("negative: %e ticks\n", ((float) (t2 - t1)))
-
     for i in range(n):
         for ax in range(dimension):
             coord = i * dimension + ax
