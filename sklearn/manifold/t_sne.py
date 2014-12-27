@@ -12,6 +12,7 @@ import numpy as np
 from scipy import linalg
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
+from ..neighbors import BallTree
 from ..base import BaseEstimator
 from ..utils import check_array
 from ..utils import check_random_state
@@ -50,6 +51,37 @@ def _joint_probabilities(distances, desired_perplexity, verbose):
     # the desired perplexity
     conditional_P = _utils._binary_search_perplexity(
         distances, desired_perplexity, verbose)
+    P = conditional_P + conditional_P.T
+    sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
+    P = np.maximum(squareform(P) / sum_P, MACHINE_EPSILON)
+    return P
+
+
+def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
+    """Compute joint probabilities p_ij from distances.
+
+    Parameters
+    ----------
+    distances : array, shape (n_samples * (n_samples-1) / 2,)
+        Distances of samples are stored as condensed matrices, i.e.
+        we omit the diagonal and duplicate entries and store everything
+        in a one-dimensional array.
+
+    desired_perplexity : float
+        Desired perplexity of the joint probability distributions.
+
+    verbose : int
+        Verbosity level.
+
+    Returns
+    -------
+    P : array, shape (n_samples * (n_samples-1) / 2,)
+        Condensed joint probability matrix.
+    """
+    # Compute conditional probabilities such that they approximately match
+    # the desired perplexity
+    conditional_P = _utils._binary_search_perplexity_nn(
+        distances, neighbors, desired_perplexity, verbose)
     P = conditional_P + conditional_P.T
     sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
     P = np.maximum(squareform(P) / sum_P, MACHINE_EPSILON)
@@ -161,8 +193,8 @@ def _kl_divergence_error(params, P, alpha, n_samples, n_components):
     return kl_divergence
 
 
-def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
-                      verbose=False):
+def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
+                      theta=0.5, verbose=False):
     """t-SNE objective function: KL divergence of p_ijs and q_ijs.
     Uses Barnes-Hut tree methods to calculate the gradient that
     runs in O(NlogN) instead of O(N^2)
@@ -203,7 +235,8 @@ def _kl_divergence_bh(params, P, alpha, n_samples, n_components, theta=0.5,
     dimension = X_embedded.shape[1]
     width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
     grad = np.zeros(X_embedded.shape, dtype=np.float32)
-    bhtsne.gradient(width, sP, X_embedded, grad, theta, dimension, verbose)
+    bhtsne.gradient(width, sP, X_embedded, neighbors, grad,
+                    theta, dimension, verbose)
 
     c = 2.0 * (alpha + 1.0) / alpha
     grad = grad.ravel()
@@ -594,7 +627,21 @@ class TSNE(BaseEstimator):
         n_samples = X.shape[0]
         self.training_data_ = X
 
-        P = _joint_probabilities(distances, self.perplexity, self.verbose)
+        neighbors = None
+        if self.method == 'barnes_hut':
+            # Find the nearest neighbors for every point
+            bt = BallTree(distances)
+            # LVDM uses 3 * perplexity as the number of neighbors
+            # And we add one to not count the data point itself
+            neighbors = 3. * self.perplexity + 1
+            distances_nn, neighbors_nn = bt.query(X, k=neighbors)
+            # Skip the closest
+            distances_nn = distances_nn[1:]
+            neighbors_nn = neighbors_nn[1:]
+            P = _joint_probabilities_nn(distances, neighbors_nn,
+                                        self.perplexity, self.verbose)
+        else:
+            P = _joint_probabilities(distances, self.perplexity, self.verbose)
         if self.init == 'pca':
             pca = RandomizedPCA(n_components=self.n_components,
                                 random_state=random_state)
@@ -608,9 +655,11 @@ class TSNE(BaseEstimator):
                              % self.init)
 
         self.embedding_ = self._tsne(P, alpha, n_samples, random_state,
-                                     X_embedded=X_embedded)
+                                     X_embedded=X_embedded,
+                                     neighbors=neighbors_nn)
 
-    def _tsne(self, P, alpha, n_samples, random_state, X_embedded=None):
+    def _tsne(self, P, alpha, n_samples, random_state, X_embedded=None,
+              neighbors=None):
         """Runs t-SNE."""
         # t-SNE minimizes the Kullback-Leiber divergence of the Gaussians P
         # and the Student's t-distributions Q. The optimization algorithm that
@@ -634,17 +683,20 @@ class TSNE(BaseEstimator):
         kwargs['verbose'] = self.verbose
         kwargs['it'] = 0
         if self.method == 'barnes_hut':
+            m = "Must provide an array of neighbors to use Barnes-Hut"
+            assert neighbors is not None, m
             obj_func = _kl_divergence_bh
             objective_error = _kl_divergence_error
             sP = squareform(P).astype(np.float32)
-            kwargs['args'] = [sP, alpha, n_samples, self.n_components]
+            args = [sP, neighbors, alpha, n_samples, self.n_components]
+            kwargs['args'] = args
             kwargs['min_grad_norm'] = 1e-3
             kwargs['n_iter_without_progress'] = 30
             # Don't always calculate the cost since that calculation
             # can be nearly as expensive as the gradient
             kwargs['n_iter_check'] = 25
             kwargs['objective_error'] = objective_error
-            kwargs['kwargs'] = dict(theta=self.theta)
+            kwargs['kwargs'] = dict(theta=self.theta, neighbors=neighbors)
         else:
             obj_func = _kl_divergence
             kwargs['args'] = [P, alpha, n_samples, self.n_components]

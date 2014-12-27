@@ -290,6 +290,7 @@ cdef int count_points(Node* root, int count) nogil:
 
 cdef void compute_gradient(float[:,:] val_P,
                            float[:,:] pos_reference,
+                           int[:,:] neighbors,
                            float[:,:] tot_force,
                            Node* root_node,
                            float theta,
@@ -310,13 +311,18 @@ cdef void compute_gradient(float[:,:] val_P,
     compute_gradient_positive(val_P, pos_reference, pos_f, dimension)
     t2 = clock()
     if root_node.tree.verbose > 15:
-        printf("positive: %e sec\n", ((float) (t2 - t1)))
+        printf("positive: %e ticks\n", ((float) (t2 - t1)))
+    t1 = clock()
+    compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f, dimension)
+    t2 = clock()
+    if root_node.tree.verbose > 15:
+        printf("  nn pos: %e ticks\n", ((float) (t2 - t1)))
     t1 = clock()
     compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q, 
                               theta, start, stop)
     t2 = clock()
     if root_node.tree.verbose > 15:
-        printf("negative: %e sec\n", ((float) (t2 - t1)))
+        printf("negative: %e ticks\n", ((float) (t2 - t1)))
 
     for i in range(n):
         for ax in range(dimension):
@@ -345,6 +351,40 @@ cdef void compute_gradient_positive(float[:,:] val_P,
         for j in range(n):
             if i == j : 
                 continue
+            D = 0.0
+            for ax in range(dimension):
+                buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
+                D += buff[ax] ** 2.0  
+            D = val_P[i, j] / (1.0 + D)
+            for ax in range(dimension):
+                pos_f[i * dimension + ax] += D * buff[ax]
+                temp = i * dimension + ax
+
+
+cdef void compute_gradient_positive_nn(float[:,:] val_P,
+                                       float[:,:] pos_reference,
+                                       int[:,:] neighbors,
+                                       float* pos_f,
+                                       int dimension) nogil:
+    # Sum over the following expression for i not equal to j
+    # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
+    # This is equivalent to compute_edge_forces in the authors' code
+    # It just goes over the nearest neighbors instead of all the data points
+    # (unlike the non-nearest neighbors version of `compute_gradient_positive')
+    cdef:
+        int i, j, k, ax
+        int K = neighbors.shape[1]
+        int n = val_P.shape[0]
+        float buff[3]
+        float D
+        int temp
+    for i in range(n):
+        for ax in range(dimension):
+            pos_f[i * dimension + ax] = 0.0
+        for k in range(K):
+            j = neighbors[i, k]
+            # we don't need to exclude the i==j case since we've 
+            # already thrown it out from the list of neighbors
             D = 0.0
             for ax in range(dimension):
                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
@@ -535,6 +575,7 @@ cdef void compute_non_edge_forces(Node* node,
 def gradient(float[:] width, 
              float[:,:] pij_input, 
              float[:,:] pos_output, 
+             int[:,:] neighbors, 
              float[:,:] forces, 
              float theta,
              int dimension,
@@ -548,6 +589,6 @@ def gradient(float[:] width,
     assert forces.itemsize == 4
     cdef Tree* qt = init_tree(width, dimension, verbose)
     insert_many(qt, pos_output)
-    compute_gradient(pij_input, pos_output, forces, qt.root_node, theta, 0, -1)
+    compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, theta, 0, -1)
     check_consistency(qt)
     free_tree(qt)
