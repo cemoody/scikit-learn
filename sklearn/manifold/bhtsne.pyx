@@ -1,6 +1,4 @@
-# distutils: extra_compile_args = -fopenmp
-# distutils: extra_link_args = -fopenmp
-# cython: boundscheck=True
+# cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
 import numpy as np
@@ -381,10 +379,9 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
         long i, j, k
         long K = neighbors.shape[1]
         long n = val_P.shape[0]
-        float buff[3]
+        float[3] buff
         float D
     for i in range(n):
-        printf("Pos gradient for %i out of %i, %i neighbors\n", i, n, K)
         for ax in range(dimension):
             pos_f[i * dimension + ax] = 0.0
         for k in range(K):

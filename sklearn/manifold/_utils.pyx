@@ -117,10 +117,10 @@ cpdef np.ndarray[np.float_t, ndim=2] _binary_search_perplexity_nn(
         np.ndarray[np.int_t, ndim=2] neighbors, 
         double desired_perplexity,
         int verbose):
-    """Binary search for sigmas of conditional Gaussians. This approximation
-    reduces the computational complexity from O(N^2) to O(uN). See the exact
-    method '_binary_search_perplexity' for more details.
+    """Binary search for sigmas of conditional Gaussians. 
     
+    This approximation reduces the computational complexity from O(N^2) to O(uN). 
+    See the exact method '_binary_search_perplexity' for more details.
 
     Parameters
     ----------

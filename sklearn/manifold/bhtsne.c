@@ -795,7 +795,7 @@ typedef npy_cdouble __pyx_t_5numpy_complex_t;
 struct __pyx_t_7sklearn_8manifold_6bhtsne_Node;
 struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree;
 
-/* "sklearn/manifold/bhtsne.pyx":32
+/* "sklearn/manifold/bhtsne.pyx":30
  * 
  * 
  * cdef struct Node:             # <<<<<<<<<<<<<<
@@ -818,7 +818,7 @@ struct __pyx_t_7sklearn_8manifold_6bhtsne_Node {
   struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *tree;
 };
 
-/* "sklearn/manifold/bhtsne.pyx":65
+/* "sklearn/manifold/bhtsne.pyx":63
  *     Tree* tree
  * 
  * cdef struct Tree:             # <<<<<<<<<<<<<<
@@ -1021,17 +1021,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_GetAttrStr(PyObject* obj, PyObject
 
 static PyObject *__Pyx_GetBuiltinName(PyObject *name);
 
-static void __Pyx_RaiseBufferIndexError(int axis);
-
-static void __Pyx_RaiseBufferIndexErrorNogil(int axis);
-
-static CYTHON_INLINE void __Pyx_ErrRestore(PyObject *type, PyObject *value, PyObject *tb);
-static CYTHON_INLINE void __Pyx_ErrFetch(PyObject **type, PyObject **value, PyObject **tb);
-
-static void __Pyx_WriteUnraisable(const char *name, int clineno,
-                                  int lineno, const char *filename,
-                                  int full_traceback);
-
 static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
     Py_ssize_t num_min, Py_ssize_t num_max, Py_ssize_t num_found);
 
@@ -1075,6 +1064,9 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg
 #else
 #define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
 #endif
+
+static CYTHON_INLINE void __Pyx_ErrRestore(PyObject *type, PyObject *value, PyObject *tb);
+static CYTHON_INLINE void __Pyx_ErrFetch(PyObject **type, PyObject **value, PyObject **tb);
 
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause);
 
@@ -1201,6 +1193,10 @@ static CYTHON_INLINE int __Pyx_PyList_Append(PyObject* list, PyObject* x) {
 static CYTHON_INLINE void __Pyx_RaiseUnboundLocalError(const char *varname);
 
 static PyObject *__pyx_memoryviewslice__get__base(PyObject *__pyx_v_self); /*proto*/
+static void __Pyx_WriteUnraisable(const char *name, int clineno,
+                                  int lineno, const char *filename,
+                                  int full_traceback);
+
 #if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
 #endif
@@ -1680,7 +1676,6 @@ static char __pyx_k_Non_native_byte_order_not_suppor[] = "Non-native byte order 
 static char __pyx_k_Only_2D_and_3D_embeddings_suppor[] = "Only 2D and 3D embeddings supported. Width array must be size 2 or 3";
 static char __pyx_k_Out_of_bounds_on_buffer_access_a[] = "Out of bounds on buffer access (axis %d)";
 static char __pyx_k_Pij_and_pos_output_shapes_are_in[] = "Pij and pos_output shapes are incompatible";
-static char __pyx_k_Pos_gradient_for_i_out_of_i_i_ne[] = "Pos gradient for %i out of %i, %i neighbors\n";
 static char __pyx_k_Unable_to_convert_item_to_object[] = "Unable to convert item to object";
 static char __pyx_k_got_differing_extents_in_dimensi[] = "got differing extents in dimension %d (got %d and %d)";
 static char __pyx_k_ndarray_is_not_Fortran_contiguou[] = "ndarray is not Fortran contiguous";
@@ -1805,7 +1800,7 @@ static PyObject *__pyx_tuple__23;
 static PyObject *__pyx_tuple__24;
 static PyObject *__pyx_codeobj__19;
 
-/* "sklearn/manifold/bhtsne.pyx":77
+/* "sklearn/manifold/bhtsne.pyx":75
  *     int verbose
  * 
  * cdef Tree* init_tree(float[:] width, int dimension, int verbose) nogil:             # <<<<<<<<<<<<<<
@@ -1817,7 +1812,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
   struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_v_tree;
   struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_r;
 
-  /* "sklearn/manifold/bhtsne.pyx":79
+  /* "sklearn/manifold/bhtsne.pyx":77
  * cdef Tree* init_tree(float[:] width, int dimension, int verbose) nogil:
  *     # tree is freed by free_tree
  *     cdef Tree* tree = <Tree*> malloc(sizeof(Tree))             # <<<<<<<<<<<<<<
@@ -1826,7 +1821,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_tree = ((struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *)malloc((sizeof(struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree))));
 
-  /* "sklearn/manifold/bhtsne.pyx":80
+  /* "sklearn/manifold/bhtsne.pyx":78
  *     # tree is freed by free_tree
  *     cdef Tree* tree = <Tree*> malloc(sizeof(Tree))
  *     tree.dimension = dimension             # <<<<<<<<<<<<<<
@@ -1835,7 +1830,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_tree->dimension = __pyx_v_dimension;
 
-  /* "sklearn/manifold/bhtsne.pyx":81
+  /* "sklearn/manifold/bhtsne.pyx":79
  *     cdef Tree* tree = <Tree*> malloc(sizeof(Tree))
  *     tree.dimension = dimension
  *     tree.num_cells = 0             # <<<<<<<<<<<<<<
@@ -1844,7 +1839,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_tree->num_cells = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":82
+  /* "sklearn/manifold/bhtsne.pyx":80
  *     tree.dimension = dimension
  *     tree.num_cells = 0
  *     tree.num_part = 0             # <<<<<<<<<<<<<<
@@ -1853,7 +1848,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_tree->num_part = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":83
+  /* "sklearn/manifold/bhtsne.pyx":81
  *     tree.num_cells = 0
  *     tree.num_part = 0
  *     tree.verbose = verbose             # <<<<<<<<<<<<<<
@@ -1862,7 +1857,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_tree->verbose = __pyx_v_verbose;
 
-  /* "sklearn/manifold/bhtsne.pyx":84
+  /* "sklearn/manifold/bhtsne.pyx":82
  *     tree.num_part = 0
  *     tree.verbose = verbose
  *     tree.root_node = create_root(width, dimension)             # <<<<<<<<<<<<<<
@@ -1871,7 +1866,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_tree->root_node = __pyx_f_7sklearn_8manifold_6bhtsne_create_root(__pyx_v_width, __pyx_v_dimension);
 
-  /* "sklearn/manifold/bhtsne.pyx":85
+  /* "sklearn/manifold/bhtsne.pyx":83
  *     tree.verbose = verbose
  *     tree.root_node = create_root(width, dimension)
  *     tree.root_node.tree = tree             # <<<<<<<<<<<<<<
@@ -1880,7 +1875,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_tree->root_node->tree = __pyx_v_tree;
 
-  /* "sklearn/manifold/bhtsne.pyx":86
+  /* "sklearn/manifold/bhtsne.pyx":84
  *     tree.root_node = create_root(width, dimension)
  *     tree.root_node.tree = tree
  *     tree.num_cells += 1             # <<<<<<<<<<<<<<
@@ -1889,7 +1884,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_tree->num_cells = (__pyx_v_tree->num_cells + 1);
 
-  /* "sklearn/manifold/bhtsne.pyx":87
+  /* "sklearn/manifold/bhtsne.pyx":85
  *     tree.root_node.tree = tree
  *     tree.num_cells += 1
  *     return tree             # <<<<<<<<<<<<<<
@@ -1899,7 +1894,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
   __pyx_r = __pyx_v_tree;
   goto __pyx_L0;
 
-  /* "sklearn/manifold/bhtsne.pyx":77
+  /* "sklearn/manifold/bhtsne.pyx":75
  *     int verbose
  * 
  * cdef Tree* init_tree(float[:] width, int dimension, int verbose) nogil:             # <<<<<<<<<<<<<<
@@ -1912,7 +1907,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Tree *__pyx_f_7sklearn_8manifol
   return __pyx_r;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":89
+/* "sklearn/manifold/bhtsne.pyx":87
  *     return tree
  * 
  * cdef Node* create_root(float[:] width, int dimension) nogil:             # <<<<<<<<<<<<<<
@@ -1927,12 +1922,8 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   int __pyx_t_1;
   int __pyx_t_2;
   int __pyx_t_3;
-  int __pyx_t_4;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":93
+  /* "sklearn/manifold/bhtsne.pyx":91
  *     cdef int ax
  *     # root is freed by free_tree
  *     root = <Node*> malloc(sizeof(Node))             # <<<<<<<<<<<<<<
@@ -1941,7 +1932,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_root = ((struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *)malloc((sizeof(struct __pyx_t_7sklearn_8manifold_6bhtsne_Node))));
 
-  /* "sklearn/manifold/bhtsne.pyx":94
+  /* "sklearn/manifold/bhtsne.pyx":92
  *     # root is freed by free_tree
  *     root = <Node*> malloc(sizeof(Node))
  *     root.is_leaf = 1             # <<<<<<<<<<<<<<
@@ -1950,7 +1941,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_root->is_leaf = 1;
 
-  /* "sklearn/manifold/bhtsne.pyx":95
+  /* "sklearn/manifold/bhtsne.pyx":93
  *     root = <Node*> malloc(sizeof(Node))
  *     root.is_leaf = 1
  *     root.parent = NULL             # <<<<<<<<<<<<<<
@@ -1959,7 +1950,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_root->parent = NULL;
 
-  /* "sklearn/manifold/bhtsne.pyx":96
+  /* "sklearn/manifold/bhtsne.pyx":94
  *     root.is_leaf = 1
  *     root.parent = NULL
  *     root.level = 0             # <<<<<<<<<<<<<<
@@ -1968,7 +1959,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_root->level = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":97
+  /* "sklearn/manifold/bhtsne.pyx":95
  *     root.parent = NULL
  *     root.level = 0
  *     root.cum_size = 0             # <<<<<<<<<<<<<<
@@ -1977,7 +1968,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_root->cum_size = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":98
+  /* "sklearn/manifold/bhtsne.pyx":96
  *     root.level = 0
  *     root.cum_size = 0
  *     root.size = 0             # <<<<<<<<<<<<<<
@@ -1986,7 +1977,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_root->size = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":99
+  /* "sklearn/manifold/bhtsne.pyx":97
  *     root.cum_size = 0
  *     root.size = 0
  *     root.point_index = -1             # <<<<<<<<<<<<<<
@@ -1995,7 +1986,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_root->point_index = -1;
 
-  /* "sklearn/manifold/bhtsne.pyx":100
+  /* "sklearn/manifold/bhtsne.pyx":98
  *     root.size = 0
  *     root.point_index = -1
  *     for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -2006,7 +1997,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_ax = __pyx_t_2;
 
-    /* "sklearn/manifold/bhtsne.pyx":101
+    /* "sklearn/manifold/bhtsne.pyx":99
  *     root.point_index = -1
  *     for ax in range(dimension):
  *         root.w[ax] = width[ax]             # <<<<<<<<<<<<<<
@@ -2014,17 +2005,9 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  *         root.c[ax] = 0.0
  */
     __pyx_t_3 = __pyx_v_ax;
-    __pyx_t_4 = -1;
-    if (__pyx_t_3 < 0) {
-      __pyx_t_4 = 0;
-    } else if (unlikely(__pyx_t_3 >= __pyx_v_width.shape[0])) __pyx_t_4 = 0;
-    if (unlikely(__pyx_t_4 != -1)) {
-      __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_4);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 101; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
     (__pyx_v_root->w[__pyx_v_ax]) = (*((float *) ( /* dim=0 */ (__pyx_v_width.data + __pyx_t_3 * __pyx_v_width.strides[0]) )));
 
-    /* "sklearn/manifold/bhtsne.pyx":102
+    /* "sklearn/manifold/bhtsne.pyx":100
  *     for ax in range(dimension):
  *         root.w[ax] = width[ax]
  *         root.le[ax] = 0. - root.w[ax] / 2.0             # <<<<<<<<<<<<<<
@@ -2033,7 +2016,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
     (__pyx_v_root->le[__pyx_v_ax]) = (0. - ((__pyx_v_root->w[__pyx_v_ax]) / 2.0));
 
-    /* "sklearn/manifold/bhtsne.pyx":103
+    /* "sklearn/manifold/bhtsne.pyx":101
  *         root.w[ax] = width[ax]
  *         root.le[ax] = 0. - root.w[ax] / 2.0
  *         root.c[ax] = 0.0             # <<<<<<<<<<<<<<
@@ -2042,7 +2025,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
     (__pyx_v_root->c[__pyx_v_ax]) = 0.0;
 
-    /* "sklearn/manifold/bhtsne.pyx":104
+    /* "sklearn/manifold/bhtsne.pyx":102
  *         root.le[ax] = 0. - root.w[ax] / 2.0
  *         root.c[ax] = 0.0
  *         root.cum_com[ax] = 0.             # <<<<<<<<<<<<<<
@@ -2051,7 +2034,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
     (__pyx_v_root->cum_com[__pyx_v_ax]) = 0.;
 
-    /* "sklearn/manifold/bhtsne.pyx":105
+    /* "sklearn/manifold/bhtsne.pyx":103
  *         root.c[ax] = 0.0
  *         root.cum_com[ax] = 0.
  *         root.cur_pos[ax] = -1.             # <<<<<<<<<<<<<<
@@ -2061,7 +2044,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
     (__pyx_v_root->cur_pos[__pyx_v_ax]) = -1.;
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":106
+  /* "sklearn/manifold/bhtsne.pyx":104
  *         root.cum_com[ax] = 0.
  *         root.cur_pos[ax] = -1.
  *     return root             # <<<<<<<<<<<<<<
@@ -2071,7 +2054,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   __pyx_r = __pyx_v_root;
   goto __pyx_L0;
 
-  /* "sklearn/manifold/bhtsne.pyx":89
+  /* "sklearn/manifold/bhtsne.pyx":87
  *     return tree
  * 
  * cdef Node* create_root(float[:] width, int dimension) nogil:             # <<<<<<<<<<<<<<
@@ -2080,14 +2063,11 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
 
   /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_WriteUnraisable("sklearn.manifold.bhtsne.create_root", __pyx_clineno, __pyx_lineno, __pyx_filename, 0);
-  __pyx_r = 0;
   __pyx_L0:;
   return __pyx_r;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":108
+/* "sklearn/manifold/bhtsne.pyx":106
  *     return root
  * 
  * cdef Node* create_child(Node *parent, int[3] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2103,7 +2083,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   int __pyx_t_2;
   int __pyx_t_3;
 
-  /* "sklearn/manifold/bhtsne.pyx":112
+  /* "sklearn/manifold/bhtsne.pyx":110
  *     cdef int ax
  *     # these children are freed by free_recursive
  *     child = <Node *> malloc(sizeof(Node))             # <<<<<<<<<<<<<<
@@ -2112,7 +2092,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_child = ((struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *)malloc((sizeof(struct __pyx_t_7sklearn_8manifold_6bhtsne_Node))));
 
-  /* "sklearn/manifold/bhtsne.pyx":113
+  /* "sklearn/manifold/bhtsne.pyx":111
  *     # these children are freed by free_recursive
  *     child = <Node *> malloc(sizeof(Node))
  *     child.is_leaf = 1             # <<<<<<<<<<<<<<
@@ -2121,7 +2101,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_child->is_leaf = 1;
 
-  /* "sklearn/manifold/bhtsne.pyx":114
+  /* "sklearn/manifold/bhtsne.pyx":112
  *     child = <Node *> malloc(sizeof(Node))
  *     child.is_leaf = 1
  *     child.parent = parent             # <<<<<<<<<<<<<<
@@ -2130,7 +2110,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_child->parent = __pyx_v_parent;
 
-  /* "sklearn/manifold/bhtsne.pyx":115
+  /* "sklearn/manifold/bhtsne.pyx":113
  *     child.is_leaf = 1
  *     child.parent = parent
  *     child.level = parent.level + 1             # <<<<<<<<<<<<<<
@@ -2139,7 +2119,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_child->level = (__pyx_v_parent->level + 1);
 
-  /* "sklearn/manifold/bhtsne.pyx":116
+  /* "sklearn/manifold/bhtsne.pyx":114
  *     child.parent = parent
  *     child.level = parent.level + 1
  *     child.size = 0             # <<<<<<<<<<<<<<
@@ -2148,7 +2128,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_child->size = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":117
+  /* "sklearn/manifold/bhtsne.pyx":115
  *     child.level = parent.level + 1
  *     child.size = 0
  *     child.cum_size = 0             # <<<<<<<<<<<<<<
@@ -2157,7 +2137,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_child->cum_size = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":118
+  /* "sklearn/manifold/bhtsne.pyx":116
  *     child.size = 0
  *     child.cum_size = 0
  *     child.point_index = -1             # <<<<<<<<<<<<<<
@@ -2166,7 +2146,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_child->point_index = -1;
 
-  /* "sklearn/manifold/bhtsne.pyx":119
+  /* "sklearn/manifold/bhtsne.pyx":117
  *     child.cum_size = 0
  *     child.point_index = -1
  *     child.tree = parent.tree             # <<<<<<<<<<<<<<
@@ -2176,7 +2156,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   __pyx_t_1 = __pyx_v_parent->tree;
   __pyx_v_child->tree = __pyx_t_1;
 
-  /* "sklearn/manifold/bhtsne.pyx":120
+  /* "sklearn/manifold/bhtsne.pyx":118
  *     child.point_index = -1
  *     child.tree = parent.tree
  *     for ax in range(parent.tree.dimension):             # <<<<<<<<<<<<<<
@@ -2187,7 +2167,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_ax = __pyx_t_3;
 
-    /* "sklearn/manifold/bhtsne.pyx":121
+    /* "sklearn/manifold/bhtsne.pyx":119
  *     child.tree = parent.tree
  *     for ax in range(parent.tree.dimension):
  *         child.w[ax] = parent.w[ax] / 2.0             # <<<<<<<<<<<<<<
@@ -2196,7 +2176,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
     (__pyx_v_child->w[__pyx_v_ax]) = ((__pyx_v_parent->w[__pyx_v_ax]) / 2.0);
 
-    /* "sklearn/manifold/bhtsne.pyx":122
+    /* "sklearn/manifold/bhtsne.pyx":120
  *     for ax in range(parent.tree.dimension):
  *         child.w[ax] = parent.w[ax] / 2.0
  *         child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0             # <<<<<<<<<<<<<<
@@ -2205,7 +2185,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
     (__pyx_v_child->le[__pyx_v_ax]) = ((__pyx_v_parent->le[__pyx_v_ax]) + (((__pyx_v_offset[__pyx_v_ax]) * (__pyx_v_parent->w[__pyx_v_ax])) / 2.0));
 
-    /* "sklearn/manifold/bhtsne.pyx":123
+    /* "sklearn/manifold/bhtsne.pyx":121
  *         child.w[ax] = parent.w[ax] / 2.0
  *         child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0
  *         child.c[ax] = child.le[ax] + child.w[ax] / 2.0             # <<<<<<<<<<<<<<
@@ -2214,7 +2194,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
     (__pyx_v_child->c[__pyx_v_ax]) = ((__pyx_v_child->le[__pyx_v_ax]) + ((__pyx_v_child->w[__pyx_v_ax]) / 2.0));
 
-    /* "sklearn/manifold/bhtsne.pyx":124
+    /* "sklearn/manifold/bhtsne.pyx":122
  *         child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0
  *         child.c[ax] = child.le[ax] + child.w[ax] / 2.0
  *         child.cum_com[ax] = 0.             # <<<<<<<<<<<<<<
@@ -2223,7 +2203,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
     (__pyx_v_child->cum_com[__pyx_v_ax]) = 0.;
 
-    /* "sklearn/manifold/bhtsne.pyx":125
+    /* "sklearn/manifold/bhtsne.pyx":123
  *         child.c[ax] = child.le[ax] + child.w[ax] / 2.0
  *         child.cum_com[ax] = 0.
  *         child.cur_pos[ax] = -1.             # <<<<<<<<<<<<<<
@@ -2233,7 +2213,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
     (__pyx_v_child->cur_pos[__pyx_v_ax]) = -1.;
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":126
+  /* "sklearn/manifold/bhtsne.pyx":124
  *         child.cum_com[ax] = 0.
  *         child.cur_pos[ax] = -1.
  *     child.tree.num_cells += 1             # <<<<<<<<<<<<<<
@@ -2242,7 +2222,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
  */
   __pyx_v_child->tree->num_cells = (__pyx_v_child->tree->num_cells + 1);
 
-  /* "sklearn/manifold/bhtsne.pyx":127
+  /* "sklearn/manifold/bhtsne.pyx":125
  *         child.cur_pos[ax] = -1.
  *     child.tree.num_cells += 1
  *     return child             # <<<<<<<<<<<<<<
@@ -2252,7 +2232,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   __pyx_r = __pyx_v_child;
   goto __pyx_L0;
 
-  /* "sklearn/manifold/bhtsne.pyx":108
+  /* "sklearn/manifold/bhtsne.pyx":106
  *     return root
  * 
  * cdef Node* create_child(Node *parent, int[3] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2265,7 +2245,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   return __pyx_r;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":129
+/* "sklearn/manifold/bhtsne.pyx":127
  *     return child
  * 
  * cdef Node* select_child(Node *node, float[3] pos) nogil:             # <<<<<<<<<<<<<<
@@ -2280,7 +2260,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "sklearn/manifold/bhtsne.pyx":135
+  /* "sklearn/manifold/bhtsne.pyx":133
  *     cdef int ax
  *     # In case we don't have 3D data, set it to zero
  *     for ax in range(3):             # <<<<<<<<<<<<<<
@@ -2290,7 +2270,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_ax = __pyx_t_1;
 
-    /* "sklearn/manifold/bhtsne.pyx":136
+    /* "sklearn/manifold/bhtsne.pyx":134
  *     # In case we don't have 3D data, set it to zero
  *     for ax in range(3):
  *         offset[ax] = 0             # <<<<<<<<<<<<<<
@@ -2300,7 +2280,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
     (__pyx_v_offset[__pyx_v_ax]) = 0;
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":137
+  /* "sklearn/manifold/bhtsne.pyx":135
  *     for ax in range(3):
  *         offset[ax] = 0
  *     for ax in range(node.tree.dimension):             # <<<<<<<<<<<<<<
@@ -2311,7 +2291,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_ax = __pyx_t_2;
 
-    /* "sklearn/manifold/bhtsne.pyx":138
+    /* "sklearn/manifold/bhtsne.pyx":136
  *         offset[ax] = 0
  *     for ax in range(node.tree.dimension):
  *         offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.             # <<<<<<<<<<<<<<
@@ -2321,7 +2301,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
     (__pyx_v_offset[__pyx_v_ax]) = (((__pyx_v_pos[__pyx_v_ax]) - ((__pyx_v_node->le[__pyx_v_ax]) + ((__pyx_v_node->w[__pyx_v_ax]) / 2.0))) > 0.);
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":139
+  /* "sklearn/manifold/bhtsne.pyx":137
  *     for ax in range(node.tree.dimension):
  *         offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
  *     return node.children[offset[0]][offset[1]][offset[2]]             # <<<<<<<<<<<<<<
@@ -2331,7 +2311,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   __pyx_r = (((__pyx_v_node->children[(__pyx_v_offset[0])])[(__pyx_v_offset[1])])[(__pyx_v_offset[2])]);
   goto __pyx_L0;
 
-  /* "sklearn/manifold/bhtsne.pyx":129
+  /* "sklearn/manifold/bhtsne.pyx":127
  *     return child
  * 
  * cdef Node* select_child(Node *node, float[3] pos) nogil:             # <<<<<<<<<<<<<<
@@ -2344,7 +2324,7 @@ static struct __pyx_t_7sklearn_8manifold_6bhtsne_Node *__pyx_f_7sklearn_8manifol
   return __pyx_r;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":141
+/* "sklearn/manifold/bhtsne.pyx":139
  *     return node.children[offset[0]][offset[1]][offset[2]]
  * 
  * cdef void subdivide(Node* node) nogil:             # <<<<<<<<<<<<<<
@@ -2365,7 +2345,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
   int __pyx_t_4;
   int __pyx_t_5;
 
-  /* "sklearn/manifold/bhtsne.pyx":143
+  /* "sklearn/manifold/bhtsne.pyx":141
  * cdef void subdivide(Node* node) nogil:
  *     # This instantiates 4 or 8 nodes for the current node
  *     cdef int i = 0             # <<<<<<<<<<<<<<
@@ -2374,7 +2354,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
  */
   __pyx_v_i = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":144
+  /* "sklearn/manifold/bhtsne.pyx":142
  *     # This instantiates 4 or 8 nodes for the current node
  *     cdef int i = 0
  *     cdef int j = 0             # <<<<<<<<<<<<<<
@@ -2383,7 +2363,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
  */
   __pyx_v_j = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":145
+  /* "sklearn/manifold/bhtsne.pyx":143
  *     cdef int i = 0
  *     cdef int j = 0
  *     cdef int k = 0             # <<<<<<<<<<<<<<
@@ -2392,7 +2372,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
  */
   __pyx_v_k = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":147
+  /* "sklearn/manifold/bhtsne.pyx":145
  *     cdef int k = 0
  *     cdef int[3] offset
  *     node.is_leaf = False             # <<<<<<<<<<<<<<
@@ -2401,7 +2381,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
  */
   __pyx_v_node->is_leaf = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":148
+  /* "sklearn/manifold/bhtsne.pyx":146
  *     cdef int[3] offset
  *     node.is_leaf = False
  *     for ax in range(3):             # <<<<<<<<<<<<<<
@@ -2411,7 +2391,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_ax = __pyx_t_1;
 
-    /* "sklearn/manifold/bhtsne.pyx":149
+    /* "sklearn/manifold/bhtsne.pyx":147
  *     node.is_leaf = False
  *     for ax in range(3):
  *         offset[ax] = 0             # <<<<<<<<<<<<<<
@@ -2421,7 +2401,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
     (__pyx_v_offset[__pyx_v_ax]) = 0;
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":150
+  /* "sklearn/manifold/bhtsne.pyx":148
  *     for ax in range(3):
  *         offset[ax] = 0
  *     if node.tree.dimension > 2:             # <<<<<<<<<<<<<<
@@ -2431,7 +2411,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
   __pyx_t_2 = ((__pyx_v_node->tree->dimension > 2) != 0);
   if (__pyx_t_2) {
 
-    /* "sklearn/manifold/bhtsne.pyx":151
+    /* "sklearn/manifold/bhtsne.pyx":149
  *         offset[ax] = 0
  *     if node.tree.dimension > 2:
  *         krange = 2             # <<<<<<<<<<<<<<
@@ -2443,7 +2423,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
   }
   /*else*/ {
 
-    /* "sklearn/manifold/bhtsne.pyx":153
+    /* "sklearn/manifold/bhtsne.pyx":151
  *         krange = 2
  *     else:
  *         krange = 1             # <<<<<<<<<<<<<<
@@ -2454,7 +2434,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
   }
   __pyx_L5:;
 
-  /* "sklearn/manifold/bhtsne.pyx":154
+  /* "sklearn/manifold/bhtsne.pyx":152
  *     else:
  *         krange = 1
  *     for i in range(2):             # <<<<<<<<<<<<<<
@@ -2464,7 +2444,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
   for (__pyx_t_3 = 0; __pyx_t_3 < 2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "sklearn/manifold/bhtsne.pyx":155
+    /* "sklearn/manifold/bhtsne.pyx":153
  *         krange = 1
  *     for i in range(2):
  *         offset[0] = i             # <<<<<<<<<<<<<<
@@ -2473,7 +2453,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
  */
     (__pyx_v_offset[0]) = __pyx_v_i;
 
-    /* "sklearn/manifold/bhtsne.pyx":156
+    /* "sklearn/manifold/bhtsne.pyx":154
  *     for i in range(2):
  *         offset[0] = i
  *         for j in range(2):             # <<<<<<<<<<<<<<
@@ -2483,7 +2463,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
     for (__pyx_t_4 = 0; __pyx_t_4 < 2; __pyx_t_4+=1) {
       __pyx_v_j = __pyx_t_4;
 
-      /* "sklearn/manifold/bhtsne.pyx":157
+      /* "sklearn/manifold/bhtsne.pyx":155
  *         offset[0] = i
  *         for j in range(2):
  *             offset[1] = j             # <<<<<<<<<<<<<<
@@ -2492,7 +2472,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
  */
       (__pyx_v_offset[1]) = __pyx_v_j;
 
-      /* "sklearn/manifold/bhtsne.pyx":158
+      /* "sklearn/manifold/bhtsne.pyx":156
  *         for j in range(2):
  *             offset[1] = j
  *             for k in range(krange):             # <<<<<<<<<<<<<<
@@ -2503,7 +2483,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
       for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_1; __pyx_t_5+=1) {
         __pyx_v_k = __pyx_t_5;
 
-        /* "sklearn/manifold/bhtsne.pyx":159
+        /* "sklearn/manifold/bhtsne.pyx":157
  *             offset[1] = j
  *             for k in range(krange):
  *                 offset[2] = k             # <<<<<<<<<<<<<<
@@ -2512,7 +2492,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
  */
         (__pyx_v_offset[2]) = __pyx_v_k;
 
-        /* "sklearn/manifold/bhtsne.pyx":160
+        /* "sklearn/manifold/bhtsne.pyx":158
  *             for k in range(krange):
  *                 offset[2] = k
  *                 node.children[i][j][k] = create_child(node, offset)             # <<<<<<<<<<<<<<
@@ -2524,7 +2504,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
     }
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":141
+  /* "sklearn/manifold/bhtsne.pyx":139
  *     return node.children[offset[0]][offset[1]][offset[2]]
  * 
  * cdef void subdivide(Node* node) nogil:             # <<<<<<<<<<<<<<
@@ -2535,7 +2515,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_subdivide(struct __pyx_t_7sklearn
   /* function exit code */
 }
 
-/* "sklearn/manifold/bhtsne.pyx":162
+/* "sklearn/manifold/bhtsne.pyx":160
  *                 node.children[i][j][k] = create_child(node, offset)
  * 
  * cdef void insert(Node *root, float pos[3], long point_index) nogil:             # <<<<<<<<<<<<<<
@@ -2554,7 +2534,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
   int __pyx_t_3;
   int __pyx_t_4;
 
-  /* "sklearn/manifold/bhtsne.pyx":168
+  /* "sklearn/manifold/bhtsne.pyx":166
  *     cdef long i
  *     cdef int ax
  *     cdef int dimension = root.tree.dimension             # <<<<<<<<<<<<<<
@@ -2564,7 +2544,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
   __pyx_t_1 = __pyx_v_root->tree->dimension;
   __pyx_v_dimension = __pyx_t_1;
 
-  /* "sklearn/manifold/bhtsne.pyx":171
+  /* "sklearn/manifold/bhtsne.pyx":169
  *     # Increment the total number points including this
  *     # node and below it
  *     root.cum_size += 1             # <<<<<<<<<<<<<<
@@ -2573,7 +2553,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
  */
   __pyx_v_root->cum_size = (__pyx_v_root->cum_size + 1);
 
-  /* "sklearn/manifold/bhtsne.pyx":174
+  /* "sklearn/manifold/bhtsne.pyx":172
  *     # Evaluate the new center of mass, weighting the previous
  *     # center of mass against the new point data
  *     cdef double frac_seen = <double>(root.cum_size - 1) / (<double> root.cum_size)             # <<<<<<<<<<<<<<
@@ -2582,7 +2562,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
  */
   __pyx_v_frac_seen = (((double)(__pyx_v_root->cum_size - 1)) / ((double)__pyx_v_root->cum_size));
 
-  /* "sklearn/manifold/bhtsne.pyx":175
+  /* "sklearn/manifold/bhtsne.pyx":173
  *     # center of mass against the new point data
  *     cdef double frac_seen = <double>(root.cum_size - 1) / (<double> root.cum_size)
  *     cdef double frac_new  = 1.0 / <double> root.cum_size             # <<<<<<<<<<<<<<
@@ -2591,7 +2571,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
  */
   __pyx_v_frac_new = (1.0 / ((double)__pyx_v_root->cum_size));
 
-  /* "sklearn/manifold/bhtsne.pyx":176
+  /* "sklearn/manifold/bhtsne.pyx":174
  *     cdef double frac_seen = <double>(root.cum_size - 1) / (<double> root.cum_size)
  *     cdef double frac_new  = 1.0 / <double> root.cum_size
  *     for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -2602,7 +2582,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_ax = __pyx_t_2;
 
-    /* "sklearn/manifold/bhtsne.pyx":177
+    /* "sklearn/manifold/bhtsne.pyx":175
  *     cdef double frac_new  = 1.0 / <double> root.cum_size
  *     for ax in range(dimension):
  *         root.cum_com[ax] *= frac_seen             # <<<<<<<<<<<<<<
@@ -2613,7 +2593,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
     (__pyx_v_root->cum_com[__pyx_t_3]) = ((__pyx_v_root->cum_com[__pyx_t_3]) * __pyx_v_frac_seen);
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":178
+  /* "sklearn/manifold/bhtsne.pyx":176
  *     for ax in range(dimension):
  *         root.cum_com[ax] *= frac_seen
  *     for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -2624,7 +2604,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_ax = __pyx_t_2;
 
-    /* "sklearn/manifold/bhtsne.pyx":179
+    /* "sklearn/manifold/bhtsne.pyx":177
  *         root.cum_com[ax] *= frac_seen
  *     for ax in range(dimension):
  *         root.cum_com[ax] += pos[ax] * frac_new             # <<<<<<<<<<<<<<
@@ -2635,7 +2615,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
     (__pyx_v_root->cum_com[__pyx_t_3]) = ((__pyx_v_root->cum_com[__pyx_t_3]) + ((__pyx_v_pos[__pyx_v_ax]) * __pyx_v_frac_new));
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":185
+  /* "sklearn/manifold/bhtsne.pyx":183
  *     # 1) Insert into this node if it is a leaf and empty
  *     # 2) Subdivide this node if it is currently occupied
  *     if (root.size == 0) & root.is_leaf:             # <<<<<<<<<<<<<<
@@ -2645,7 +2625,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
   __pyx_t_4 = (((__pyx_v_root->size == 0) & __pyx_v_root->is_leaf) != 0);
   if (__pyx_t_4) {
 
-    /* "sklearn/manifold/bhtsne.pyx":186
+    /* "sklearn/manifold/bhtsne.pyx":184
  *     # 2) Subdivide this node if it is currently occupied
  *     if (root.size == 0) & root.is_leaf:
  *         for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -2656,7 +2636,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
     for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
       __pyx_v_ax = __pyx_t_2;
 
-      /* "sklearn/manifold/bhtsne.pyx":187
+      /* "sklearn/manifold/bhtsne.pyx":185
  *     if (root.size == 0) & root.is_leaf:
  *         for ax in range(dimension):
  *             root.cur_pos[ax] = pos[ax]             # <<<<<<<<<<<<<<
@@ -2666,7 +2646,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
       (__pyx_v_root->cur_pos[__pyx_v_ax]) = (__pyx_v_pos[__pyx_v_ax]);
     }
 
-    /* "sklearn/manifold/bhtsne.pyx":188
+    /* "sklearn/manifold/bhtsne.pyx":186
  *         for ax in range(dimension):
  *             root.cur_pos[ax] = pos[ax]
  *         root.point_index = point_index             # <<<<<<<<<<<<<<
@@ -2675,7 +2655,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
  */
     __pyx_v_root->point_index = __pyx_v_point_index;
 
-    /* "sklearn/manifold/bhtsne.pyx":189
+    /* "sklearn/manifold/bhtsne.pyx":187
  *             root.cur_pos[ax] = pos[ax]
  *         root.point_index = point_index
  *         root.size = 1             # <<<<<<<<<<<<<<
@@ -2687,7 +2667,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
   }
   /*else*/ {
 
-    /* "sklearn/manifold/bhtsne.pyx":193
+    /* "sklearn/manifold/bhtsne.pyx":191
  *         # If necessary, subdivide this node before
  *         # descending
  *         if root.is_leaf:             # <<<<<<<<<<<<<<
@@ -2697,7 +2677,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
     __pyx_t_4 = (__pyx_v_root->is_leaf != 0);
     if (__pyx_t_4) {
 
-      /* "sklearn/manifold/bhtsne.pyx":194
+      /* "sklearn/manifold/bhtsne.pyx":192
  *         # descending
  *         if root.is_leaf:
  *             subdivide(root)             # <<<<<<<<<<<<<<
@@ -2709,7 +2689,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
     }
     __pyx_L10:;
 
-    /* "sklearn/manifold/bhtsne.pyx":198
+    /* "sklearn/manifold/bhtsne.pyx":196
  *         # at this node, and the new one we're attempting
  *         # to insert
  *         if root.size > 0:             # <<<<<<<<<<<<<<
@@ -2719,7 +2699,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
     __pyx_t_4 = ((__pyx_v_root->size > 0) != 0);
     if (__pyx_t_4) {
 
-      /* "sklearn/manifold/bhtsne.pyx":199
+      /* "sklearn/manifold/bhtsne.pyx":197
  *         # to insert
  *         if root.size > 0:
  *             child = select_child(root, root.cur_pos)             # <<<<<<<<<<<<<<
@@ -2728,7 +2708,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
  */
       __pyx_v_child = __pyx_f_7sklearn_8manifold_6bhtsne_select_child(__pyx_v_root, __pyx_v_root->cur_pos);
 
-      /* "sklearn/manifold/bhtsne.pyx":200
+      /* "sklearn/manifold/bhtsne.pyx":198
  *         if root.size > 0:
  *             child = select_child(root, root.cur_pos)
  *             insert(child, root.cur_pos, root.point_index)             # <<<<<<<<<<<<<<
@@ -2737,7 +2717,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
  */
       __pyx_f_7sklearn_8manifold_6bhtsne_insert(__pyx_v_child, __pyx_v_root->cur_pos, __pyx_v_root->point_index);
 
-      /* "sklearn/manifold/bhtsne.pyx":202
+      /* "sklearn/manifold/bhtsne.pyx":200
  *             insert(child, root.cur_pos, root.point_index)
  *             # Remove the point from this node
  *             for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -2748,7 +2728,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
       for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
         __pyx_v_ax = __pyx_t_2;
 
-        /* "sklearn/manifold/bhtsne.pyx":203
+        /* "sklearn/manifold/bhtsne.pyx":201
  *             # Remove the point from this node
  *             for ax in range(dimension):
  *                 root.cur_pos[ax] = -1             # <<<<<<<<<<<<<<
@@ -2758,7 +2738,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
         (__pyx_v_root->cur_pos[__pyx_v_ax]) = -1.0;
       }
 
-      /* "sklearn/manifold/bhtsne.pyx":204
+      /* "sklearn/manifold/bhtsne.pyx":202
  *             for ax in range(dimension):
  *                 root.cur_pos[ax] = -1
  *             root.size = 0             # <<<<<<<<<<<<<<
@@ -2767,7 +2747,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
  */
       __pyx_v_root->size = 0;
 
-      /* "sklearn/manifold/bhtsne.pyx":205
+      /* "sklearn/manifold/bhtsne.pyx":203
  *                 root.cur_pos[ax] = -1
  *             root.size = 0
  *             root.point_index = -1             # <<<<<<<<<<<<<<
@@ -2779,7 +2759,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
     }
     __pyx_L11:;
 
-    /* "sklearn/manifold/bhtsne.pyx":207
+    /* "sklearn/manifold/bhtsne.pyx":205
  *             root.point_index = -1
  *         # Insert the new point
  *         child = select_child(root, pos)             # <<<<<<<<<<<<<<
@@ -2788,7 +2768,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
  */
     __pyx_v_child = __pyx_f_7sklearn_8manifold_6bhtsne_select_child(__pyx_v_root, __pyx_v_pos);
 
-    /* "sklearn/manifold/bhtsne.pyx":208
+    /* "sklearn/manifold/bhtsne.pyx":206
  *         # Insert the new point
  *         child = select_child(root, pos)
  *         insert(child, pos, point_index)             # <<<<<<<<<<<<<<
@@ -2799,7 +2779,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
   }
   __pyx_L7:;
 
-  /* "sklearn/manifold/bhtsne.pyx":162
+  /* "sklearn/manifold/bhtsne.pyx":160
  *                 node.children[i][j][k] = create_child(node, offset)
  * 
  * cdef void insert(Node *root, float pos[3], long point_index) nogil:             # <<<<<<<<<<<<<<
@@ -2810,7 +2790,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert(struct __pyx_t_7sklearn_8m
   /* function exit code */
 }
 
-/* "sklearn/manifold/bhtsne.pyx":210
+/* "sklearn/manifold/bhtsne.pyx":208
  *         insert(child, pos, point_index)
  * 
  * cdef void insert_many(Tree* tree, float[:,:] pos_array) nogil:             # <<<<<<<<<<<<<<
@@ -2829,12 +2809,8 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert_many(struct __pyx_t_7sklea
   int __pyx_t_4;
   long __pyx_t_5;
   int __pyx_t_6;
-  int __pyx_t_7;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":212
+  /* "sklearn/manifold/bhtsne.pyx":210
  * cdef void insert_many(Tree* tree, float[:,:] pos_array) nogil:
  *     # Insert each data point into the tree one at a time
  *     cdef long nrows = pos_array.shape[0]             # <<<<<<<<<<<<<<
@@ -2843,7 +2819,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert_many(struct __pyx_t_7sklea
  */
   __pyx_v_nrows = (__pyx_v_pos_array.shape[0]);
 
-  /* "sklearn/manifold/bhtsne.pyx":216
+  /* "sklearn/manifold/bhtsne.pyx":214
  *     cdef int ax
  *     cdef float row[3]
  *     for i in range(nrows):             # <<<<<<<<<<<<<<
@@ -2854,7 +2830,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert_many(struct __pyx_t_7sklea
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "sklearn/manifold/bhtsne.pyx":217
+    /* "sklearn/manifold/bhtsne.pyx":215
  *     cdef float row[3]
  *     for i in range(nrows):
  *         for ax in range(tree.dimension):             # <<<<<<<<<<<<<<
@@ -2865,7 +2841,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert_many(struct __pyx_t_7sklea
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_ax = __pyx_t_4;
 
-      /* "sklearn/manifold/bhtsne.pyx":218
+      /* "sklearn/manifold/bhtsne.pyx":216
  *     for i in range(nrows):
  *         for ax in range(tree.dimension):
  *             row[ax] = pos_array[i, ax]             # <<<<<<<<<<<<<<
@@ -2874,21 +2850,10 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert_many(struct __pyx_t_7sklea
  */
       __pyx_t_5 = __pyx_v_i;
       __pyx_t_6 = __pyx_v_ax;
-      __pyx_t_7 = -1;
-      if (__pyx_t_5 < 0) {
-        __pyx_t_7 = 0;
-      } else if (unlikely(__pyx_t_5 >= __pyx_v_pos_array.shape[0])) __pyx_t_7 = 0;
-      if (__pyx_t_6 < 0) {
-        __pyx_t_7 = 1;
-      } else if (unlikely(__pyx_t_6 >= __pyx_v_pos_array.shape[1])) __pyx_t_7 = 1;
-      if (unlikely(__pyx_t_7 != -1)) {
-        __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_7);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 218; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      }
       (__pyx_v_row[__pyx_v_ax]) = (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_array.data + __pyx_t_5 * __pyx_v_pos_array.strides[0]) ) + __pyx_t_6 * __pyx_v_pos_array.strides[1]) )));
     }
 
-    /* "sklearn/manifold/bhtsne.pyx":219
+    /* "sklearn/manifold/bhtsne.pyx":217
  *         for ax in range(tree.dimension):
  *             row[ax] = pos_array[i, ax]
  *         insert(tree.root_node, row, i)             # <<<<<<<<<<<<<<
@@ -2897,7 +2862,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert_many(struct __pyx_t_7sklea
  */
     __pyx_f_7sklearn_8manifold_6bhtsne_insert(__pyx_v_tree->root_node, __pyx_v_row, __pyx_v_i);
 
-    /* "sklearn/manifold/bhtsne.pyx":220
+    /* "sklearn/manifold/bhtsne.pyx":218
  *             row[ax] = pos_array[i, ax]
  *         insert(tree.root_node, row, i)
  *         tree.num_part += 1             # <<<<<<<<<<<<<<
@@ -2907,7 +2872,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert_many(struct __pyx_t_7sklea
     __pyx_v_tree->num_part = (__pyx_v_tree->num_part + 1);
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":210
+  /* "sklearn/manifold/bhtsne.pyx":208
  *         insert(child, pos, point_index)
  * 
  * cdef void insert_many(Tree* tree, float[:,:] pos_array) nogil:             # <<<<<<<<<<<<<<
@@ -2916,13 +2881,9 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_insert_many(struct __pyx_t_7sklea
  */
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __Pyx_WriteUnraisable("sklearn.manifold.bhtsne.insert_many", __pyx_clineno, __pyx_lineno, __pyx_filename, 0);
-  __pyx_L0:;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":222
+/* "sklearn/manifold/bhtsne.pyx":220
  *         tree.num_part += 1
  * 
  * cdef int free_tree(Tree* tree) nogil:             # <<<<<<<<<<<<<<
@@ -2937,7 +2898,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
   int __pyx_r;
   long __pyx_t_1;
 
-  /* "sklearn/manifold/bhtsne.pyx":224
+  /* "sklearn/manifold/bhtsne.pyx":222
  * cdef int free_tree(Tree* tree) nogil:
  *     cdef int check
  *     cdef long* cnt = <long*> malloc(sizeof(long) * 3)             # <<<<<<<<<<<<<<
@@ -2946,7 +2907,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
  */
   __pyx_v_cnt = ((long *)malloc(((sizeof(long)) * 3)));
 
-  /* "sklearn/manifold/bhtsne.pyx":225
+  /* "sklearn/manifold/bhtsne.pyx":223
  *     cdef int check
  *     cdef long* cnt = <long*> malloc(sizeof(long) * 3)
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -2956,7 +2917,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "sklearn/manifold/bhtsne.pyx":226
+    /* "sklearn/manifold/bhtsne.pyx":224
  *     cdef long* cnt = <long*> malloc(sizeof(long) * 3)
  *     for i in range(3):
  *         cnt[i] = 0             # <<<<<<<<<<<<<<
@@ -2966,7 +2927,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
     (__pyx_v_cnt[__pyx_v_i]) = 0;
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":227
+  /* "sklearn/manifold/bhtsne.pyx":225
  *     for i in range(3):
  *         cnt[i] = 0
  *     free_recursive(tree, tree.root_node, cnt)             # <<<<<<<<<<<<<<
@@ -2975,7 +2936,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
  */
   __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(__pyx_v_tree, __pyx_v_tree->root_node, __pyx_v_cnt);
 
-  /* "sklearn/manifold/bhtsne.pyx":228
+  /* "sklearn/manifold/bhtsne.pyx":226
  *         cnt[i] = 0
  *     free_recursive(tree, tree.root_node, cnt)
  *     free(tree.root_node)             # <<<<<<<<<<<<<<
@@ -2984,7 +2945,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
  */
   free(__pyx_v_tree->root_node);
 
-  /* "sklearn/manifold/bhtsne.pyx":229
+  /* "sklearn/manifold/bhtsne.pyx":227
  *     free_recursive(tree, tree.root_node, cnt)
  *     free(tree.root_node)
  *     check = cnt[0] == tree.num_cells             # <<<<<<<<<<<<<<
@@ -2993,7 +2954,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
  */
   __pyx_v_check = ((__pyx_v_cnt[0]) == __pyx_v_tree->num_cells);
 
-  /* "sklearn/manifold/bhtsne.pyx":230
+  /* "sklearn/manifold/bhtsne.pyx":228
  *     free(tree.root_node)
  *     check = cnt[0] == tree.num_cells
  *     check &= cnt[2] == tree.num_part             # <<<<<<<<<<<<<<
@@ -3002,7 +2963,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
  */
   __pyx_v_check = (__pyx_v_check & ((__pyx_v_cnt[2]) == __pyx_v_tree->num_part));
 
-  /* "sklearn/manifold/bhtsne.pyx":231
+  /* "sklearn/manifold/bhtsne.pyx":229
  *     check = cnt[0] == tree.num_cells
  *     check &= cnt[2] == tree.num_part
  *     free(cnt)             # <<<<<<<<<<<<<<
@@ -3011,7 +2972,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
  */
   free(__pyx_v_cnt);
 
-  /* "sklearn/manifold/bhtsne.pyx":232
+  /* "sklearn/manifold/bhtsne.pyx":230
  *     check &= cnt[2] == tree.num_part
  *     free(cnt)
  *     free(tree)             # <<<<<<<<<<<<<<
@@ -3020,7 +2981,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
  */
   free(__pyx_v_tree);
 
-  /* "sklearn/manifold/bhtsne.pyx":233
+  /* "sklearn/manifold/bhtsne.pyx":231
  *     free(cnt)
  *     free(tree)
  *     return check             # <<<<<<<<<<<<<<
@@ -3030,7 +2991,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
   __pyx_r = __pyx_v_check;
   goto __pyx_L0;
 
-  /* "sklearn/manifold/bhtsne.pyx":222
+  /* "sklearn/manifold/bhtsne.pyx":220
  *         tree.num_part += 1
  * 
  * cdef int free_tree(Tree* tree) nogil:             # <<<<<<<<<<<<<<
@@ -3043,7 +3004,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(struct __pyx_t_7sklearn_
   return __pyx_r;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":235
+/* "sklearn/manifold/bhtsne.pyx":233
  *     return check
  * 
  * cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:             # <<<<<<<<<<<<<<
@@ -3064,7 +3025,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
   int __pyx_t_5;
   long __pyx_t_6;
 
-  /* "sklearn/manifold/bhtsne.pyx":240
+  /* "sklearn/manifold/bhtsne.pyx":238
  *     # and total number of data points removed
  *     cdef int i, j, krange
  *     cdef int k = 0             # <<<<<<<<<<<<<<
@@ -3073,7 +3034,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
  */
   __pyx_v_k = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":242
+  /* "sklearn/manifold/bhtsne.pyx":240
  *     cdef int k = 0
  *     cdef Node* child
  *     if root.tree.dimension > 2:             # <<<<<<<<<<<<<<
@@ -3083,7 +3044,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
   __pyx_t_1 = ((__pyx_v_root->tree->dimension > 2) != 0);
   if (__pyx_t_1) {
 
-    /* "sklearn/manifold/bhtsne.pyx":243
+    /* "sklearn/manifold/bhtsne.pyx":241
  *     cdef Node* child
  *     if root.tree.dimension > 2:
  *         krange = 2             # <<<<<<<<<<<<<<
@@ -3095,7 +3056,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
   }
   /*else*/ {
 
-    /* "sklearn/manifold/bhtsne.pyx":245
+    /* "sklearn/manifold/bhtsne.pyx":243
  *         krange = 2
  *     else:
  *         krange = 1             # <<<<<<<<<<<<<<
@@ -3106,7 +3067,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
   }
   __pyx_L3:;
 
-  /* "sklearn/manifold/bhtsne.pyx":246
+  /* "sklearn/manifold/bhtsne.pyx":244
  *     else:
  *         krange = 1
  *     if not root.is_leaf:             # <<<<<<<<<<<<<<
@@ -3116,7 +3077,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
   __pyx_t_1 = ((!(__pyx_v_root->is_leaf != 0)) != 0);
   if (__pyx_t_1) {
 
-    /* "sklearn/manifold/bhtsne.pyx":247
+    /* "sklearn/manifold/bhtsne.pyx":245
  *         krange = 1
  *     if not root.is_leaf:
  *         for i in range(2):             # <<<<<<<<<<<<<<
@@ -3126,7 +3087,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
     for (__pyx_t_2 = 0; __pyx_t_2 < 2; __pyx_t_2+=1) {
       __pyx_v_i = __pyx_t_2;
 
-      /* "sklearn/manifold/bhtsne.pyx":248
+      /* "sklearn/manifold/bhtsne.pyx":246
  *     if not root.is_leaf:
  *         for i in range(2):
  *             for j in range(2):             # <<<<<<<<<<<<<<
@@ -3136,7 +3097,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
       for (__pyx_t_3 = 0; __pyx_t_3 < 2; __pyx_t_3+=1) {
         __pyx_v_j = __pyx_t_3;
 
-        /* "sklearn/manifold/bhtsne.pyx":249
+        /* "sklearn/manifold/bhtsne.pyx":247
  *         for i in range(2):
  *             for j in range(2):
  *                 for k in range(krange):             # <<<<<<<<<<<<<<
@@ -3147,7 +3108,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
         for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
           __pyx_v_k = __pyx_t_5;
 
-          /* "sklearn/manifold/bhtsne.pyx":250
+          /* "sklearn/manifold/bhtsne.pyx":248
  *             for j in range(2):
  *                 for k in range(krange):
  *                     child = root.children[i][j][k]             # <<<<<<<<<<<<<<
@@ -3156,7 +3117,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
  */
           __pyx_v_child = (((__pyx_v_root->children[__pyx_v_i])[__pyx_v_j])[__pyx_v_k]);
 
-          /* "sklearn/manifold/bhtsne.pyx":251
+          /* "sklearn/manifold/bhtsne.pyx":249
  *                 for k in range(krange):
  *                     child = root.children[i][j][k]
  *                     free_recursive(tree, child, counts)             # <<<<<<<<<<<<<<
@@ -3165,7 +3126,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
  */
           __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(__pyx_v_tree, __pyx_v_child, __pyx_v_counts);
 
-          /* "sklearn/manifold/bhtsne.pyx":252
+          /* "sklearn/manifold/bhtsne.pyx":250
  *                     child = root.children[i][j][k]
  *                     free_recursive(tree, child, counts)
  *                     counts[0] += 1             # <<<<<<<<<<<<<<
@@ -3175,7 +3136,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
           __pyx_t_6 = 0;
           (__pyx_v_counts[__pyx_t_6]) = ((__pyx_v_counts[__pyx_t_6]) + 1);
 
-          /* "sklearn/manifold/bhtsne.pyx":253
+          /* "sklearn/manifold/bhtsne.pyx":251
  *                     free_recursive(tree, child, counts)
  *                     counts[0] += 1
  *                     if child.is_leaf:             # <<<<<<<<<<<<<<
@@ -3185,7 +3146,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
           __pyx_t_1 = (__pyx_v_child->is_leaf != 0);
           if (__pyx_t_1) {
 
-            /* "sklearn/manifold/bhtsne.pyx":254
+            /* "sklearn/manifold/bhtsne.pyx":252
  *                     counts[0] += 1
  *                     if child.is_leaf:
  *                         counts[1] += 1             # <<<<<<<<<<<<<<
@@ -3195,7 +3156,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
             __pyx_t_6 = 1;
             (__pyx_v_counts[__pyx_t_6]) = ((__pyx_v_counts[__pyx_t_6]) + 1);
 
-            /* "sklearn/manifold/bhtsne.pyx":255
+            /* "sklearn/manifold/bhtsne.pyx":253
  *                     if child.is_leaf:
  *                         counts[1] += 1
  *                         if child.size > 0:             # <<<<<<<<<<<<<<
@@ -3205,7 +3166,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
             __pyx_t_1 = ((__pyx_v_child->size > 0) != 0);
             if (__pyx_t_1) {
 
-              /* "sklearn/manifold/bhtsne.pyx":256
+              /* "sklearn/manifold/bhtsne.pyx":254
  *                         counts[1] += 1
  *                         if child.size > 0:
  *                             counts[2] +=1             # <<<<<<<<<<<<<<
@@ -3221,7 +3182,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
           }
           __pyx_L11:;
 
-          /* "sklearn/manifold/bhtsne.pyx":257
+          /* "sklearn/manifold/bhtsne.pyx":255
  *                         if child.size > 0:
  *                             counts[2] +=1
  *                     free(child)             # <<<<<<<<<<<<<<
@@ -3236,7 +3197,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
   }
   __pyx_L4:;
 
-  /* "sklearn/manifold/bhtsne.pyx":235
+  /* "sklearn/manifold/bhtsne.pyx":233
  *     return check
  * 
  * cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:             # <<<<<<<<<<<<<<
@@ -3247,7 +3208,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_free_recursive(struct __pyx_t_7sk
   /* function exit code */
 }
 
-/* "sklearn/manifold/bhtsne.pyx":259
+/* "sklearn/manifold/bhtsne.pyx":257
  *                     free(child)
  * 
  * cdef int check_consistency(Tree* tree) nogil:             # <<<<<<<<<<<<<<
@@ -3260,7 +3221,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_check_consistency(struct __pyx_t_7
   int __pyx_v_check;
   int __pyx_r;
 
-  /* "sklearn/manifold/bhtsne.pyx":265
+  /* "sklearn/manifold/bhtsne.pyx":263
  *     cdef long count
  *     cdef int check
  *     count = 0             # <<<<<<<<<<<<<<
@@ -3269,7 +3230,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_check_consistency(struct __pyx_t_7
  */
   __pyx_v_count = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":266
+  /* "sklearn/manifold/bhtsne.pyx":264
  *     cdef int check
  *     count = 0
  *     count = count_points(tree.root_node, count)             # <<<<<<<<<<<<<<
@@ -3278,7 +3239,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_check_consistency(struct __pyx_t_7
  */
   __pyx_v_count = __pyx_f_7sklearn_8manifold_6bhtsne_count_points(__pyx_v_tree->root_node, __pyx_v_count);
 
-  /* "sklearn/manifold/bhtsne.pyx":267
+  /* "sklearn/manifold/bhtsne.pyx":265
  *     count = 0
  *     count = count_points(tree.root_node, count)
  *     check = count == tree.root_node.cum_size             # <<<<<<<<<<<<<<
@@ -3287,7 +3248,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_check_consistency(struct __pyx_t_7
  */
   __pyx_v_check = (__pyx_v_count == __pyx_v_tree->root_node->cum_size);
 
-  /* "sklearn/manifold/bhtsne.pyx":268
+  /* "sklearn/manifold/bhtsne.pyx":266
  *     count = count_points(tree.root_node, count)
  *     check = count == tree.root_node.cum_size
  *     check &= count == tree.num_part             # <<<<<<<<<<<<<<
@@ -3296,7 +3257,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_check_consistency(struct __pyx_t_7
  */
   __pyx_v_check = (__pyx_v_check & (__pyx_v_count == __pyx_v_tree->num_part));
 
-  /* "sklearn/manifold/bhtsne.pyx":269
+  /* "sklearn/manifold/bhtsne.pyx":267
  *     check = count == tree.root_node.cum_size
  *     check &= count == tree.num_part
  *     return check             # <<<<<<<<<<<<<<
@@ -3306,7 +3267,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_check_consistency(struct __pyx_t_7
   __pyx_r = __pyx_v_check;
   goto __pyx_L0;
 
-  /* "sklearn/manifold/bhtsne.pyx":259
+  /* "sklearn/manifold/bhtsne.pyx":257
  *                     free(child)
  * 
  * cdef int check_consistency(Tree* tree) nogil:             # <<<<<<<<<<<<<<
@@ -3319,7 +3280,7 @@ static int __pyx_f_7sklearn_8manifold_6bhtsne_check_consistency(struct __pyx_t_7
   return __pyx_r;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":271
+/* "sklearn/manifold/bhtsne.pyx":269
  *     return check
  * 
  * cdef long count_points(Node* root, long count) nogil:             # <<<<<<<<<<<<<<
@@ -3341,7 +3302,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
   long __pyx_t_5;
   int __pyx_t_6;
 
-  /* "sklearn/manifold/bhtsne.pyx":276
+  /* "sklearn/manifold/bhtsne.pyx":274
  *     cdef Node* child
  *     cdef int i, j
  *     if root.tree.dimension > 2:             # <<<<<<<<<<<<<<
@@ -3351,7 +3312,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
   __pyx_t_1 = ((__pyx_v_root->tree->dimension > 2) != 0);
   if (__pyx_t_1) {
 
-    /* "sklearn/manifold/bhtsne.pyx":277
+    /* "sklearn/manifold/bhtsne.pyx":275
  *     cdef int i, j
  *     if root.tree.dimension > 2:
  *         krange = 2             # <<<<<<<<<<<<<<
@@ -3363,7 +3324,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
   }
   /*else*/ {
 
-    /* "sklearn/manifold/bhtsne.pyx":279
+    /* "sklearn/manifold/bhtsne.pyx":277
  *         krange = 2
  *     else:
  *         krange = 1             # <<<<<<<<<<<<<<
@@ -3374,7 +3335,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
   }
   __pyx_L3:;
 
-  /* "sklearn/manifold/bhtsne.pyx":280
+  /* "sklearn/manifold/bhtsne.pyx":278
  *     else:
  *         krange = 1
  *     for i in range(2):             # <<<<<<<<<<<<<<
@@ -3384,7 +3345,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
   for (__pyx_t_2 = 0; __pyx_t_2 < 2; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "sklearn/manifold/bhtsne.pyx":281
+    /* "sklearn/manifold/bhtsne.pyx":279
  *         krange = 1
  *     for i in range(2):
  *         for j in range(2):             # <<<<<<<<<<<<<<
@@ -3394,7 +3355,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
     for (__pyx_t_3 = 0; __pyx_t_3 < 2; __pyx_t_3+=1) {
       __pyx_v_j = __pyx_t_3;
 
-      /* "sklearn/manifold/bhtsne.pyx":282
+      /* "sklearn/manifold/bhtsne.pyx":280
  *     for i in range(2):
  *         for j in range(2):
  *             for k in range(krange):             # <<<<<<<<<<<<<<
@@ -3405,7 +3366,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
       for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
         __pyx_v_k = __pyx_t_5;
 
-        /* "sklearn/manifold/bhtsne.pyx":283
+        /* "sklearn/manifold/bhtsne.pyx":281
  *         for j in range(2):
  *             for k in range(krange):
  *                 child = root.children[i][j][k]             # <<<<<<<<<<<<<<
@@ -3414,7 +3375,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
  */
         __pyx_v_child = (((__pyx_v_root->children[__pyx_v_i])[__pyx_v_j])[__pyx_v_k]);
 
-        /* "sklearn/manifold/bhtsne.pyx":284
+        /* "sklearn/manifold/bhtsne.pyx":282
  *             for k in range(krange):
  *                 child = root.children[i][j][k]
  *                 if child.is_leaf and child.size > 0:             # <<<<<<<<<<<<<<
@@ -3432,7 +3393,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
         __pyx_L11_bool_binop_done:;
         if (__pyx_t_1) {
 
-          /* "sklearn/manifold/bhtsne.pyx":285
+          /* "sklearn/manifold/bhtsne.pyx":283
  *                 child = root.children[i][j][k]
  *                 if child.is_leaf and child.size > 0:
  *                     count += 1             # <<<<<<<<<<<<<<
@@ -3443,7 +3404,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
           goto __pyx_L10;
         }
 
-        /* "sklearn/manifold/bhtsne.pyx":286
+        /* "sklearn/manifold/bhtsne.pyx":284
  *                 if child.is_leaf and child.size > 0:
  *                     count += 1
  *                 elif not child.is_leaf:             # <<<<<<<<<<<<<<
@@ -3453,7 +3414,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
         __pyx_t_1 = ((!(__pyx_v_child->is_leaf != 0)) != 0);
         if (__pyx_t_1) {
 
-          /* "sklearn/manifold/bhtsne.pyx":287
+          /* "sklearn/manifold/bhtsne.pyx":285
  *                     count += 1
  *                 elif not child.is_leaf:
  *                     count = count_points(child, count)             # <<<<<<<<<<<<<<
@@ -3468,7 +3429,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
     }
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":292
+  /* "sklearn/manifold/bhtsne.pyx":290
  *                 # one point, and then the other neighboring cells
  *                 # don't get filled in
  *     return count             # <<<<<<<<<<<<<<
@@ -3478,7 +3439,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
   __pyx_r = __pyx_v_count;
   goto __pyx_L0;
 
-  /* "sklearn/manifold/bhtsne.pyx":271
+  /* "sklearn/manifold/bhtsne.pyx":269
  *     return check
  * 
  * cdef long count_points(Node* root, long count) nogil:             # <<<<<<<<<<<<<<
@@ -3491,7 +3452,7 @@ static long __pyx_f_7sklearn_8manifold_6bhtsne_count_points(struct __pyx_t_7skle
   return __pyx_r;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":294
+/* "sklearn/manifold/bhtsne.pyx":292
  *     return count
  * 
  * cdef void compute_gradient(float[:,:] val_P,             # <<<<<<<<<<<<<<
@@ -3517,12 +3478,8 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   int __pyx_t_5;
   long __pyx_t_6;
   int __pyx_t_7;
-  int __pyx_t_8;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":306
+  /* "sklearn/manifold/bhtsne.pyx":304
  *     cdef long i, coord
  *     cdef int ax
  *     cdef long n = pos_reference.shape[0]             # <<<<<<<<<<<<<<
@@ -3531,7 +3488,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_v_n = (__pyx_v_pos_reference.shape[0]);
 
-  /* "sklearn/manifold/bhtsne.pyx":307
+  /* "sklearn/manifold/bhtsne.pyx":305
  *     cdef int ax
  *     cdef long n = pos_reference.shape[0]
  *     cdef int dimension = root_node.tree.dimension             # <<<<<<<<<<<<<<
@@ -3541,7 +3498,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   __pyx_t_1 = __pyx_v_root_node->tree->dimension;
   __pyx_v_dimension = __pyx_t_1;
 
-  /* "sklearn/manifold/bhtsne.pyx":308
+  /* "sklearn/manifold/bhtsne.pyx":306
  *     cdef long n = pos_reference.shape[0]
  *     cdef int dimension = root_node.tree.dimension
  *     if root_node.tree.verbose > 11:             # <<<<<<<<<<<<<<
@@ -3551,7 +3508,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   __pyx_t_2 = ((__pyx_v_root_node->tree->verbose > 11) != 0);
   if (__pyx_t_2) {
 
-    /* "sklearn/manifold/bhtsne.pyx":309
+    /* "sklearn/manifold/bhtsne.pyx":307
  *     cdef int dimension = root_node.tree.dimension
  *     if root_node.tree.verbose > 11:
  *         printf("Allocating %i elements in force arrays",             # <<<<<<<<<<<<<<
@@ -3563,7 +3520,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   }
   __pyx_L3:;
 
-  /* "sklearn/manifold/bhtsne.pyx":311
+  /* "sklearn/manifold/bhtsne.pyx":309
  *         printf("Allocating %i elements in force arrays",
  *                 n * dimension * 2)
  *     cdef float* sum_Q = <float*> malloc(sizeof(float))             # <<<<<<<<<<<<<<
@@ -3572,7 +3529,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_v_sum_Q = ((float *)malloc((sizeof(float))));
 
-  /* "sklearn/manifold/bhtsne.pyx":312
+  /* "sklearn/manifold/bhtsne.pyx":310
  *                 n * dimension * 2)
  *     cdef float* sum_Q = <float*> malloc(sizeof(float))
  *     cdef float* neg_f = <float*> malloc(sizeof(float) * n * dimension)             # <<<<<<<<<<<<<<
@@ -3581,7 +3538,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_v_neg_f = ((float *)malloc((((sizeof(float)) * __pyx_v_n) * __pyx_v_dimension)));
 
-  /* "sklearn/manifold/bhtsne.pyx":313
+  /* "sklearn/manifold/bhtsne.pyx":311
  *     cdef float* sum_Q = <float*> malloc(sizeof(float))
  *     cdef float* neg_f = <float*> malloc(sizeof(float) * n * dimension)
  *     cdef float* pos_f = <float*> malloc(sizeof(float) * n * dimension)             # <<<<<<<<<<<<<<
@@ -3590,7 +3547,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_v_pos_f = ((float *)malloc((((sizeof(float)) * __pyx_v_n) * __pyx_v_dimension)));
 
-  /* "sklearn/manifold/bhtsne.pyx":316
+  /* "sklearn/manifold/bhtsne.pyx":314
  *     cdef clock_t t1, t2
  * 
  *     sum_Q[0] = 0.0             # <<<<<<<<<<<<<<
@@ -3599,7 +3556,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   (__pyx_v_sum_Q[0]) = 0.0;
 
-  /* "sklearn/manifold/bhtsne.pyx":317
+  /* "sklearn/manifold/bhtsne.pyx":315
  * 
  *     sum_Q[0] = 0.0
  *     if root_node.tree.verbose > 11:             # <<<<<<<<<<<<<<
@@ -3609,7 +3566,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   __pyx_t_2 = ((__pyx_v_root_node->tree->verbose > 11) != 0);
   if (__pyx_t_2) {
 
-    /* "sklearn/manifold/bhtsne.pyx":318
+    /* "sklearn/manifold/bhtsne.pyx":316
  *     sum_Q[0] = 0.0
  *     if root_node.tree.verbose > 11:
  *         printf("computing positive gradient")             # <<<<<<<<<<<<<<
@@ -3621,7 +3578,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   }
   __pyx_L4:;
 
-  /* "sklearn/manifold/bhtsne.pyx":319
+  /* "sklearn/manifold/bhtsne.pyx":317
  *     if root_node.tree.verbose > 11:
  *         printf("computing positive gradient")
  *     t1 = clock()             # <<<<<<<<<<<<<<
@@ -3630,7 +3587,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_v_t1 = clock();
 
-  /* "sklearn/manifold/bhtsne.pyx":320
+  /* "sklearn/manifold/bhtsne.pyx":318
  *         printf("computing positive gradient")
  *     t1 = clock()
  *     compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f, dimension)             # <<<<<<<<<<<<<<
@@ -3639,7 +3596,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__pyx_v_val_P, __pyx_v_pos_reference, __pyx_v_neighbors, __pyx_v_pos_f, __pyx_v_dimension);
 
-  /* "sklearn/manifold/bhtsne.pyx":321
+  /* "sklearn/manifold/bhtsne.pyx":319
  *     t1 = clock()
  *     compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f, dimension)
  *     t2 = clock()             # <<<<<<<<<<<<<<
@@ -3648,7 +3605,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_v_t2 = clock();
 
-  /* "sklearn/manifold/bhtsne.pyx":322
+  /* "sklearn/manifold/bhtsne.pyx":320
  *     compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f, dimension)
  *     t2 = clock()
  *     if root_node.tree.verbose > 15:             # <<<<<<<<<<<<<<
@@ -3658,7 +3615,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   __pyx_t_2 = ((__pyx_v_root_node->tree->verbose > 15) != 0);
   if (__pyx_t_2) {
 
-    /* "sklearn/manifold/bhtsne.pyx":323
+    /* "sklearn/manifold/bhtsne.pyx":321
  *     t2 = clock()
  *     if root_node.tree.verbose > 15:
  *         printf("  nn pos: %e ticks\n", ((float) (t2 - t1)))             # <<<<<<<<<<<<<<
@@ -3670,7 +3627,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   }
   __pyx_L5:;
 
-  /* "sklearn/manifold/bhtsne.pyx":324
+  /* "sklearn/manifold/bhtsne.pyx":322
  *     if root_node.tree.verbose > 15:
  *         printf("  nn pos: %e ticks\n", ((float) (t2 - t1)))
  *     if root_node.tree.verbose > 11:             # <<<<<<<<<<<<<<
@@ -3680,7 +3637,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   __pyx_t_2 = ((__pyx_v_root_node->tree->verbose > 11) != 0);
   if (__pyx_t_2) {
 
-    /* "sklearn/manifold/bhtsne.pyx":325
+    /* "sklearn/manifold/bhtsne.pyx":323
  *         printf("  nn pos: %e ticks\n", ((float) (t2 - t1)))
  *     if root_node.tree.verbose > 11:
  *         printf("computing negative gradient")             # <<<<<<<<<<<<<<
@@ -3692,7 +3649,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   }
   __pyx_L6:;
 
-  /* "sklearn/manifold/bhtsne.pyx":326
+  /* "sklearn/manifold/bhtsne.pyx":324
  *     if root_node.tree.verbose > 11:
  *         printf("computing negative gradient")
  *     t1 = clock()             # <<<<<<<<<<<<<<
@@ -3701,7 +3658,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_v_t1 = clock();
 
-  /* "sklearn/manifold/bhtsne.pyx":327
+  /* "sklearn/manifold/bhtsne.pyx":325
  *         printf("computing negative gradient")
  *     t1 = clock()
  *     compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q,             # <<<<<<<<<<<<<<
@@ -3710,7 +3667,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(__pyx_v_val_P, __pyx_v_pos_reference, __pyx_v_neg_f, __pyx_v_root_node, __pyx_v_sum_Q, __pyx_v_theta, __pyx_v_start, __pyx_v_stop);
 
-  /* "sklearn/manifold/bhtsne.pyx":329
+  /* "sklearn/manifold/bhtsne.pyx":327
  *     compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q,
  *                               theta, start, stop)
  *     t2 = clock()             # <<<<<<<<<<<<<<
@@ -3719,7 +3676,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   __pyx_v_t2 = clock();
 
-  /* "sklearn/manifold/bhtsne.pyx":330
+  /* "sklearn/manifold/bhtsne.pyx":328
  *                               theta, start, stop)
  *     t2 = clock()
  *     if root_node.tree.verbose > 15:             # <<<<<<<<<<<<<<
@@ -3729,7 +3686,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   __pyx_t_2 = ((__pyx_v_root_node->tree->verbose > 15) != 0);
   if (__pyx_t_2) {
 
-    /* "sklearn/manifold/bhtsne.pyx":331
+    /* "sklearn/manifold/bhtsne.pyx":329
  *     t2 = clock()
  *     if root_node.tree.verbose > 15:
  *         printf("negative: %e ticks\n", ((float) (t2 - t1)))             # <<<<<<<<<<<<<<
@@ -3741,7 +3698,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   }
   __pyx_L7:;
 
-  /* "sklearn/manifold/bhtsne.pyx":332
+  /* "sklearn/manifold/bhtsne.pyx":330
  *     if root_node.tree.verbose > 15:
  *         printf("negative: %e ticks\n", ((float) (t2 - t1)))
  *     for i in range(n):             # <<<<<<<<<<<<<<
@@ -3752,7 +3709,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "sklearn/manifold/bhtsne.pyx":333
+    /* "sklearn/manifold/bhtsne.pyx":331
  *         printf("negative: %e ticks\n", ((float) (t2 - t1)))
  *     for i in range(n):
  *         for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -3763,7 +3720,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
     for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_1; __pyx_t_5+=1) {
       __pyx_v_ax = __pyx_t_5;
 
-      /* "sklearn/manifold/bhtsne.pyx":334
+      /* "sklearn/manifold/bhtsne.pyx":332
  *     for i in range(n):
  *         for ax in range(dimension):
  *             coord = i * dimension + ax             # <<<<<<<<<<<<<<
@@ -3772,7 +3729,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
       __pyx_v_coord = ((__pyx_v_i * __pyx_v_dimension) + __pyx_v_ax);
 
-      /* "sklearn/manifold/bhtsne.pyx":335
+      /* "sklearn/manifold/bhtsne.pyx":333
  *         for ax in range(dimension):
  *             coord = i * dimension + ax
  *             tot_force[i, ax] = pos_f[coord] - (neg_f[coord] / sum_Q[0])             # <<<<<<<<<<<<<<
@@ -3781,22 +3738,11 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
       __pyx_t_6 = __pyx_v_i;
       __pyx_t_7 = __pyx_v_ax;
-      __pyx_t_8 = -1;
-      if (__pyx_t_6 < 0) {
-        __pyx_t_8 = 0;
-      } else if (unlikely(__pyx_t_6 >= __pyx_v_tot_force.shape[0])) __pyx_t_8 = 0;
-      if (__pyx_t_7 < 0) {
-        __pyx_t_8 = 1;
-      } else if (unlikely(__pyx_t_7 >= __pyx_v_tot_force.shape[1])) __pyx_t_8 = 1;
-      if (unlikely(__pyx_t_8 != -1)) {
-        __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_8);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 335; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      }
       *((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_tot_force.data + __pyx_t_6 * __pyx_v_tot_force.strides[0]) ) + __pyx_t_7 * __pyx_v_tot_force.strides[1]) )) = ((__pyx_v_pos_f[__pyx_v_coord]) - ((__pyx_v_neg_f[__pyx_v_coord]) / (__pyx_v_sum_Q[0])));
     }
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":336
+  /* "sklearn/manifold/bhtsne.pyx":334
  *             coord = i * dimension + ax
  *             tot_force[i, ax] = pos_f[coord] - (neg_f[coord] / sum_Q[0])
  *     free(sum_Q)             # <<<<<<<<<<<<<<
@@ -3805,7 +3751,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   free(__pyx_v_sum_Q);
 
-  /* "sklearn/manifold/bhtsne.pyx":337
+  /* "sklearn/manifold/bhtsne.pyx":335
  *             tot_force[i, ax] = pos_f[coord] - (neg_f[coord] / sum_Q[0])
  *     free(sum_Q)
  *     free(neg_f)             # <<<<<<<<<<<<<<
@@ -3814,7 +3760,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   free(__pyx_v_neg_f);
 
-  /* "sklearn/manifold/bhtsne.pyx":338
+  /* "sklearn/manifold/bhtsne.pyx":336
  *     free(sum_Q)
  *     free(neg_f)
  *     free(pos_f)             # <<<<<<<<<<<<<<
@@ -3823,7 +3769,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
   free(__pyx_v_pos_f);
 
-  /* "sklearn/manifold/bhtsne.pyx":294
+  /* "sklearn/manifold/bhtsne.pyx":292
  *     return count
  * 
  * cdef void compute_gradient(float[:,:] val_P,             # <<<<<<<<<<<<<<
@@ -3832,13 +3778,9 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__Pyx_memviewsli
  */
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __Pyx_WriteUnraisable("sklearn.manifold.bhtsne.compute_gradient", __pyx_clineno, __pyx_lineno, __pyx_filename, 0);
-  __pyx_L0:;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":340
+/* "sklearn/manifold/bhtsne.pyx":338
  *     free(pos_f)
  * 
  * cdef void compute_gradient_positive(float[:,:] val_P,             # <<<<<<<<<<<<<<
@@ -3863,17 +3805,13 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
   int __pyx_t_7;
   long __pyx_t_8;
   int __pyx_t_9;
-  int __pyx_t_10;
-  long __pyx_t_11;
-  int __pyx_t_12;
+  long __pyx_t_10;
+  int __pyx_t_11;
+  long __pyx_t_12;
   long __pyx_t_13;
   long __pyx_t_14;
-  long __pyx_t_15;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":350
+  /* "sklearn/manifold/bhtsne.pyx":348
  *         int ax
  *         long i, j, temp
  *         long n = val_P.shape[0]             # <<<<<<<<<<<<<<
@@ -3882,7 +3820,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
  */
   __pyx_v_n = (__pyx_v_val_P.shape[0]);
 
-  /* "sklearn/manifold/bhtsne.pyx":353
+  /* "sklearn/manifold/bhtsne.pyx":351
  *         float buff[3]
  *         float D
  *     for i in range(n):             # <<<<<<<<<<<<<<
@@ -3893,7 +3831,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "sklearn/manifold/bhtsne.pyx":354
+    /* "sklearn/manifold/bhtsne.pyx":352
  *         float D
  *     for i in range(n):
  *         for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -3904,7 +3842,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_ax = __pyx_t_4;
 
-      /* "sklearn/manifold/bhtsne.pyx":355
+      /* "sklearn/manifold/bhtsne.pyx":353
  *     for i in range(n):
  *         for ax in range(dimension):
  *             pos_f[i * dimension + ax] = 0.0             # <<<<<<<<<<<<<<
@@ -3914,7 +3852,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
       (__pyx_v_pos_f[((__pyx_v_i * __pyx_v_dimension) + __pyx_v_ax)]) = 0.0;
     }
 
-    /* "sklearn/manifold/bhtsne.pyx":356
+    /* "sklearn/manifold/bhtsne.pyx":354
  *         for ax in range(dimension):
  *             pos_f[i * dimension + ax] = 0.0
  *         for j in range(n):             # <<<<<<<<<<<<<<
@@ -3925,7 +3863,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
     for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
       __pyx_v_j = __pyx_t_6;
 
-      /* "sklearn/manifold/bhtsne.pyx":357
+      /* "sklearn/manifold/bhtsne.pyx":355
  *             pos_f[i * dimension + ax] = 0.0
  *         for j in range(n):
  *             if i == j :             # <<<<<<<<<<<<<<
@@ -3935,7 +3873,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
       __pyx_t_7 = ((__pyx_v_i == __pyx_v_j) != 0);
       if (__pyx_t_7) {
 
-        /* "sklearn/manifold/bhtsne.pyx":358
+        /* "sklearn/manifold/bhtsne.pyx":356
  *         for j in range(n):
  *             if i == j :
  *                 continue             # <<<<<<<<<<<<<<
@@ -3945,7 +3883,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
         goto __pyx_L7_continue;
       }
 
-      /* "sklearn/manifold/bhtsne.pyx":359
+      /* "sklearn/manifold/bhtsne.pyx":357
  *             if i == j :
  *                 continue
  *             D = 0.0             # <<<<<<<<<<<<<<
@@ -3954,7 +3892,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
  */
       __pyx_v_D = 0.0;
 
-      /* "sklearn/manifold/bhtsne.pyx":360
+      /* "sklearn/manifold/bhtsne.pyx":358
  *                 continue
  *             D = 0.0
  *             for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -3965,7 +3903,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
       for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
         __pyx_v_ax = __pyx_t_4;
 
-        /* "sklearn/manifold/bhtsne.pyx":361
+        /* "sklearn/manifold/bhtsne.pyx":359
  *             D = 0.0
  *             for ax in range(dimension):
  *                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]             # <<<<<<<<<<<<<<
@@ -3974,33 +3912,11 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
  */
         __pyx_t_8 = __pyx_v_i;
         __pyx_t_9 = __pyx_v_ax;
-        __pyx_t_10 = -1;
-        if (__pyx_t_8 < 0) {
-          __pyx_t_10 = 0;
-        } else if (unlikely(__pyx_t_8 >= __pyx_v_pos_reference.shape[0])) __pyx_t_10 = 0;
-        if (__pyx_t_9 < 0) {
-          __pyx_t_10 = 1;
-        } else if (unlikely(__pyx_t_9 >= __pyx_v_pos_reference.shape[1])) __pyx_t_10 = 1;
-        if (unlikely(__pyx_t_10 != -1)) {
-          __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_10);
-          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 361; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-        }
-        __pyx_t_11 = __pyx_v_j;
-        __pyx_t_10 = __pyx_v_ax;
-        __pyx_t_12 = -1;
-        if (__pyx_t_11 < 0) {
-          __pyx_t_12 = 0;
-        } else if (unlikely(__pyx_t_11 >= __pyx_v_pos_reference.shape[0])) __pyx_t_12 = 0;
-        if (__pyx_t_10 < 0) {
-          __pyx_t_12 = 1;
-        } else if (unlikely(__pyx_t_10 >= __pyx_v_pos_reference.shape[1])) __pyx_t_12 = 1;
-        if (unlikely(__pyx_t_12 != -1)) {
-          __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_12);
-          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 361; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-        }
-        (__pyx_v_buff[__pyx_v_ax]) = ((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_reference.data + __pyx_t_8 * __pyx_v_pos_reference.strides[0]) ) + __pyx_t_9 * __pyx_v_pos_reference.strides[1]) ))) - (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_reference.data + __pyx_t_11 * __pyx_v_pos_reference.strides[0]) ) + __pyx_t_10 * __pyx_v_pos_reference.strides[1]) ))));
+        __pyx_t_10 = __pyx_v_j;
+        __pyx_t_11 = __pyx_v_ax;
+        (__pyx_v_buff[__pyx_v_ax]) = ((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_reference.data + __pyx_t_8 * __pyx_v_pos_reference.strides[0]) ) + __pyx_t_9 * __pyx_v_pos_reference.strides[1]) ))) - (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_reference.data + __pyx_t_10 * __pyx_v_pos_reference.strides[0]) ) + __pyx_t_11 * __pyx_v_pos_reference.strides[1]) ))));
 
-        /* "sklearn/manifold/bhtsne.pyx":362
+        /* "sklearn/manifold/bhtsne.pyx":360
  *             for ax in range(dimension):
  *                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
  *                 D += buff[ax] ** 2.0             # <<<<<<<<<<<<<<
@@ -4010,29 +3926,18 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
         __pyx_v_D = (__pyx_v_D + pow(((double)(__pyx_v_buff[__pyx_v_ax])), 2.0));
       }
 
-      /* "sklearn/manifold/bhtsne.pyx":363
+      /* "sklearn/manifold/bhtsne.pyx":361
  *                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
  *                 D += buff[ax] ** 2.0
  *             D = val_P[i, j] / (1.0 + D)             # <<<<<<<<<<<<<<
  *             for ax in range(dimension):
  *                 pos_f[i * dimension + ax] += D * buff[ax]
  */
-      __pyx_t_13 = __pyx_v_i;
-      __pyx_t_14 = __pyx_v_j;
-      __pyx_t_3 = -1;
-      if (__pyx_t_13 < 0) {
-        __pyx_t_3 = 0;
-      } else if (unlikely(__pyx_t_13 >= __pyx_v_val_P.shape[0])) __pyx_t_3 = 0;
-      if (__pyx_t_14 < 0) {
-        __pyx_t_3 = 1;
-      } else if (unlikely(__pyx_t_14 >= __pyx_v_val_P.shape[1])) __pyx_t_3 = 1;
-      if (unlikely(__pyx_t_3 != -1)) {
-        __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_3);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 363; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      }
-      __pyx_v_D = ((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_val_P.data + __pyx_t_13 * __pyx_v_val_P.strides[0]) ) + __pyx_t_14 * __pyx_v_val_P.strides[1]) ))) / (1.0 + __pyx_v_D));
+      __pyx_t_12 = __pyx_v_i;
+      __pyx_t_13 = __pyx_v_j;
+      __pyx_v_D = ((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_val_P.data + __pyx_t_12 * __pyx_v_val_P.strides[0]) ) + __pyx_t_13 * __pyx_v_val_P.strides[1]) ))) / (1.0 + __pyx_v_D));
 
-      /* "sklearn/manifold/bhtsne.pyx":364
+      /* "sklearn/manifold/bhtsne.pyx":362
  *                 D += buff[ax] ** 2.0
  *             D = val_P[i, j] / (1.0 + D)
  *             for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -4043,17 +3948,17 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
       for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
         __pyx_v_ax = __pyx_t_4;
 
-        /* "sklearn/manifold/bhtsne.pyx":365
+        /* "sklearn/manifold/bhtsne.pyx":363
  *             D = val_P[i, j] / (1.0 + D)
  *             for ax in range(dimension):
  *                 pos_f[i * dimension + ax] += D * buff[ax]             # <<<<<<<<<<<<<<
  *                 temp = i * dimension + ax
  * 
  */
-        __pyx_t_15 = ((__pyx_v_i * __pyx_v_dimension) + __pyx_v_ax);
-        (__pyx_v_pos_f[__pyx_t_15]) = ((__pyx_v_pos_f[__pyx_t_15]) + (__pyx_v_D * (__pyx_v_buff[__pyx_v_ax])));
+        __pyx_t_14 = ((__pyx_v_i * __pyx_v_dimension) + __pyx_v_ax);
+        (__pyx_v_pos_f[__pyx_t_14]) = ((__pyx_v_pos_f[__pyx_t_14]) + (__pyx_v_D * (__pyx_v_buff[__pyx_v_ax])));
 
-        /* "sklearn/manifold/bhtsne.pyx":366
+        /* "sklearn/manifold/bhtsne.pyx":364
  *             for ax in range(dimension):
  *                 pos_f[i * dimension + ax] += D * buff[ax]
  *                 temp = i * dimension + ax             # <<<<<<<<<<<<<<
@@ -4066,7 +3971,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
     }
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":340
+  /* "sklearn/manifold/bhtsne.pyx":338
  *     free(pos_f)
  * 
  * cdef void compute_gradient_positive(float[:,:] val_P,             # <<<<<<<<<<<<<<
@@ -4075,13 +3980,9 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive(__Pyx_m
  */
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __Pyx_WriteUnraisable("sklearn.manifold.bhtsne.compute_gradient_positive", __pyx_clineno, __pyx_lineno, __pyx_filename, 0);
-  __pyx_L0:;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":369
+/* "sklearn/manifold/bhtsne.pyx":367
  * 
  * 
  * cdef void compute_gradient_positive_nn(float[:,:] val_P,             # <<<<<<<<<<<<<<
@@ -4108,57 +4009,44 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
   long __pyx_t_8;
   long __pyx_t_9;
   int __pyx_t_10;
-  int __pyx_t_11;
-  long __pyx_t_12;
-  int __pyx_t_13;
+  long __pyx_t_11;
+  int __pyx_t_12;
+  long __pyx_t_13;
   long __pyx_t_14;
   long __pyx_t_15;
-  long __pyx_t_16;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":382
+  /* "sklearn/manifold/bhtsne.pyx":380
  *         int ax
  *         long i, j, k
  *         long K = neighbors.shape[1]             # <<<<<<<<<<<<<<
  *         long n = val_P.shape[0]
- *         float buff[3]
+ *         float[3] buff
  */
   __pyx_v_K = (__pyx_v_neighbors.shape[1]);
 
-  /* "sklearn/manifold/bhtsne.pyx":383
+  /* "sklearn/manifold/bhtsne.pyx":381
  *         long i, j, k
  *         long K = neighbors.shape[1]
  *         long n = val_P.shape[0]             # <<<<<<<<<<<<<<
- *         float buff[3]
+ *         float[3] buff
  *         float D
  */
   __pyx_v_n = (__pyx_v_val_P.shape[0]);
 
-  /* "sklearn/manifold/bhtsne.pyx":386
- *         float buff[3]
+  /* "sklearn/manifold/bhtsne.pyx":384
+ *         float[3] buff
  *         float D
  *     for i in range(n):             # <<<<<<<<<<<<<<
- *         printf("Pos gradient for %i out of %i, %i neighbors\n", i, n, K)
  *         for ax in range(dimension):
+ *             pos_f[i * dimension + ax] = 0.0
  */
   __pyx_t_1 = __pyx_v_n;
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "sklearn/manifold/bhtsne.pyx":387
+    /* "sklearn/manifold/bhtsne.pyx":385
  *         float D
  *     for i in range(n):
- *         printf("Pos gradient for %i out of %i, %i neighbors\n", i, n, K)             # <<<<<<<<<<<<<<
- *         for ax in range(dimension):
- *             pos_f[i * dimension + ax] = 0.0
- */
-    printf(__pyx_k_Pos_gradient_for_i_out_of_i_i_ne, __pyx_v_i, __pyx_v_n, __pyx_v_K);
-
-    /* "sklearn/manifold/bhtsne.pyx":388
- *     for i in range(n):
- *         printf("Pos gradient for %i out of %i, %i neighbors\n", i, n, K)
  *         for ax in range(dimension):             # <<<<<<<<<<<<<<
  *             pos_f[i * dimension + ax] = 0.0
  *         for k in range(K):
@@ -4167,8 +4055,8 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_ax = __pyx_t_4;
 
-      /* "sklearn/manifold/bhtsne.pyx":389
- *         printf("Pos gradient for %i out of %i, %i neighbors\n", i, n, K)
+      /* "sklearn/manifold/bhtsne.pyx":386
+ *     for i in range(n):
  *         for ax in range(dimension):
  *             pos_f[i * dimension + ax] = 0.0             # <<<<<<<<<<<<<<
  *         for k in range(K):
@@ -4177,7 +4065,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
       (__pyx_v_pos_f[((__pyx_v_i * __pyx_v_dimension) + __pyx_v_ax)]) = 0.0;
     }
 
-    /* "sklearn/manifold/bhtsne.pyx":390
+    /* "sklearn/manifold/bhtsne.pyx":387
  *         for ax in range(dimension):
  *             pos_f[i * dimension + ax] = 0.0
  *         for k in range(K):             # <<<<<<<<<<<<<<
@@ -4188,7 +4076,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
     for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
       __pyx_v_k = __pyx_t_6;
 
-      /* "sklearn/manifold/bhtsne.pyx":391
+      /* "sklearn/manifold/bhtsne.pyx":388
  *             pos_f[i * dimension + ax] = 0.0
  *         for k in range(K):
  *             j = neighbors[i, k]             # <<<<<<<<<<<<<<
@@ -4197,20 +4085,9 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
  */
       __pyx_t_7 = __pyx_v_i;
       __pyx_t_8 = __pyx_v_k;
-      __pyx_t_3 = -1;
-      if (__pyx_t_7 < 0) {
-        __pyx_t_3 = 0;
-      } else if (unlikely(__pyx_t_7 >= __pyx_v_neighbors.shape[0])) __pyx_t_3 = 0;
-      if (__pyx_t_8 < 0) {
-        __pyx_t_3 = 1;
-      } else if (unlikely(__pyx_t_8 >= __pyx_v_neighbors.shape[1])) __pyx_t_3 = 1;
-      if (unlikely(__pyx_t_3 != -1)) {
-        __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_3);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 391; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      }
       __pyx_v_j = (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_neighbors.data + __pyx_t_7 * __pyx_v_neighbors.strides[0]) ) + __pyx_t_8 * __pyx_v_neighbors.strides[1]) )));
 
-      /* "sklearn/manifold/bhtsne.pyx":394
+      /* "sklearn/manifold/bhtsne.pyx":391
  *             # we don't need to exclude the i==j case since we've
  *             # already thrown it out from the list of neighbors
  *             D = 0.0             # <<<<<<<<<<<<<<
@@ -4219,7 +4096,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
  */
       __pyx_v_D = 0.0;
 
-      /* "sklearn/manifold/bhtsne.pyx":395
+      /* "sklearn/manifold/bhtsne.pyx":392
  *             # already thrown it out from the list of neighbors
  *             D = 0.0
  *             for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -4230,7 +4107,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
       for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
         __pyx_v_ax = __pyx_t_4;
 
-        /* "sklearn/manifold/bhtsne.pyx":396
+        /* "sklearn/manifold/bhtsne.pyx":393
  *             D = 0.0
  *             for ax in range(dimension):
  *                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]             # <<<<<<<<<<<<<<
@@ -4239,33 +4116,11 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
  */
         __pyx_t_9 = __pyx_v_i;
         __pyx_t_10 = __pyx_v_ax;
-        __pyx_t_11 = -1;
-        if (__pyx_t_9 < 0) {
-          __pyx_t_11 = 0;
-        } else if (unlikely(__pyx_t_9 >= __pyx_v_pos_reference.shape[0])) __pyx_t_11 = 0;
-        if (__pyx_t_10 < 0) {
-          __pyx_t_11 = 1;
-        } else if (unlikely(__pyx_t_10 >= __pyx_v_pos_reference.shape[1])) __pyx_t_11 = 1;
-        if (unlikely(__pyx_t_11 != -1)) {
-          __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_11);
-          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 396; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-        }
-        __pyx_t_12 = __pyx_v_j;
-        __pyx_t_11 = __pyx_v_ax;
-        __pyx_t_13 = -1;
-        if (__pyx_t_12 < 0) {
-          __pyx_t_13 = 0;
-        } else if (unlikely(__pyx_t_12 >= __pyx_v_pos_reference.shape[0])) __pyx_t_13 = 0;
-        if (__pyx_t_11 < 0) {
-          __pyx_t_13 = 1;
-        } else if (unlikely(__pyx_t_11 >= __pyx_v_pos_reference.shape[1])) __pyx_t_13 = 1;
-        if (unlikely(__pyx_t_13 != -1)) {
-          __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_13);
-          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 396; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-        }
-        (__pyx_v_buff[__pyx_v_ax]) = ((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_reference.data + __pyx_t_9 * __pyx_v_pos_reference.strides[0]) ) + __pyx_t_10 * __pyx_v_pos_reference.strides[1]) ))) - (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_reference.data + __pyx_t_12 * __pyx_v_pos_reference.strides[0]) ) + __pyx_t_11 * __pyx_v_pos_reference.strides[1]) ))));
+        __pyx_t_11 = __pyx_v_j;
+        __pyx_t_12 = __pyx_v_ax;
+        (__pyx_v_buff[__pyx_v_ax]) = ((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_reference.data + __pyx_t_9 * __pyx_v_pos_reference.strides[0]) ) + __pyx_t_10 * __pyx_v_pos_reference.strides[1]) ))) - (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_reference.data + __pyx_t_11 * __pyx_v_pos_reference.strides[0]) ) + __pyx_t_12 * __pyx_v_pos_reference.strides[1]) ))));
 
-        /* "sklearn/manifold/bhtsne.pyx":397
+        /* "sklearn/manifold/bhtsne.pyx":394
  *             for ax in range(dimension):
  *                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
  *                 D += buff[ax] ** 2.0             # <<<<<<<<<<<<<<
@@ -4275,29 +4130,18 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
         __pyx_v_D = (__pyx_v_D + pow(((double)(__pyx_v_buff[__pyx_v_ax])), 2.0));
       }
 
-      /* "sklearn/manifold/bhtsne.pyx":398
+      /* "sklearn/manifold/bhtsne.pyx":395
  *                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
  *                 D += buff[ax] ** 2.0
  *             D = val_P[i, j] / (1.0 + D)             # <<<<<<<<<<<<<<
  *             for ax in range(dimension):
  *                 pos_f[i * dimension + ax] += D * buff[ax]
  */
-      __pyx_t_14 = __pyx_v_i;
-      __pyx_t_15 = __pyx_v_j;
-      __pyx_t_3 = -1;
-      if (__pyx_t_14 < 0) {
-        __pyx_t_3 = 0;
-      } else if (unlikely(__pyx_t_14 >= __pyx_v_val_P.shape[0])) __pyx_t_3 = 0;
-      if (__pyx_t_15 < 0) {
-        __pyx_t_3 = 1;
-      } else if (unlikely(__pyx_t_15 >= __pyx_v_val_P.shape[1])) __pyx_t_3 = 1;
-      if (unlikely(__pyx_t_3 != -1)) {
-        __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_3);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 398; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      }
-      __pyx_v_D = ((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_val_P.data + __pyx_t_14 * __pyx_v_val_P.strides[0]) ) + __pyx_t_15 * __pyx_v_val_P.strides[1]) ))) / (1.0 + __pyx_v_D));
+      __pyx_t_13 = __pyx_v_i;
+      __pyx_t_14 = __pyx_v_j;
+      __pyx_v_D = ((*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_val_P.data + __pyx_t_13 * __pyx_v_val_P.strides[0]) ) + __pyx_t_14 * __pyx_v_val_P.strides[1]) ))) / (1.0 + __pyx_v_D));
 
-      /* "sklearn/manifold/bhtsne.pyx":399
+      /* "sklearn/manifold/bhtsne.pyx":396
  *                 D += buff[ax] ** 2.0
  *             D = val_P[i, j] / (1.0 + D)
  *             for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -4308,20 +4152,20 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
       for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
         __pyx_v_ax = __pyx_t_4;
 
-        /* "sklearn/manifold/bhtsne.pyx":400
+        /* "sklearn/manifold/bhtsne.pyx":397
  *             D = val_P[i, j] / (1.0 + D)
  *             for ax in range(dimension):
  *                 pos_f[i * dimension + ax] += D * buff[ax]             # <<<<<<<<<<<<<<
  * 
  * 
  */
-        __pyx_t_16 = ((__pyx_v_i * __pyx_v_dimension) + __pyx_v_ax);
-        (__pyx_v_pos_f[__pyx_t_16]) = ((__pyx_v_pos_f[__pyx_t_16]) + (__pyx_v_D * (__pyx_v_buff[__pyx_v_ax])));
+        __pyx_t_15 = ((__pyx_v_i * __pyx_v_dimension) + __pyx_v_ax);
+        (__pyx_v_pos_f[__pyx_t_15]) = ((__pyx_v_pos_f[__pyx_t_15]) + (__pyx_v_D * (__pyx_v_buff[__pyx_v_ax])));
       }
     }
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":369
+  /* "sklearn/manifold/bhtsne.pyx":367
  * 
  * 
  * cdef void compute_gradient_positive_nn(float[:,:] val_P,             # <<<<<<<<<<<<<<
@@ -4330,13 +4174,9 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_nn(__Py
  */
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __Pyx_WriteUnraisable("sklearn.manifold.bhtsne.compute_gradient_positive_nn", __pyx_clineno, __pyx_lineno, __pyx_filename, 0);
-  __pyx_L0:;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":404
+/* "sklearn/manifold/bhtsne.pyx":401
  * 
  * 
  * cdef void compute_gradient_negative(float[:,:] val_P,             # <<<<<<<<<<<<<<
@@ -4359,13 +4199,9 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
   int __pyx_t_5;
   long __pyx_t_6;
   int __pyx_t_7;
-  int __pyx_t_8;
-  long __pyx_t_9;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
+  long __pyx_t_8;
 
-  /* "sklearn/manifold/bhtsne.pyx":412
+  /* "sklearn/manifold/bhtsne.pyx":409
  *                                     long start,
  *                                     long stop) nogil:
  *     if stop == -1:             # <<<<<<<<<<<<<<
@@ -4375,7 +4211,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
   __pyx_t_1 = ((__pyx_v_stop == -1) != 0);
   if (__pyx_t_1) {
 
-    /* "sklearn/manifold/bhtsne.pyx":413
+    /* "sklearn/manifold/bhtsne.pyx":410
  *                                     long stop) nogil:
  *     if stop == -1:
  *         stop = pos_reference.shape[0]             # <<<<<<<<<<<<<<
@@ -4387,7 +4223,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
   }
   __pyx_L3:;
 
-  /* "sklearn/manifold/bhtsne.pyx":417
+  /* "sklearn/manifold/bhtsne.pyx":414
  *         int ax
  *         long i
  *         long n = stop - start             # <<<<<<<<<<<<<<
@@ -4396,7 +4232,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
   __pyx_v_n = (__pyx_v_stop - __pyx_v_start);
 
-  /* "sklearn/manifold/bhtsne.pyx":421
+  /* "sklearn/manifold/bhtsne.pyx":418
  *         float* iQ
  *         float* pos
  *         int dimension = root_node.tree.dimension             # <<<<<<<<<<<<<<
@@ -4406,7 +4242,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
   __pyx_t_2 = __pyx_v_root_node->tree->dimension;
   __pyx_v_dimension = __pyx_t_2;
 
-  /* "sklearn/manifold/bhtsne.pyx":423
+  /* "sklearn/manifold/bhtsne.pyx":420
  *         int dimension = root_node.tree.dimension
  * 
  *     iQ = <float*> malloc(sizeof(float))             # <<<<<<<<<<<<<<
@@ -4415,7 +4251,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
   __pyx_v_iQ = ((float *)malloc((sizeof(float))));
 
-  /* "sklearn/manifold/bhtsne.pyx":424
+  /* "sklearn/manifold/bhtsne.pyx":421
  * 
  *     iQ = <float*> malloc(sizeof(float))
  *     force = <float*> malloc(sizeof(float) * dimension)             # <<<<<<<<<<<<<<
@@ -4424,7 +4260,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
   __pyx_v_force = ((float *)malloc(((sizeof(float)) * __pyx_v_dimension)));
 
-  /* "sklearn/manifold/bhtsne.pyx":425
+  /* "sklearn/manifold/bhtsne.pyx":422
  *     iQ = <float*> malloc(sizeof(float))
  *     force = <float*> malloc(sizeof(float) * dimension)
  *     pos = <float*> malloc(sizeof(float) * dimension)             # <<<<<<<<<<<<<<
@@ -4433,7 +4269,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
   __pyx_v_pos = ((float *)malloc(((sizeof(float)) * __pyx_v_dimension)));
 
-  /* "sklearn/manifold/bhtsne.pyx":426
+  /* "sklearn/manifold/bhtsne.pyx":423
  *     force = <float*> malloc(sizeof(float) * dimension)
  *     pos = <float*> malloc(sizeof(float) * dimension)
  *     for i in range(start, stop):             # <<<<<<<<<<<<<<
@@ -4444,7 +4280,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
   for (__pyx_t_4 = __pyx_v_start; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "sklearn/manifold/bhtsne.pyx":428
+    /* "sklearn/manifold/bhtsne.pyx":425
  *     for i in range(start, stop):
  *         # Clear the arrays
  *         for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -4455,7 +4291,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
     for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_2; __pyx_t_5+=1) {
       __pyx_v_ax = __pyx_t_5;
 
-      /* "sklearn/manifold/bhtsne.pyx":429
+      /* "sklearn/manifold/bhtsne.pyx":426
  *         # Clear the arrays
  *         for ax in range(dimension):
  *             force[ax] = 0.0             # <<<<<<<<<<<<<<
@@ -4464,7 +4300,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
       (__pyx_v_force[__pyx_v_ax]) = 0.0;
 
-      /* "sklearn/manifold/bhtsne.pyx":430
+      /* "sklearn/manifold/bhtsne.pyx":427
  *         for ax in range(dimension):
  *             force[ax] = 0.0
  *             pos[ax] = pos_reference[i, ax]             # <<<<<<<<<<<<<<
@@ -4473,21 +4309,10 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
       __pyx_t_6 = __pyx_v_i;
       __pyx_t_7 = __pyx_v_ax;
-      __pyx_t_8 = -1;
-      if (__pyx_t_6 < 0) {
-        __pyx_t_8 = 0;
-      } else if (unlikely(__pyx_t_6 >= __pyx_v_pos_reference.shape[0])) __pyx_t_8 = 0;
-      if (__pyx_t_7 < 0) {
-        __pyx_t_8 = 1;
-      } else if (unlikely(__pyx_t_7 >= __pyx_v_pos_reference.shape[1])) __pyx_t_8 = 1;
-      if (unlikely(__pyx_t_8 != -1)) {
-        __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_8);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 430; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      }
       (__pyx_v_pos[__pyx_v_ax]) = (*((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pos_reference.data + __pyx_t_6 * __pyx_v_pos_reference.strides[0]) ) + __pyx_t_7 * __pyx_v_pos_reference.strides[1]) )));
     }
 
-    /* "sklearn/manifold/bhtsne.pyx":431
+    /* "sklearn/manifold/bhtsne.pyx":428
  *             force[ax] = 0.0
  *             pos[ax] = pos_reference[i, ax]
  *         iQ[0] = 0.0             # <<<<<<<<<<<<<<
@@ -4496,7 +4321,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
     (__pyx_v_iQ[0]) = 0.0;
 
-    /* "sklearn/manifold/bhtsne.pyx":432
+    /* "sklearn/manifold/bhtsne.pyx":429
  *             pos[ax] = pos_reference[i, ax]
  *         iQ[0] = 0.0
  *         compute_non_edge_forces(root_node, theta, iQ, i,             # <<<<<<<<<<<<<<
@@ -4505,17 +4330,17 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
     __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(__pyx_v_root_node, __pyx_v_theta, __pyx_v_iQ, __pyx_v_i, __pyx_v_pos, __pyx_v_force);
 
-    /* "sklearn/manifold/bhtsne.pyx":434
+    /* "sklearn/manifold/bhtsne.pyx":431
  *         compute_non_edge_forces(root_node, theta, iQ, i,
  *                                 pos, force)
  *         sum_Q[0] += iQ[0]             # <<<<<<<<<<<<<<
  *         # Save local force into global
  *         for ax in range(dimension):
  */
-    __pyx_t_9 = 0;
-    (__pyx_v_sum_Q[__pyx_t_9]) = ((__pyx_v_sum_Q[__pyx_t_9]) + (__pyx_v_iQ[0]));
+    __pyx_t_8 = 0;
+    (__pyx_v_sum_Q[__pyx_t_8]) = ((__pyx_v_sum_Q[__pyx_t_8]) + (__pyx_v_iQ[0]));
 
-    /* "sklearn/manifold/bhtsne.pyx":436
+    /* "sklearn/manifold/bhtsne.pyx":433
  *         sum_Q[0] += iQ[0]
  *         # Save local force into global
  *         for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -4526,7 +4351,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
     for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_2; __pyx_t_5+=1) {
       __pyx_v_ax = __pyx_t_5;
 
-      /* "sklearn/manifold/bhtsne.pyx":437
+      /* "sklearn/manifold/bhtsne.pyx":434
  *         # Save local force into global
  *         for ax in range(dimension):
  *             neg_f[i * dimension + ax] = force[ax]             # <<<<<<<<<<<<<<
@@ -4537,7 +4362,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
     }
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":438
+  /* "sklearn/manifold/bhtsne.pyx":435
  *         for ax in range(dimension):
  *             neg_f[i * dimension + ax] = force[ax]
  *     free(iQ)             # <<<<<<<<<<<<<<
@@ -4546,7 +4371,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
   free(__pyx_v_iQ);
 
-  /* "sklearn/manifold/bhtsne.pyx":439
+  /* "sklearn/manifold/bhtsne.pyx":436
  *             neg_f[i * dimension + ax] = force[ax]
  *     free(iQ)
  *     free(force)             # <<<<<<<<<<<<<<
@@ -4555,7 +4380,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
   free(__pyx_v_force);
 
-  /* "sklearn/manifold/bhtsne.pyx":440
+  /* "sklearn/manifold/bhtsne.pyx":437
  *     free(iQ)
  *     free(force)
  *     free(pos)             # <<<<<<<<<<<<<<
@@ -4564,7 +4389,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
   free(__pyx_v_pos);
 
-  /* "sklearn/manifold/bhtsne.pyx":404
+  /* "sklearn/manifold/bhtsne.pyx":401
  * 
  * 
  * cdef void compute_gradient_negative(float[:,:] val_P,             # <<<<<<<<<<<<<<
@@ -4573,13 +4398,9 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative(CYTHON_
  */
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __Pyx_WriteUnraisable("sklearn.manifold.bhtsne.compute_gradient_negative", __pyx_clineno, __pyx_lineno, __pyx_filename, 0);
-  __pyx_L0:;
 }
 
-/* "sklearn/manifold/bhtsne.pyx":443
+/* "sklearn/manifold/bhtsne.pyx":440
  * 
  * 
  * cdef void compute_non_edge_forces(Node* node,             # <<<<<<<<<<<<<<
@@ -4615,7 +4436,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
   int __pyx_t_12;
   int __pyx_t_13;
 
-  /* "sklearn/manifold/bhtsne.pyx":453
+  /* "sklearn/manifold/bhtsne.pyx":450
  *         Node* child
  *         int i, j, krange
  *         int summary = 0             # <<<<<<<<<<<<<<
@@ -4624,7 +4445,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
  */
   __pyx_v_summary = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":454
+  /* "sklearn/manifold/bhtsne.pyx":451
  *         int i, j, krange
  *         int summary = 0
  *         int dimension = node.tree.dimension             # <<<<<<<<<<<<<<
@@ -4634,7 +4455,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
   __pyx_t_1 = __pyx_v_node->tree->dimension;
   __pyx_v_dimension = __pyx_t_1;
 
-  /* "sklearn/manifold/bhtsne.pyx":456
+  /* "sklearn/manifold/bhtsne.pyx":453
  *         int dimension = node.tree.dimension
  *         float dist2, mult, qijZ
  *         float wmax = 0.0             # <<<<<<<<<<<<<<
@@ -4643,7 +4464,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
  */
   __pyx_v_wmax = 0.0;
 
-  /* "sklearn/manifold/bhtsne.pyx":457
+  /* "sklearn/manifold/bhtsne.pyx":454
  *         float dist2, mult, qijZ
  *         float wmax = 0.0
  *         float* delta  = <float*> malloc(sizeof(float) * dimension)             # <<<<<<<<<<<<<<
@@ -4652,7 +4473,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
  */
   __pyx_v_delta = ((float *)malloc(((sizeof(float)) * __pyx_v_dimension)));
 
-  /* "sklearn/manifold/bhtsne.pyx":459
+  /* "sklearn/manifold/bhtsne.pyx":456
  *         float* delta  = <float*> malloc(sizeof(float) * dimension)
  * 
  *     if node.tree.dimension > 2:             # <<<<<<<<<<<<<<
@@ -4662,7 +4483,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
   __pyx_t_2 = ((__pyx_v_node->tree->dimension > 2) != 0);
   if (__pyx_t_2) {
 
-    /* "sklearn/manifold/bhtsne.pyx":460
+    /* "sklearn/manifold/bhtsne.pyx":457
  * 
  *     if node.tree.dimension > 2:
  *         krange = 2             # <<<<<<<<<<<<<<
@@ -4674,7 +4495,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
   }
   /*else*/ {
 
-    /* "sklearn/manifold/bhtsne.pyx":462
+    /* "sklearn/manifold/bhtsne.pyx":459
  *         krange = 2
  *     else:
  *         krange = 1             # <<<<<<<<<<<<<<
@@ -4685,7 +4506,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
   }
   __pyx_L3:;
 
-  /* "sklearn/manifold/bhtsne.pyx":464
+  /* "sklearn/manifold/bhtsne.pyx":461
  *         krange = 1
  * 
  *     for i in range(dimension):             # <<<<<<<<<<<<<<
@@ -4696,7 +4517,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_1; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "sklearn/manifold/bhtsne.pyx":465
+    /* "sklearn/manifold/bhtsne.pyx":462
  * 
  *     for i in range(dimension):
  *         delta[i] = 0.0             # <<<<<<<<<<<<<<
@@ -4706,7 +4527,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
     (__pyx_v_delta[__pyx_v_i]) = 0.0;
   }
 
-  /* "sklearn/manifold/bhtsne.pyx":470
+  /* "sklearn/manifold/bhtsne.pyx":467
  *     # so do not bother to calculate any force contributions
  *     # Also do not compute self-interactions
  *     if node.cum_size > 0 and not (node.is_leaf and (node.point_index == point_index)):             # <<<<<<<<<<<<<<
@@ -4733,7 +4554,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
   __pyx_L7_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "sklearn/manifold/bhtsne.pyx":471
+    /* "sklearn/manifold/bhtsne.pyx":468
  *     # Also do not compute self-interactions
  *     if node.cum_size > 0 and not (node.is_leaf and (node.point_index == point_index)):
  *         dist2 = 0.0             # <<<<<<<<<<<<<<
@@ -4742,7 +4563,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
  */
     __pyx_v_dist2 = 0.0;
 
-    /* "sklearn/manifold/bhtsne.pyx":473
+    /* "sklearn/manifold/bhtsne.pyx":470
  *         dist2 = 0.0
  *         # Compute distance between node center of mass and the reference point
  *         for i in range(dimension):             # <<<<<<<<<<<<<<
@@ -4753,7 +4574,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
     for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_1; __pyx_t_3+=1) {
       __pyx_v_i = __pyx_t_3;
 
-      /* "sklearn/manifold/bhtsne.pyx":474
+      /* "sklearn/manifold/bhtsne.pyx":471
  *         # Compute distance between node center of mass and the reference point
  *         for i in range(dimension):
  *             delta[i] += pos[i] - node.cum_com[i]             # <<<<<<<<<<<<<<
@@ -4763,7 +4584,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
       __pyx_t_6 = __pyx_v_i;
       (__pyx_v_delta[__pyx_t_6]) = ((__pyx_v_delta[__pyx_t_6]) + ((__pyx_v_pos[__pyx_v_i]) - (__pyx_v_node->cum_com[__pyx_v_i])));
 
-      /* "sklearn/manifold/bhtsne.pyx":475
+      /* "sklearn/manifold/bhtsne.pyx":472
  *         for i in range(dimension):
  *             delta[i] += pos[i] - node.cum_com[i]
  *             dist2 += delta[i]**2.0             # <<<<<<<<<<<<<<
@@ -4773,7 +4594,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
       __pyx_v_dist2 = (__pyx_v_dist2 + pow(((double)(__pyx_v_delta[__pyx_v_i])), 2.0));
     }
 
-    /* "sklearn/manifold/bhtsne.pyx":481
+    /* "sklearn/manifold/bhtsne.pyx":478
  *         # If it can be summarized, we use the cell center of mass
  *         # Otherwise, we go a higher level of resolution and into the leaves.
  *         for i in range(dimension):             # <<<<<<<<<<<<<<
@@ -4784,7 +4605,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
     for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_1; __pyx_t_3+=1) {
       __pyx_v_i = __pyx_t_3;
 
-      /* "sklearn/manifold/bhtsne.pyx":482
+      /* "sklearn/manifold/bhtsne.pyx":479
  *         # Otherwise, we go a higher level of resolution and into the leaves.
  *         for i in range(dimension):
  *             wmax = max(wmax, node.w[i])             # <<<<<<<<<<<<<<
@@ -4801,7 +4622,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
       __pyx_v_wmax = __pyx_t_9;
     }
 
-    /* "sklearn/manifold/bhtsne.pyx":484
+    /* "sklearn/manifold/bhtsne.pyx":481
  *             wmax = max(wmax, node.w[i])
  * 
  *         summary = (wmax / sqrt(dist2) < theta)             # <<<<<<<<<<<<<<
@@ -4810,7 +4631,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
  */
     __pyx_v_summary = ((__pyx_v_wmax / sqrt(__pyx_v_dist2)) < __pyx_v_theta);
 
-    /* "sklearn/manifold/bhtsne.pyx":486
+    /* "sklearn/manifold/bhtsne.pyx":483
  *         summary = (wmax / sqrt(dist2) < theta)
  * 
  *         if node.is_leaf or summary:             # <<<<<<<<<<<<<<
@@ -4828,7 +4649,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
     __pyx_L16_bool_binop_done:;
     if (__pyx_t_2) {
 
-      /* "sklearn/manifold/bhtsne.pyx":488
+      /* "sklearn/manifold/bhtsne.pyx":485
  *         if node.is_leaf or summary:
  *             # Compute the t-SNE force between the reference point and the current node
  *             qijZ = 1.0 / (1.0 + dist2)             # <<<<<<<<<<<<<<
@@ -4837,7 +4658,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
  */
       __pyx_v_qijZ = (1.0 / (1.0 + __pyx_v_dist2));
 
-      /* "sklearn/manifold/bhtsne.pyx":489
+      /* "sklearn/manifold/bhtsne.pyx":486
  *             # Compute the t-SNE force between the reference point and the current node
  *             qijZ = 1.0 / (1.0 + dist2)
  *             sum_Q[0] += node.cum_size * qijZ             # <<<<<<<<<<<<<<
@@ -4847,7 +4668,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
       __pyx_t_10 = 0;
       (__pyx_v_sum_Q[__pyx_t_10]) = ((__pyx_v_sum_Q[__pyx_t_10]) + (__pyx_v_node->cum_size * __pyx_v_qijZ));
 
-      /* "sklearn/manifold/bhtsne.pyx":490
+      /* "sklearn/manifold/bhtsne.pyx":487
  *             qijZ = 1.0 / (1.0 + dist2)
  *             sum_Q[0] += node.cum_size * qijZ
  *             mult = node.cum_size * qijZ * qijZ             # <<<<<<<<<<<<<<
@@ -4856,7 +4677,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
  */
       __pyx_v_mult = ((__pyx_v_node->cum_size * __pyx_v_qijZ) * __pyx_v_qijZ);
 
-      /* "sklearn/manifold/bhtsne.pyx":491
+      /* "sklearn/manifold/bhtsne.pyx":488
  *             sum_Q[0] += node.cum_size * qijZ
  *             mult = node.cum_size * qijZ * qijZ
  *             for ax in range(dimension):             # <<<<<<<<<<<<<<
@@ -4867,7 +4688,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
       for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_1; __pyx_t_3+=1) {
         __pyx_v_ax = __pyx_t_3;
 
-        /* "sklearn/manifold/bhtsne.pyx":492
+        /* "sklearn/manifold/bhtsne.pyx":489
  *             mult = node.cum_size * qijZ * qijZ
  *             for ax in range(dimension):
  *                 force[ax] += mult * delta[ax]             # <<<<<<<<<<<<<<
@@ -4881,7 +4702,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
     }
     /*else*/ {
 
-      /* "sklearn/manifold/bhtsne.pyx":495
+      /* "sklearn/manifold/bhtsne.pyx":492
  *         else:
  *             # Recursively apply Barnes-Hut to child nodes
  *             for i in range(dimension):             # <<<<<<<<<<<<<<
@@ -4892,7 +4713,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
       for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_1; __pyx_t_3+=1) {
         __pyx_v_i = __pyx_t_3;
 
-        /* "sklearn/manifold/bhtsne.pyx":496
+        /* "sklearn/manifold/bhtsne.pyx":493
  *             # Recursively apply Barnes-Hut to child nodes
  *             for i in range(dimension):
  *                 for j in range(dimension):             # <<<<<<<<<<<<<<
@@ -4903,7 +4724,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
         for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_6; __pyx_t_11+=1) {
           __pyx_v_j = __pyx_t_11;
 
-          /* "sklearn/manifold/bhtsne.pyx":497
+          /* "sklearn/manifold/bhtsne.pyx":494
  *             for i in range(dimension):
  *                 for j in range(dimension):
  *                     for k in range(krange):             # <<<<<<<<<<<<<<
@@ -4914,7 +4735,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
           for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
             __pyx_v_k = __pyx_t_13;
 
-            /* "sklearn/manifold/bhtsne.pyx":498
+            /* "sklearn/manifold/bhtsne.pyx":495
  *                 for j in range(dimension):
  *                     for k in range(krange):
  *                         child = node.children[i][j][k]             # <<<<<<<<<<<<<<
@@ -4923,7 +4744,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
  */
             __pyx_v_child = (((__pyx_v_node->children[__pyx_v_i])[__pyx_v_j])[__pyx_v_k]);
 
-            /* "sklearn/manifold/bhtsne.pyx":499
+            /* "sklearn/manifold/bhtsne.pyx":496
  *                     for k in range(krange):
  *                         child = node.children[i][j][k]
  *                         if child.cum_size == 0:             # <<<<<<<<<<<<<<
@@ -4933,7 +4754,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
             __pyx_t_2 = ((__pyx_v_child->cum_size == 0) != 0);
             if (__pyx_t_2) {
 
-              /* "sklearn/manifold/bhtsne.pyx":500
+              /* "sklearn/manifold/bhtsne.pyx":497
  *                         child = node.children[i][j][k]
  *                         if child.cum_size == 0:
  *                             continue             # <<<<<<<<<<<<<<
@@ -4943,7 +4764,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
               goto __pyx_L24_continue;
             }
 
-            /* "sklearn/manifold/bhtsne.pyx":501
+            /* "sklearn/manifold/bhtsne.pyx":498
  *                         if child.cum_size == 0:
  *                             continue
  *                         compute_non_edge_forces(child, theta, sum_Q,             # <<<<<<<<<<<<<<
@@ -4961,7 +4782,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
   }
   __pyx_L6:;
 
-  /* "sklearn/manifold/bhtsne.pyx":505
+  /* "sklearn/manifold/bhtsne.pyx":502
  *                                                      pos, force)
  * 
  *     free(delta)             # <<<<<<<<<<<<<<
@@ -4970,7 +4791,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
  */
   free(__pyx_v_delta);
 
-  /* "sklearn/manifold/bhtsne.pyx":443
+  /* "sklearn/manifold/bhtsne.pyx":440
  * 
  * 
  * cdef void compute_non_edge_forces(Node* node,             # <<<<<<<<<<<<<<
@@ -4981,7 +4802,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_non_edge_forces(struct __
   /* function exit code */
 }
 
-/* "sklearn/manifold/bhtsne.pyx":508
+/* "sklearn/manifold/bhtsne.pyx":505
  * 
  * 
  * def gradient(float[:] width,             # <<<<<<<<<<<<<<
@@ -5033,41 +4854,41 @@ static PyObject *__pyx_pw_7sklearn_8manifold_6bhtsne_1gradient(PyObject *__pyx_s
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_pij_input)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_pos_output)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_neighbors)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  4:
         if (likely((values[4] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_forces)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 4); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 4); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  5:
         if (likely((values[5] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_theta)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 5); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 5); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  6:
         if (likely((values[6] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_dimension)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 6); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 6); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  7:
         if (likely((values[7] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_verbose)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 7); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, 7); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "gradient") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "gradient") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 8) {
       goto __pyx_L5_argtuple_error;
@@ -5081,18 +4902,18 @@ static PyObject *__pyx_pw_7sklearn_8manifold_6bhtsne_1gradient(PyObject *__pyx_s
       values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
       values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
     }
-    __pyx_v_width = __Pyx_PyObject_to_MemoryviewSlice_ds_float(values[0]); if (unlikely(!__pyx_v_width.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_pij_input = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(values[1]); if (unlikely(!__pyx_v_pij_input.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 509; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_pos_output = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(values[2]); if (unlikely(!__pyx_v_pos_output.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 510; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_neighbors = __Pyx_PyObject_to_MemoryviewSlice_dsds_long(values[3]); if (unlikely(!__pyx_v_neighbors.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 511; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_forces = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(values[4]); if (unlikely(!__pyx_v_forces.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 512; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_theta = __pyx_PyFloat_AsFloat(values[5]); if (unlikely((__pyx_v_theta == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 513; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_dimension = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_dimension == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 514; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_verbose = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_verbose == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 515; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_width = __Pyx_PyObject_to_MemoryviewSlice_ds_float(values[0]); if (unlikely(!__pyx_v_width.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_pij_input = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(values[1]); if (unlikely(!__pyx_v_pij_input.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 506; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_pos_output = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(values[2]); if (unlikely(!__pyx_v_pos_output.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 507; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_neighbors = __Pyx_PyObject_to_MemoryviewSlice_dsds_long(values[3]); if (unlikely(!__pyx_v_neighbors.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_forces = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(values[4]); if (unlikely(!__pyx_v_forces.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 509; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_theta = __pyx_PyFloat_AsFloat(values[5]); if (unlikely((__pyx_v_theta == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 510; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_dimension = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_dimension == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 511; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_verbose = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_verbose == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 512; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("gradient", 1, 8, 8, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("sklearn.manifold.bhtsne.gradient", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -5119,7 +4940,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("gradient", 0);
 
-  /* "sklearn/manifold/bhtsne.pyx":519
+  /* "sklearn/manifold/bhtsne.pyx":516
  *     # it passes the 'forces' array by reference and fills thats array
  *     # up in-place
  *     n = pos_output.shape[0]             # <<<<<<<<<<<<<<
@@ -5128,7 +4949,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
  */
   __pyx_v_n = (__pyx_v_pos_output.shape[0]);
 
-  /* "sklearn/manifold/bhtsne.pyx":520
+  /* "sklearn/manifold/bhtsne.pyx":517
  *     # up in-place
  *     n = pos_output.shape[0]
  *     assert width.itemsize == 4             # <<<<<<<<<<<<<<
@@ -5137,7 +4958,82 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_width, 1, (PyObject *(*)(char *)) __pyx_memview_get_float, (int (*)(char *, PyObject *)) __pyx_memview_set_float, 0);; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 520; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_width, 1, (PyObject *(*)(char *)) __pyx_memview_get_float, (int (*)(char *, PyObject *)) __pyx_memview_set_float, 0);; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 517; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 517; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_int_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 517; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 517; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    if (unlikely(!__pyx_t_3)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 517; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+  }
+  #endif
+
+  /* "sklearn/manifold/bhtsne.pyx":518
+ *     n = pos_output.shape[0]
+ *     assert width.itemsize == 4
+ *     assert pij_input.itemsize == 4             # <<<<<<<<<<<<<<
+ *     assert pos_output.itemsize == 4
+ *     assert forces.itemsize == 4
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_pij_input, 2, (PyObject *(*)(char *)) __pyx_memview_get_float, (int (*)(char *, PyObject *)) __pyx_memview_set_float, 0);; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 518; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 518; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_int_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 518; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 518; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    if (unlikely(!__pyx_t_3)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 518; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+  }
+  #endif
+
+  /* "sklearn/manifold/bhtsne.pyx":519
+ *     assert width.itemsize == 4
+ *     assert pij_input.itemsize == 4
+ *     assert pos_output.itemsize == 4             # <<<<<<<<<<<<<<
+ *     assert forces.itemsize == 4
+ *     m = "neighbors array and pos_output shapes are incompatible"
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_pos_output, 2, (PyObject *(*)(char *)) __pyx_memview_get_float, (int (*)(char *, PyObject *)) __pyx_memview_set_float, 0);; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 519; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 519; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_int_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 519; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 519; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    if (unlikely(!__pyx_t_3)) {
+      PyErr_SetNone(PyExc_AssertionError);
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 519; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+  }
+  #endif
+
+  /* "sklearn/manifold/bhtsne.pyx":520
+ *     assert pij_input.itemsize == 4
+ *     assert pos_output.itemsize == 4
+ *     assert forces.itemsize == 4             # <<<<<<<<<<<<<<
+ *     m = "neighbors array and pos_output shapes are incompatible"
+ *     assert n == neighbors.shape[0]
+ */
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_forces, 2, (PyObject *(*)(char *)) __pyx_memview_get_float, (int (*)(char *, PyObject *)) __pyx_memview_set_float, 0);; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 520; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 520; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
@@ -5154,81 +5050,6 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   #endif
 
   /* "sklearn/manifold/bhtsne.pyx":521
- *     n = pos_output.shape[0]
- *     assert width.itemsize == 4
- *     assert pij_input.itemsize == 4             # <<<<<<<<<<<<<<
- *     assert pos_output.itemsize == 4
- *     assert forces.itemsize == 4
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_pij_input, 2, (PyObject *(*)(char *)) __pyx_memview_get_float, (int (*)(char *, PyObject *)) __pyx_memview_set_float, 0);; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 521; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 521; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_int_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 521; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 521; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (unlikely(!__pyx_t_3)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 521; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-  }
-  #endif
-
-  /* "sklearn/manifold/bhtsne.pyx":522
- *     assert width.itemsize == 4
- *     assert pij_input.itemsize == 4
- *     assert pos_output.itemsize == 4             # <<<<<<<<<<<<<<
- *     assert forces.itemsize == 4
- *     m = "neighbors array and pos_output shapes are incompatible"
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_pos_output, 2, (PyObject *(*)(char *)) __pyx_memview_get_float, (int (*)(char *, PyObject *)) __pyx_memview_set_float, 0);; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 522; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 522; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_int_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 522; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 522; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (unlikely(!__pyx_t_3)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 522; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-  }
-  #endif
-
-  /* "sklearn/manifold/bhtsne.pyx":523
- *     assert pij_input.itemsize == 4
- *     assert pos_output.itemsize == 4
- *     assert forces.itemsize == 4             # <<<<<<<<<<<<<<
- *     m = "neighbors array and pos_output shapes are incompatible"
- *     assert n == neighbors.shape[0]
- */
-  #ifndef CYTHON_WITHOUT_ASSERTIONS
-  if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_forces, 2, (PyObject *(*)(char *)) __pyx_memview_get_float, (int (*)(char *, PyObject *)) __pyx_memview_set_float, 0);; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 523; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_itemsize); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 523; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_2);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_int_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 523; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 523; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (unlikely(!__pyx_t_3)) {
-      PyErr_SetNone(PyExc_AssertionError);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 523; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-  }
-  #endif
-
-  /* "sklearn/manifold/bhtsne.pyx":524
  *     assert pos_output.itemsize == 4
  *     assert forces.itemsize == 4
  *     m = "neighbors array and pos_output shapes are incompatible"             # <<<<<<<<<<<<<<
@@ -5238,7 +5059,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   __Pyx_INCREF(__pyx_kp_s_neighbors_array_and_pos_output_s);
   __pyx_v_m = __pyx_kp_s_neighbors_array_and_pos_output_s;
 
-  /* "sklearn/manifold/bhtsne.pyx":525
+  /* "sklearn/manifold/bhtsne.pyx":522
  *     assert forces.itemsize == 4
  *     m = "neighbors array and pos_output shapes are incompatible"
  *     assert n == neighbors.shape[0]             # <<<<<<<<<<<<<<
@@ -5249,12 +5070,12 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_n == (__pyx_v_neighbors.shape[0])) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 525; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 522; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "sklearn/manifold/bhtsne.pyx":526
+  /* "sklearn/manifold/bhtsne.pyx":523
  *     m = "neighbors array and pos_output shapes are incompatible"
  *     assert n == neighbors.shape[0]
  *     m = "Forces array and pos_output shapes are incompatible"             # <<<<<<<<<<<<<<
@@ -5264,7 +5085,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   __Pyx_INCREF(__pyx_kp_s_Forces_array_and_pos_output_shap);
   __Pyx_DECREF_SET(__pyx_v_m, __pyx_kp_s_Forces_array_and_pos_output_shap);
 
-  /* "sklearn/manifold/bhtsne.pyx":527
+  /* "sklearn/manifold/bhtsne.pyx":524
  *     assert n == neighbors.shape[0]
  *     m = "Forces array and pos_output shapes are incompatible"
  *     assert n == forces.shape[0], m             # <<<<<<<<<<<<<<
@@ -5274,16 +5095,16 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_n == (__pyx_v_forces.shape[0])) != 0))) {
-      __pyx_t_1 = PyTuple_Pack(1, __pyx_v_m); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 527; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = PyTuple_Pack(1, __pyx_v_m); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 524; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       PyErr_SetObject(PyExc_AssertionError, __pyx_t_1);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 527; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 524; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "sklearn/manifold/bhtsne.pyx":528
+  /* "sklearn/manifold/bhtsne.pyx":525
  *     m = "Forces array and pos_output shapes are incompatible"
  *     assert n == forces.shape[0], m
  *     m = "Pij and pos_output shapes are incompatible"             # <<<<<<<<<<<<<<
@@ -5293,7 +5114,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   __Pyx_INCREF(__pyx_kp_s_Pij_and_pos_output_shapes_are_in);
   __Pyx_DECREF_SET(__pyx_v_m, __pyx_kp_s_Pij_and_pos_output_shapes_are_in);
 
-  /* "sklearn/manifold/bhtsne.pyx":529
+  /* "sklearn/manifold/bhtsne.pyx":526
  *     assert n == forces.shape[0], m
  *     m = "Pij and pos_output shapes are incompatible"
  *     assert n == pij_input.shape[0], m             # <<<<<<<<<<<<<<
@@ -5303,16 +5124,16 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_n == (__pyx_v_pij_input.shape[0])) != 0))) {
-      __pyx_t_1 = PyTuple_Pack(1, __pyx_v_m); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 529; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = PyTuple_Pack(1, __pyx_v_m); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 526; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       PyErr_SetObject(PyExc_AssertionError, __pyx_t_1);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 529; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 526; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "sklearn/manifold/bhtsne.pyx":530
+  /* "sklearn/manifold/bhtsne.pyx":527
  *     m = "Pij and pos_output shapes are incompatible"
  *     assert n == pij_input.shape[0], m
  *     m = "Pij and pos_output shapes are incompatible"             # <<<<<<<<<<<<<<
@@ -5322,7 +5143,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   __Pyx_INCREF(__pyx_kp_s_Pij_and_pos_output_shapes_are_in);
   __Pyx_DECREF_SET(__pyx_v_m, __pyx_kp_s_Pij_and_pos_output_shapes_are_in);
 
-  /* "sklearn/manifold/bhtsne.pyx":531
+  /* "sklearn/manifold/bhtsne.pyx":528
  *     assert n == pij_input.shape[0], m
  *     m = "Pij and pos_output shapes are incompatible"
  *     assert n == pij_input.shape[1], m             # <<<<<<<<<<<<<<
@@ -5332,16 +5153,16 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_n == (__pyx_v_pij_input.shape[1])) != 0))) {
-      __pyx_t_1 = PyTuple_Pack(1, __pyx_v_m); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 531; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = PyTuple_Pack(1, __pyx_v_m); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 528; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       PyErr_SetObject(PyExc_AssertionError, __pyx_t_1);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 531; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 528; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "sklearn/manifold/bhtsne.pyx":532
+  /* "sklearn/manifold/bhtsne.pyx":529
  *     m = "Pij and pos_output shapes are incompatible"
  *     assert n == pij_input.shape[1], m
  *     m = "Only 2D and 3D embeddings supported. Width array must be size 2 or 3"             # <<<<<<<<<<<<<<
@@ -5351,7 +5172,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   __Pyx_INCREF(__pyx_kp_s_Only_2D_and_3D_embeddings_suppor);
   __Pyx_DECREF_SET(__pyx_v_m, __pyx_kp_s_Only_2D_and_3D_embeddings_suppor);
 
-  /* "sklearn/manifold/bhtsne.pyx":533
+  /* "sklearn/manifold/bhtsne.pyx":530
  *     assert n == pij_input.shape[1], m
  *     m = "Only 2D and 3D embeddings supported. Width array must be size 2 or 3"
  *     assert width.shape[0] <= 3, m             # <<<<<<<<<<<<<<
@@ -5361,16 +5182,16 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!(((__pyx_v_width.shape[0]) <= 3) != 0))) {
-      __pyx_t_1 = PyTuple_Pack(1, __pyx_v_m); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 533; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = PyTuple_Pack(1, __pyx_v_m); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 530; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       PyErr_SetObject(PyExc_AssertionError, __pyx_t_1);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 533; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 530; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "sklearn/manifold/bhtsne.pyx":534
+  /* "sklearn/manifold/bhtsne.pyx":531
  *     m = "Only 2D and 3D embeddings supported. Width array must be size 2 or 3"
  *     assert width.shape[0] <= 3, m
  *     if verbose > 10:             # <<<<<<<<<<<<<<
@@ -5380,7 +5201,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   __pyx_t_3 = ((__pyx_v_verbose > 10) != 0);
   if (__pyx_t_3) {
 
-    /* "sklearn/manifold/bhtsne.pyx":535
+    /* "sklearn/manifold/bhtsne.pyx":532
  *     assert width.shape[0] <= 3, m
  *     if verbose > 10:
  *         printf("Initializing tree of dimension %i\n", dimension)             # <<<<<<<<<<<<<<
@@ -5392,7 +5213,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   }
   __pyx_L3:;
 
-  /* "sklearn/manifold/bhtsne.pyx":536
+  /* "sklearn/manifold/bhtsne.pyx":533
  *     if verbose > 10:
  *         printf("Initializing tree of dimension %i\n", dimension)
  *     cdef Tree* qt = init_tree(width, dimension, verbose)             # <<<<<<<<<<<<<<
@@ -5401,7 +5222,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
  */
   __pyx_v_qt = __pyx_f_7sklearn_8manifold_6bhtsne_init_tree(__pyx_v_width, __pyx_v_dimension, __pyx_v_verbose);
 
-  /* "sklearn/manifold/bhtsne.pyx":537
+  /* "sklearn/manifold/bhtsne.pyx":534
  *         printf("Initializing tree of dimension %i\n", dimension)
  *     cdef Tree* qt = init_tree(width, dimension, verbose)
  *     if verbose > 10:             # <<<<<<<<<<<<<<
@@ -5411,7 +5232,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   __pyx_t_3 = ((__pyx_v_verbose > 10) != 0);
   if (__pyx_t_3) {
 
-    /* "sklearn/manifold/bhtsne.pyx":538
+    /* "sklearn/manifold/bhtsne.pyx":535
  *     cdef Tree* qt = init_tree(width, dimension, verbose)
  *     if verbose > 10:
  *         printf("Inserting %i points\n", pos_output.shape[0])             # <<<<<<<<<<<<<<
@@ -5423,7 +5244,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   }
   __pyx_L4:;
 
-  /* "sklearn/manifold/bhtsne.pyx":539
+  /* "sklearn/manifold/bhtsne.pyx":536
  *     if verbose > 10:
  *         printf("Inserting %i points\n", pos_output.shape[0])
  *     insert_many(qt, pos_output)             # <<<<<<<<<<<<<<
@@ -5432,7 +5253,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
  */
   __pyx_f_7sklearn_8manifold_6bhtsne_insert_many(__pyx_v_qt, __pyx_v_pos_output);
 
-  /* "sklearn/manifold/bhtsne.pyx":540
+  /* "sklearn/manifold/bhtsne.pyx":537
  *         printf("Inserting %i points\n", pos_output.shape[0])
  *     insert_many(qt, pos_output)
  *     if verbose > 10:             # <<<<<<<<<<<<<<
@@ -5442,7 +5263,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   __pyx_t_3 = ((__pyx_v_verbose > 10) != 0);
   if (__pyx_t_3) {
 
-    /* "sklearn/manifold/bhtsne.pyx":541
+    /* "sklearn/manifold/bhtsne.pyx":538
  *     insert_many(qt, pos_output)
  *     if verbose > 10:
  *         printf("Computing gradient\n")             # <<<<<<<<<<<<<<
@@ -5454,7 +5275,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   }
   __pyx_L5:;
 
-  /* "sklearn/manifold/bhtsne.pyx":542
+  /* "sklearn/manifold/bhtsne.pyx":539
  *     if verbose > 10:
  *         printf("Computing gradient\n")
  *     compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, theta, 0, -1)             # <<<<<<<<<<<<<<
@@ -5463,7 +5284,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
  */
   __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient(__pyx_v_pij_input, __pyx_v_pos_output, __pyx_v_neighbors, __pyx_v_forces, __pyx_v_qt->root_node, __pyx_v_theta, 0, -1);
 
-  /* "sklearn/manifold/bhtsne.pyx":543
+  /* "sklearn/manifold/bhtsne.pyx":540
  *         printf("Computing gradient\n")
  *     compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, theta, 0, -1)
  *     if verbose > 10:             # <<<<<<<<<<<<<<
@@ -5473,7 +5294,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   __pyx_t_3 = ((__pyx_v_verbose > 10) != 0);
   if (__pyx_t_3) {
 
-    /* "sklearn/manifold/bhtsne.pyx":544
+    /* "sklearn/manifold/bhtsne.pyx":541
  *     compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, theta, 0, -1)
  *     if verbose > 10:
  *         printf("Checking tree consistency \n")             # <<<<<<<<<<<<<<
@@ -5485,7 +5306,7 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   }
   __pyx_L6:;
 
-  /* "sklearn/manifold/bhtsne.pyx":545
+  /* "sklearn/manifold/bhtsne.pyx":542
  *     if verbose > 10:
  *         printf("Checking tree consistency \n")
  *     assert check_consistency(qt), "Tree consistency check failed"             # <<<<<<<<<<<<<<
@@ -5495,19 +5316,19 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6bhtsne_gradient(CYTHON_UNUSED PyOb
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!(__pyx_f_7sklearn_8manifold_6bhtsne_check_consistency(__pyx_v_qt) != 0))) {
       PyErr_SetObject(PyExc_AssertionError, __pyx_kp_s_Tree_consistency_check_failed);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 545; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 542; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "sklearn/manifold/bhtsne.pyx":546
+  /* "sklearn/manifold/bhtsne.pyx":543
  *         printf("Checking tree consistency \n")
  *     assert check_consistency(qt), "Tree consistency check failed"
  *     free_tree(qt)             # <<<<<<<<<<<<<<
  */
   __pyx_f_7sklearn_8manifold_6bhtsne_free_tree(__pyx_v_qt);
 
-  /* "sklearn/manifold/bhtsne.pyx":508
+  /* "sklearn/manifold/bhtsne.pyx":505
  * 
  * 
  * def gradient(float[:] width,             # <<<<<<<<<<<<<<
@@ -10857,7 +10678,7 @@ static PyObject *__pyx_memoryview_convert_item_to_object(struct __pyx_memoryview
  * 
  */
         __Pyx_XDECREF(__pyx_r);
-        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_result, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 448; __pyx_clineno = __LINE__; goto __pyx_L5_except_error;};
+        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_result, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 448; __pyx_clineno = __LINE__; goto __pyx_L5_except_error;};
         __Pyx_GOTREF(__pyx_t_1);
         __pyx_r = __pyx_t_1;
         __pyx_t_1 = 0;
@@ -18937,7 +18758,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 100; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 98; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 215; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 799; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 142; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -19147,17 +18968,17 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__17);
   __Pyx_GIVEREF(__pyx_tuple__17);
 
-  /* "sklearn/manifold/bhtsne.pyx":508
+  /* "sklearn/manifold/bhtsne.pyx":505
  * 
  * 
  * def gradient(float[:] width,             # <<<<<<<<<<<<<<
  *              float[:,:] pij_input,
  *              float[:,:] pos_output,
  */
-  __pyx_tuple__18 = PyTuple_Pack(11, __pyx_n_s_width, __pyx_n_s_pij_input, __pyx_n_s_pos_output, __pyx_n_s_neighbors, __pyx_n_s_forces, __pyx_n_s_theta, __pyx_n_s_dimension, __pyx_n_s_verbose, __pyx_n_s_n, __pyx_n_s_m, __pyx_n_s_qt); if (unlikely(!__pyx_tuple__18)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__18 = PyTuple_Pack(11, __pyx_n_s_width, __pyx_n_s_pij_input, __pyx_n_s_pos_output, __pyx_n_s_neighbors, __pyx_n_s_forces, __pyx_n_s_theta, __pyx_n_s_dimension, __pyx_n_s_verbose, __pyx_n_s_n, __pyx_n_s_m, __pyx_n_s_qt); if (unlikely(!__pyx_tuple__18)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__18);
   __Pyx_GIVEREF(__pyx_tuple__18);
-  __pyx_codeobj__19 = (PyObject*)__Pyx_PyCode_New(8, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__18, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_cemoody_Development_sciki, __pyx_n_s_gradient, 508, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__19 = (PyObject*)__Pyx_PyCode_New(8, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__18, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_cemoody_Development_sciki, __pyx_n_s_gradient, 505, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "View.MemoryView":276
  *         return self.name
@@ -19367,34 +19188,34 @@ PyMODINIT_FUNC PyInit_bhtsne(void)
   /*--- Function import code ---*/
   /*--- Execution code ---*/
 
-  /* "sklearn/manifold/bhtsne.pyx":6
+  /* "sklearn/manifold/bhtsne.pyx":4
  * # cython: wraparound=False
  * # cython: cdivision=True
  * import numpy as np             # <<<<<<<<<<<<<<
  * from cython.parallel cimport prange, parallel
  * from libc.stdio cimport printf
  */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 6; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 4; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 6; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 4; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "sklearn/manifold/bhtsne.pyx":508
+  /* "sklearn/manifold/bhtsne.pyx":505
  * 
  * 
  * def gradient(float[:] width,             # <<<<<<<<<<<<<<
  *              float[:,:] pij_input,
  *              float[:,:] pos_output,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7sklearn_8manifold_6bhtsne_1gradient, NULL, __pyx_n_s_sklearn_manifold_bhtsne); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7sklearn_8manifold_6bhtsne_1gradient, NULL, __pyx_n_s_sklearn_manifold_bhtsne); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_gradient, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 508; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_gradient, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 505; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "sklearn/manifold/bhtsne.pyx":1
- * # distutils: extra_compile_args = -fopenmp             # <<<<<<<<<<<<<<
- * # distutils: extra_link_args = -fopenmp
- * # cython: boundscheck=True
+ * # cython: boundscheck=False             # <<<<<<<<<<<<<<
+ * # cython: wraparound=False
+ * # cython: cdivision=True
  */
   __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
@@ -19568,79 +19389,6 @@ static PyObject *__Pyx_GetBuiltinName(PyObject *name) {
 #endif
     }
     return result;
-}
-
-static void __Pyx_RaiseBufferIndexError(int axis) {
-  PyErr_Format(PyExc_IndexError,
-     "Out of bounds on buffer access (axis %d)", axis);
-}
-
-static void __Pyx_RaiseBufferIndexErrorNogil(int axis) {
-    #ifdef WITH_THREAD
-    PyGILState_STATE gilstate = PyGILState_Ensure();
-    #endif
-    __Pyx_RaiseBufferIndexError(axis);
-    #ifdef WITH_THREAD
-    PyGILState_Release(gilstate);
-    #endif
-}
-
-static CYTHON_INLINE void __Pyx_ErrRestore(PyObject *type, PyObject *value, PyObject *tb) {
-#if CYTHON_COMPILING_IN_CPYTHON
-    PyObject *tmp_type, *tmp_value, *tmp_tb;
-    PyThreadState *tstate = PyThreadState_GET();
-    tmp_type = tstate->curexc_type;
-    tmp_value = tstate->curexc_value;
-    tmp_tb = tstate->curexc_traceback;
-    tstate->curexc_type = type;
-    tstate->curexc_value = value;
-    tstate->curexc_traceback = tb;
-    Py_XDECREF(tmp_type);
-    Py_XDECREF(tmp_value);
-    Py_XDECREF(tmp_tb);
-#else
-    PyErr_Restore(type, value, tb);
-#endif
-}
-static CYTHON_INLINE void __Pyx_ErrFetch(PyObject **type, PyObject **value, PyObject **tb) {
-#if CYTHON_COMPILING_IN_CPYTHON
-    PyThreadState *tstate = PyThreadState_GET();
-    *type = tstate->curexc_type;
-    *value = tstate->curexc_value;
-    *tb = tstate->curexc_traceback;
-    tstate->curexc_type = 0;
-    tstate->curexc_value = 0;
-    tstate->curexc_traceback = 0;
-#else
-    PyErr_Fetch(type, value, tb);
-#endif
-}
-
-static void __Pyx_WriteUnraisable(const char *name, CYTHON_UNUSED int clineno,
-                                  CYTHON_UNUSED int lineno, CYTHON_UNUSED const char *filename,
-                                  int full_traceback) {
-    PyObject *old_exc, *old_val, *old_tb;
-    PyObject *ctx;
-    __Pyx_ErrFetch(&old_exc, &old_val, &old_tb);
-    if (full_traceback) {
-        Py_XINCREF(old_exc);
-        Py_XINCREF(old_val);
-        Py_XINCREF(old_tb);
-        __Pyx_ErrRestore(old_exc, old_val, old_tb);
-        PyErr_PrintEx(1);
-    }
-    #if PY_MAJOR_VERSION < 3
-    ctx = PyString_FromString(name);
-    #else
-    ctx = PyUnicode_FromString(name);
-    #endif
-    __Pyx_ErrRestore(old_exc, old_val, old_tb);
-    if (!ctx) {
-        PyErr_WriteUnraisable(Py_None);
-    } else {
-        PyErr_WriteUnraisable(ctx);
-        Py_DECREF(ctx);
-    }
 }
 
 static void __Pyx_RaiseArgtupleInvalid(
@@ -20485,6 +20233,37 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg
 }
 #endif
 
+static CYTHON_INLINE void __Pyx_ErrRestore(PyObject *type, PyObject *value, PyObject *tb) {
+#if CYTHON_COMPILING_IN_CPYTHON
+    PyObject *tmp_type, *tmp_value, *tmp_tb;
+    PyThreadState *tstate = PyThreadState_GET();
+    tmp_type = tstate->curexc_type;
+    tmp_value = tstate->curexc_value;
+    tmp_tb = tstate->curexc_traceback;
+    tstate->curexc_type = type;
+    tstate->curexc_value = value;
+    tstate->curexc_traceback = tb;
+    Py_XDECREF(tmp_type);
+    Py_XDECREF(tmp_value);
+    Py_XDECREF(tmp_tb);
+#else
+    PyErr_Restore(type, value, tb);
+#endif
+}
+static CYTHON_INLINE void __Pyx_ErrFetch(PyObject **type, PyObject **value, PyObject **tb) {
+#if CYTHON_COMPILING_IN_CPYTHON
+    PyThreadState *tstate = PyThreadState_GET();
+    *type = tstate->curexc_type;
+    *value = tstate->curexc_value;
+    *tb = tstate->curexc_traceback;
+    tstate->curexc_type = 0;
+    tstate->curexc_value = 0;
+    tstate->curexc_traceback = 0;
+#else
+    PyErr_Fetch(type, value, tb);
+#endif
+}
+
 #if PY_MAJOR_VERSION < 3
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb,
                         CYTHON_UNUSED PyObject *cause) {
@@ -21040,6 +20819,33 @@ static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
 
 static CYTHON_INLINE void __Pyx_RaiseUnboundLocalError(const char *varname) {
     PyErr_Format(PyExc_UnboundLocalError, "local variable '%s' referenced before assignment", varname);
+}
+
+static void __Pyx_WriteUnraisable(const char *name, CYTHON_UNUSED int clineno,
+                                  CYTHON_UNUSED int lineno, CYTHON_UNUSED const char *filename,
+                                  int full_traceback) {
+    PyObject *old_exc, *old_val, *old_tb;
+    PyObject *ctx;
+    __Pyx_ErrFetch(&old_exc, &old_val, &old_tb);
+    if (full_traceback) {
+        Py_XINCREF(old_exc);
+        Py_XINCREF(old_val);
+        Py_XINCREF(old_tb);
+        __Pyx_ErrRestore(old_exc, old_val, old_tb);
+        PyErr_PrintEx(1);
+    }
+    #if PY_MAJOR_VERSION < 3
+    ctx = PyString_FromString(name);
+    #else
+    ctx = PyUnicode_FromString(name);
+    #endif
+    __Pyx_ErrRestore(old_exc, old_val, old_tb);
+    if (!ctx) {
+        PyErr_WriteUnraisable(Py_None);
+    } else {
+        PyErr_WriteUnraisable(ctx);
+        Py_DECREF(ctx);
+    }
 }
 
 #if CYTHON_COMPILING_IN_CPYTHON
