@@ -565,6 +565,8 @@ cdef void compute_non_edge_forces(Node* node,
                                                      point_index,
                                                      pos, force)
 
+    free(delta)
+
 
 def gradient(float[:] width, 
              float[:,:] pij_input, 
