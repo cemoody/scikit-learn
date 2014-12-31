@@ -8,7 +8,6 @@ from cython.parallel cimport prange, parallel
 from libc.stdio cimport printf
 cimport numpy as np
 cimport cython
-cimport openmp
 
 # Implementation by Chris Moody & Nick Travers
 # original code by Laurens van der Maaten
@@ -22,14 +21,13 @@ cdef extern from "math.h":
     double sqrt(double x) nogil
     double ceil(double x) nogil
 
-cdef extern from "omp.h":
-    int omp_get_thread_num() nogil
 
 cdef extern from "time.h":
     # Declare only what is necessary from `tm` structure.
     ctypedef long clock_t
     clock_t clock() nogil
     double CLOCKS_PER_SEC
+
 
 cdef struct Node:
     # Keep track of the center of mass
@@ -38,14 +36,14 @@ cdef struct Node:
     float[3] cur_pos
     # The number of particles including all 
     # nodes below this one
-    int cum_size
+    long cum_size
     # Number of particles at this node
-    int size
+    long size
     # Index of the particle at this node
-    int point_index
+    long point_index
     # level = 0 is the root node
     # And each subdivision adds 1 to the level
-    int level
+    long level
     # Left edge of this node, normalized to [0,1]
     float[3] le
     # The center of this node, equal to le + w/2.0
@@ -70,13 +68,14 @@ cdef struct Tree:
     # Number of dimensions in the ouput
     int dimension
     # Total number of cells
-    int num_cells
+    long num_cells
     # Total number of particles
-    int num_part
+    long num_part
     # Spit out diagnostic information?
     int verbose
 
 cdef Tree* init_tree(float[:] width, int dimension, int verbose) nogil:
+    # tree is freed by free_tree
     cdef Tree* tree = <Tree*> malloc(sizeof(Tree))
     tree.dimension = dimension
     tree.num_cells = 0
@@ -90,6 +89,7 @@ cdef Tree* init_tree(float[:] width, int dimension, int verbose) nogil:
 cdef Node* create_root(float[:] width, int dimension) nogil:
     # Create a default root node
     cdef int ax
+    # root is freed by free_tree
     root = <Node*> malloc(sizeof(Node))
     root.is_leaf = 1
     root.parent = NULL
@@ -108,6 +108,7 @@ cdef Node* create_root(float[:] width, int dimension) nogil:
 cdef Node* create_child(Node *parent, int[3] offset) nogil:
     # Create a new child node with default parameters
     cdef int ax
+    # these children are freed by free_recursive
     child = <Node *> malloc(sizeof(Node))
     child.is_leaf = 1
     child.parent = parent
@@ -158,11 +159,11 @@ cdef void subdivide(Node* node) nogil:
                 offset[2] = k
                 node.children[i][j][k] = create_child(node, offset)
 
-cdef void insert(Node *root, float pos[3], int point_index) nogil:
+cdef void insert(Node *root, float pos[3], long point_index) nogil:
     # Introduce a new point into the tree
     # by recursively inserting it and subdividng as necessary
     cdef Node *child
-    cdef int i
+    cdef long i
     cdef int ax
     cdef int dimension = root.tree.dimension
     # Increment the total number points including this
@@ -208,8 +209,9 @@ cdef void insert(Node *root, float pos[3], int point_index) nogil:
 
 cdef void insert_many(Tree* tree, float[:,:] pos_array) nogil:
     # Insert each data point into the tree one at a time
-    cdef int nrows = pos_array.shape[0]
-    cdef int i, ax
+    cdef long nrows = pos_array.shape[0]
+    cdef long i
+    cdef int ax
     cdef float row[3]
     for i in range(nrows):
         for ax in range(tree.dimension):
@@ -219,7 +221,7 @@ cdef void insert_many(Tree* tree, float[:,:] pos_array) nogil:
 
 cdef int free_tree(Tree* tree) nogil:
     cdef int check
-    cdef int* cnt = <int*> malloc(sizeof(int) * 3)
+    cdef long* cnt = <long*> malloc(sizeof(long) * 3)
     for i in range(3):
         cnt[i] = 0
     free_recursive(tree, tree.root_node, cnt)
@@ -227,9 +229,10 @@ cdef int free_tree(Tree* tree) nogil:
     check = cnt[0] == tree.num_cells
     check &= cnt[2] == tree.num_part
     free(cnt)
+    free(tree)
     return check
 
-cdef void free_recursive(Tree* tree, Node *root, int* counts) nogil:
+cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:
     # Free up all of the tree nodes recursively
     # while counting the number of nodes visited
     # and total number of data points removed
@@ -257,7 +260,7 @@ cdef int check_consistency(Tree* tree) nogil:
     # Ensure that the number of cells and data
     # points removed are equal to the number
     # removed
-    cdef int count 
+    cdef long count 
     cdef int check
     count = 0
     count = count_points(tree.root_node, count)
@@ -265,7 +268,7 @@ cdef int check_consistency(Tree* tree) nogil:
     check &= count == tree.num_part
     return check
 
-cdef int count_points(Node* root, int count) nogil:
+cdef long count_points(Node* root, long count) nogil:
     # Walk through the whole tree and count the number 
     # of points at the leaf nodes
     cdef Node* child
@@ -290,16 +293,17 @@ cdef int count_points(Node* root, int count) nogil:
 
 cdef void compute_gradient(float[:,:] val_P,
                            float[:,:] pos_reference,
-                           int[:,:] neighbors,
+                           long[:,:] neighbors,
                            float[:,:] tot_force,
                            Node* root_node,
                            float theta,
-                           int start,
-                           int stop) nogil:
+                           long start,
+                           long stop) nogil:
     # Having created the tree, calculate the gradient
     # in two components, the positive and negative forces
-    cdef int i, ax, coord
-    cdef int n = pos_reference.shape[0]
+    cdef long i, coord
+    cdef int ax
+    cdef long n = pos_reference.shape[0]
     cdef int dimension = root_node.tree.dimension
     cdef float* sum_Q = <float*> malloc(sizeof(float))
     cdef float* neg_f = <float*> malloc(sizeof(float) * n * dimension)
@@ -334,11 +338,11 @@ cdef void compute_gradient_positive(float[:,:] val_P,
     # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
     # This is equivalent to compute_edge_forces in the authors' code
     cdef:
-        int i, j, ax
-        int n = val_P.shape[0]
+        int ax
+        long i, j, temp
+        long n = val_P.shape[0]
         float buff[3]
         float D
-        int temp
     for i in range(n):
         for ax in range(dimension):
             pos_f[i * dimension + ax] = 0.0
@@ -357,7 +361,7 @@ cdef void compute_gradient_positive(float[:,:] val_P,
 
 cdef void compute_gradient_positive_nn(float[:,:] val_P,
                                        float[:,:] pos_reference,
-                                       int[:,:] neighbors,
+                                       long[:,:] neighbors,
                                        float* pos_f,
                                        int dimension) nogil:
     # Sum over the following expression for i not equal to j
@@ -366,12 +370,12 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
     # It just goes over the nearest neighbors instead of all the data points
     # (unlike the non-nearest neighbors version of `compute_gradient_positive')
     cdef:
-        int i, j, k, ax
-        int K = neighbors.shape[1]
-        int n = val_P.shape[0]
+        int ax
+        long i, j, k, temp
+        long K = neighbors.shape[1]
+        long n = val_P.shape[0]
         float buff[3]
         float D
-        int temp
     for i in range(n):
         for ax in range(dimension):
             pos_f[i * dimension + ax] = 0.0
@@ -389,41 +393,6 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
                 temp = i * dimension + ax
 
 
-cdef void compute_gradient_positive_parallel(float[:,:] val_P,
-                                             float[:,:] pos_reference,
-                                             float* pos_f,
-                                             int dimension) nogil:
-    # Sum over the following expression for i not equal to j
-    # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
-    cdef:
-        int i, j, ax
-        int n = val_P.shape[0]
-        float* buff
-        float* pos_f_buff
-        float* D
-    with parallel():
-        buff = <float*> malloc(sizeof(float) * dimension)
-        pos_f_buff = <float*> malloc(sizeof(float) * dimension)
-        D = <float*> malloc(sizeof(float) )
-        for i in prange(n, schedule='static'):
-            for ax in range(dimension):
-                pos_f_buff[ax] = 0.0
-            for j in range(n):
-                if i == j : 
-                    continue
-                D[0] = 0.0
-                for ax in range(dimension):
-                    buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
-                    D[0] += buff[ax] ** 2.0  
-                D[0] = val_P[i, j] / (1.0 + D[0])
-                for ax in range(dimension):
-                    pos_f_buff[ax] += D[0] * buff[ax]
-            for ax in range(dimension):
-                pos_f[i * dimension + ax] = pos_f_buff[ax]
-        free(buff)
-        free(pos_f_buff)
-        free(D)
-
 
 cdef void compute_gradient_negative(float[:,:] val_P, 
                                     float[:,:] pos_reference,
@@ -431,13 +400,14 @@ cdef void compute_gradient_negative(float[:,:] val_P,
                                     Node *root_node,
                                     float* sum_Q,
                                     float theta, 
-                                    int start, 
-                                    int stop) nogil:
+                                    long start, 
+                                    long stop) nogil:
     if stop == -1:
         stop = pos_reference.shape[0] 
     cdef:
-        int ax, i
-        int n = stop - start
+        int ax
+        long i
+        long n = stop - start
         float* force
         float* iQ 
         float* pos
@@ -463,56 +433,16 @@ cdef void compute_gradient_negative(float[:,:] val_P,
     free(pos)
 
 
-cdef void compute_gradient_negative_parallel(float[:,:] val_P, 
-                                             float[:,:] pos_reference,
-                                             float* neg_f,
-                                             Node *root_node,
-                                             float* sum_Q,
-                                             float theta, 
-                                             int start, 
-                                             int stop) nogil:
-    if stop == -1:
-        stop = pos_reference.shape[0] 
-    cdef:
-        int ax, i
-        int n = stop - start
-        float* force
-        float* iQ 
-        float* pos
-        int dimension = root_node.tree.dimension
-        int step = <int> (ceil(n / 4.0))
-
-    with parallel():
-        iQ = <float*> malloc(sizeof(float))
-        force = <float*> malloc(sizeof(float) * dimension)
-        pos = <float*> malloc(sizeof(float) * dimension)
-        for i in prange(start, stop, schedule='static'):
-            # Clear the arrays
-            for ax in range(dimension): 
-                force[ax] = 0.0
-                pos[ax] = pos_reference[i, ax]
-            iQ[0] = 0.0
-            compute_non_edge_forces(root_node, theta, iQ, i,
-                                    pos, force)
-            sum_Q[0] += iQ[0]
-            # Save local force into global
-            for ax in range(dimension): 
-                neg_f[i * dimension + ax] = force[ax]
-        free(iQ)
-        free(force)
-        free(pos)
-
-
 cdef void compute_non_edge_forces(Node* node, 
                                   float theta,
                                   float* sum_Q,
-                                  int point_index,
+                                  long point_index,
                                   float* pos,
                                   float* force) nogil:
     # Compute the t-SNE force on the point in pos given by point_index
     cdef:
         Node* child
-        int i, j
+        int i, j, krange
         int summary = 0
         int dimension = node.tree.dimension
         float dist2, mult, qijZ
@@ -571,7 +501,7 @@ cdef void compute_non_edge_forces(Node* node,
 def gradient(float[:] width, 
              float[:,:] pij_input, 
              float[:,:] pos_output, 
-             int[:,:] neighbors, 
+             long[:,:] neighbors, 
              float[:,:] forces, 
              float theta,
              int dimension,

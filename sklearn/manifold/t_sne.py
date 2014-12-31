@@ -235,11 +235,12 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
     if len(P.shape) == 1:
         sP = squareform(P).astype(np.float32)
     else:
-        sP = P
+        sP = P.astype(np.float32)
 
     dimension = X_embedded.shape[1]
     width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
     grad = np.zeros(X_embedded.shape, dtype=np.float32)
+    import pdb; pdb.set_trace()
     bhtsne.gradient(width, sP, X_embedded, neighbors, grad,
                     theta, dimension, verbose)
 
