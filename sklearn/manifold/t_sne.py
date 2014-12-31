@@ -20,7 +20,7 @@ from ..utils.extmath import _ravel
 from ..decomposition import RandomizedPCA
 from ..metrics.pairwise import pairwise_distances
 from . import _utils
-from . import bhtsne
+from . import _barnes_hut_tsne
 
 
 MACHINE_EPSILON = np.finfo(np.double).eps
@@ -58,7 +58,12 @@ def _joint_probabilities(distances, desired_perplexity, verbose):
 
 
 def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
-    """Compute joint probabilities p_ij from distances.
+    """Compute joint probabilities p_ij from distances using just nearest
+    neighbors.
+
+    This method is approximately equal to _joint_probabilities. The latter
+    is O(N), but limiting the joint probability to nearest neighbors improves
+    this substantially to O(uN).
 
     Parameters
     ----------
@@ -89,7 +94,8 @@ def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
 
 
 def _kl_divergence(params, P, alpha, n_samples, n_components):
-    """t-SNE objective function: KL divergence of p_ijs and q_ijs.
+    """t-SNE objective function: gradient of the KL divergence
+    of p_ijs and q_ijs and the absolute error.
 
     Parameters
     ----------
@@ -145,7 +151,8 @@ def _kl_divergence(params, P, alpha, n_samples, n_components):
 
 
 def _kl_divergence_error(params, P, neighbors, alpha, n_samples, n_components):
-    """t-SNE objective function: KL divergence of p_ijs and q_ijs.
+    """t-SNE objective function: the absolute error of the
+    KL divergence of p_ijs and q_ijs.
 
     Parameters
     ----------
@@ -199,8 +206,9 @@ def _kl_divergence_error(params, P, neighbors, alpha, n_samples, n_components):
 
 
 def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
-                      theta=0.5, verbose=False):
+                      angle=0.5, verbose=False):
     """t-SNE objective function: KL divergence of p_ijs and q_ijs.
+
     Uses Barnes-Hut tree methods to calculate the gradient that
     runs in O(NlogN) instead of O(N^2)
 
@@ -221,6 +229,15 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
     n_components : int
         Dimension of the embedded space.
 
+    angle : float (default: 0.5)
+        This is the trade-off between speed and accuracy for Barnes-Hut T-SNE.
+        'angle' is the angular size (referred to as theta in [3]) of a distant
+        node as measured from a point. If this size is below 'angle' then it is
+        used as a summary node of all points contained within it.
+        This method is not very sensitive to changes in this parameter
+        in the range of 0.2 - 0.8. Angle less than 0.2 has quickly increasing
+        computation time and angle greater 0.8 has quickly increasing error.
+
     Returns
     -------
     kl_divergence : float
@@ -240,8 +257,8 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
     dimension = X_embedded.shape[1]
     width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
     grad = np.zeros(X_embedded.shape, dtype=np.float32)
-    bhtsne.gradient(width, sP, X_embedded, neighbors, grad,
-                    theta, dimension, verbose)
+    _barnes_hut_tsne.gradient(width, sP, X_embedded, neighbors, grad,
+                              angle, dimension, verbose)
 
     c = 2.0 * (alpha + 1.0) / alpha
     grad = grad.ravel()
@@ -526,11 +543,14 @@ class TSNE(BaseEstimator):
         to be better than 3%. However, the exact method cannot scale to
         millions of examples.
 
-    theta : float (default: 0.5)
-        Theta is the trade-off between speed and accuracy for Barnes-Hut T-SNE
+    angle : float (default: 0.5)
+        This is the trade-off between speed and accuracy for Barnes-Hut T-SNE.
+        'angle' is the angular size (referred to as theta in [3]) of a distant
+        node as measured from a point. If this size is below 'angle' then it is
+        used as a summary node of all points contained within it.
         This method is not very sensitive to changes in this parameter
-        in the range of 0.2 - 0.8. Theta less than 0.2 has quickly increasing
-        computation time and theta greater 0.8 has quickly increasing error.
+        in the range of 0.2 - 0.8. Angle less than 0.2 has quickly increasing
+        computation time and angle greater 0.8 has quickly increasing error.
 
 
     Attributes
@@ -570,9 +590,9 @@ class TSNE(BaseEstimator):
     def __init__(self, n_components=2, perplexity=30.0,
                  early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000,
                  metric="euclidean", init="random", verbose=0,
-                 random_state=None, method='barnes_hut', theta=0.5):
+                 random_state=None, method='barnes_hut', angle=0.5):
         if init not in ["pca", "random"] or isinstance(init, np.ndarray):
-            msg = "'init' must be either 'pca', 'random' or a NumPy array"
+            msg = "'init' must be 'pca', 'random' or a NumPy array"
             raise ValueError(msg)
         self.n_components = n_components
         self.perplexity = perplexity
@@ -586,9 +606,9 @@ class TSNE(BaseEstimator):
         if method not in ['barnes_hut', 'standard']:
             raise ValueError("'method' must be 'barnes_hut' or 'standard'")
         self.method = method
-        if theta < 0.0 or theta > 1.0:
-            raise ValueError("'theta' must be between 0.0 - 1.0")
-        self.theta = theta
+        if angle < 0.0 or angle > 1.0:
+            raise ValueError("'angle' must be between 0.0 - 1.0")
+        self.angle = angle
 
     def _fit(self, X):
         """Fit the model using X as training data.
@@ -640,7 +660,9 @@ class TSNE(BaseEstimator):
             bt = BallTree(X)
             # LVDM uses 3 * perplexity as the number of neighbors
             # And we add one to not count the data point itself
-            neighbors = int(3. * self.perplexity + 1)
+            # In the event that we have very small # of points
+            # set the neighbors to n - 1
+            neighbors = min(n_samples - 1, int(3. * self.perplexity + 1))
             distances_nn, neighbors_nn = bt.query(X, k=neighbors)
             # Skip the closest
             distances_nn = distances_nn[:, 1:]
@@ -704,7 +726,7 @@ class TSNE(BaseEstimator):
             # Don't always calculate the cost since that calculation
             # can be nearly as expensive as the gradient
             kwargs['objective_error'] = objective_error
-            kwargs['kwargs'] = dict(theta=self.theta, verbose=self.verbose)
+            kwargs['kwargs'] = dict(angle=self.angle, verbose=self.verbose)
         else:
             obj_func = _kl_divergence
             kwargs['args'] = [P, alpha, n_samples, self.n_components]

@@ -14,8 +14,8 @@ def configuration(parent_package="", top_path=None):
                          include_dirs=[numpy.get_include()],
                          libraries=libraries,
                          extra_compile_args=["-O3"])
-    config.add_extension("bhtsne",
-                         sources=["bhtsne.c"],
+    config.add_extension("_barnes_hut_tsne",
+                         sources=["_barnes_hut_tsne.c"],
                          include_dirs=[numpy.get_include()],
                          libraries=libraries,
                          extra_compile_args=["-O3"])

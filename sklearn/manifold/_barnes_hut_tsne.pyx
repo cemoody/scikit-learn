@@ -17,7 +17,6 @@ from libc.stdlib cimport malloc, free, abs
 
 cdef extern from "math.h":
     double sqrt(double x) nogil
-    double ceil(double x) nogil
 
 
 cdef extern from "time.h":
@@ -254,17 +253,6 @@ cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:
                             counts[2] +=1
                     free(child)
 
-cdef int check_consistency(Tree* tree) nogil:
-    # Ensure that the number of cells and data
-    # points removed are equal to the number
-    # removed
-    cdef long count 
-    cdef int check
-    count = 0
-    count = count_points(tree.root_node, count)
-    check = count == tree.root_node.cum_size
-    check &= count == tree.num_part
-    return check
 
 cdef long count_points(Node* root, long count) nogil:
     # Walk through the whole tree and count the number 
@@ -288,6 +276,7 @@ cdef long count_points(Node* root, long count) nogil:
                 # one point, and then the other neighboring cells
                 # don't get filled in
     return count
+
 
 cdef void compute_gradient(float[:,:] val_P,
                            float[:,:] pos_reference,
@@ -518,8 +507,10 @@ def gradient(float[:] width,
     assert pij_input.itemsize == 4
     assert pos_output.itemsize == 4
     assert forces.itemsize == 4
+    m = "Number of neighbors must be < # of points - 1"
+    assert n - 1 >= neighbors.shape[1], m
     m = "neighbors array and pos_output shapes are incompatible"
-    assert n == neighbors.shape[0]
+    assert n == neighbors.shape[0], m
     m = "Forces array and pos_output shapes are incompatible"
     assert n == forces.shape[0], m
     m = "Pij and pos_output shapes are incompatible"
@@ -539,5 +530,9 @@ def gradient(float[:] width,
     compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, theta, 0, -1)
     if verbose > 10:
         printf("Checking tree consistency \n")
-    assert check_consistency(qt), "Tree consistency check failed"
+    cdef long count = count_points(qt.root_node, 0)
+    m = "Tree consistency failed: unexpected number of points at root node"
+    assert count == qt.root_node.cum_size, m 
+    m = "Tree consistency failed: unexpected number of points on the tree"
+    assert count == qt.num_part, m
     free_tree(qt)
