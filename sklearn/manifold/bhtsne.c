@@ -4145,12 +4145,12 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_paralle
           #define unlikely(x) (x)
       #endif
       #ifdef _OPENMP
-      #pragma omp parallel private(__pyx_v_buff, __pyx_v_pos_f_buff, __pyx_v_D) private(__pyx_t_1, __pyx_t_6, __pyx_t_5, __pyx_t_4, __pyx_t_12, __pyx_t_3, __pyx_t_16, __pyx_t_2, __pyx_t_7, __pyx_t_13, __pyx_t_11, __pyx_t_9, __pyx_t_10, __pyx_t_15, __pyx_t_8, __pyx_t_14)
+      #pragma omp parallel private(__pyx_v_pos_f_buff, __pyx_v_buff, __pyx_v_D) private(__pyx_t_1, __pyx_t_6, __pyx_t_5, __pyx_t_4, __pyx_t_12, __pyx_t_3, __pyx_t_16, __pyx_t_2, __pyx_t_7, __pyx_t_13, __pyx_t_11, __pyx_t_9, __pyx_t_10, __pyx_t_15, __pyx_t_8, __pyx_t_14)
       #endif /* _OPENMP */
       {
           /* Initialize private variables to invalid values */
-          __pyx_v_buff = ((float *)1);
           __pyx_v_pos_f_buff = ((float *)1);
+          __pyx_v_buff = ((float *)1);
           __pyx_v_D = ((float *)1);
 
           /* "sklearn/manifold/bhtsne.pyx":405
@@ -4194,7 +4194,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_positive_paralle
               if (__pyx_t_3 > 0)
               {
                   #ifdef _OPENMP
-                  #pragma omp for firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_ax) lastprivate(__pyx_v_j) schedule(static)
+                  #pragma omp for lastprivate(__pyx_v_ax) firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_j) schedule(static)
                   #endif /* _OPENMP */
                   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_3; __pyx_t_2++){
                       {
@@ -4772,7 +4772,7 @@ static void __pyx_f_7sklearn_8manifold_6bhtsne_compute_gradient_negative_paralle
               if (__pyx_t_5 > 0)
               {
                   #ifdef _OPENMP
-                  #pragma omp for firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_ax) schedule(static)
+                  #pragma omp for lastprivate(__pyx_v_ax) firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) schedule(static)
                   #endif /* _OPENMP */
                   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_5; __pyx_t_4++){
                       {
