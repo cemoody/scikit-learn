@@ -333,7 +333,7 @@ def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
     best_error = np.finfo(np.float).max
     best_iter = 0
 
-    for i in range(it, n_iter):
+    for i in xrange(it, n_iter):
         new_error, grad = objective(p, *args, **kwargs)
         grad_norm = linalg.norm(grad)
 
