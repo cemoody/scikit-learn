@@ -240,7 +240,6 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
     dimension = X_embedded.shape[1]
     width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
     grad = np.zeros(X_embedded.shape, dtype=np.float32)
-    import pdb; pdb.set_trace()
     bhtsne.gradient(width, sP, X_embedded, neighbors, grad,
                     theta, dimension, verbose)
 
@@ -697,7 +696,7 @@ class TSNE(BaseEstimator):
             obj_func = _kl_divergence_bh
             objective_error = _kl_divergence_error
             sP = squareform(P).astype(np.float32)
-            neighbors = neighbors.astype(np.int32)
+            neighbors = neighbors.astype(np.int64)
             args = [sP, neighbors, alpha, n_samples, self.n_components]
             kwargs['args'] = args
             kwargs['min_grad_norm'] = 1e-3

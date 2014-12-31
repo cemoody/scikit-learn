@@ -238,7 +238,7 @@ def test_pca_initialization_not_compatible_with_precomputed_kernel():
 
 def test_answer_gradient_two_particles():
     """ This case with two particles test the tree with only a single
-        set of children
+        set of children.
     """
     pos_input = np.array([[1.0, 0.0], [0.0, 1.0]])
     pos_output = np.array([[-4.961291e-05, -1.072243e-04],
