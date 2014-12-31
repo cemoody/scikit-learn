@@ -1,6 +1,6 @@
 # distutils: extra_compile_args = -fopenmp
 # distutils: extra_link_args = -fopenmp
-# cython: boundscheck=False
+# cython: boundscheck=True
 # cython: wraparound=False
 # cython: cdivision=True
 import numpy as np
@@ -129,10 +129,11 @@ cdef Node* create_child(Node *parent, int[3] offset) nogil:
 cdef Node* select_child(Node *node, float[3] pos) nogil:
     # Find which sub-node a position should go into
     # And return the appropriate node
-    cdef int offset[3]
+    cdef int[3] offset
     cdef int ax
     # In case we don't have 3D data, set it to zero
-    offset[2] = 0
+    for ax in range(3):
+        offset[ax] = 0
     for ax in range(node.tree.dimension):
         offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
     return node.children[offset[0]][offset[1]][offset[2]]
@@ -144,9 +145,8 @@ cdef void subdivide(Node* node) nogil:
     cdef int k = 0
     cdef int[3] offset
     node.is_leaf = False
-    offset[0] = 0
-    offset[1] = 0
-    offset[2] = 0
+    for ax in range(3):
+        offset[ax] = 0
     if node.tree.dimension > 2:
         krange = 2
     else:
@@ -305,17 +305,24 @@ cdef void compute_gradient(float[:,:] val_P,
     cdef int ax
     cdef long n = pos_reference.shape[0]
     cdef int dimension = root_node.tree.dimension
+    if root_node.tree.verbose > 11:
+        printf("Allocating %i elements in force arrays",
+                n * dimension * 2)
     cdef float* sum_Q = <float*> malloc(sizeof(float))
     cdef float* neg_f = <float*> malloc(sizeof(float) * n * dimension)
     cdef float* pos_f = <float*> malloc(sizeof(float) * n * dimension)
     cdef clock_t t1, t2
 
     sum_Q[0] = 0.0
+    if root_node.tree.verbose > 11:
+        printf("computing positive gradient")
     t1 = clock()
     compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f, dimension)
     t2 = clock()
     if root_node.tree.verbose > 15:
         printf("  nn pos: %e ticks\n", ((float) (t2 - t1)))
+    if root_node.tree.verbose > 11:
+        printf("computing negative gradient")
     t1 = clock()
     compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q, 
                               theta, start, stop)
@@ -371,12 +378,13 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
     # (unlike the non-nearest neighbors version of `compute_gradient_positive')
     cdef:
         int ax
-        long i, j, k, temp
+        long i, j, k
         long K = neighbors.shape[1]
         long n = val_P.shape[0]
         float buff[3]
         float D
     for i in range(n):
+        printf("Pos gradient for %i out of %i, %i neighbors\n", i, n, K)
         for ax in range(dimension):
             pos_f[i * dimension + ax] = 0.0
         for k in range(K):
@@ -390,7 +398,6 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
             D = val_P[i, j] / (1.0 + D)
             for ax in range(dimension):
                 pos_f[i * dimension + ax] += D * buff[ax]
-                temp = i * dimension + ax
 
 
 
@@ -509,12 +516,31 @@ def gradient(float[:] width,
     # This function is designed to be called from external Python
     # it passes the 'forces' array by reference and fills thats array
     # up in-place
+    n = pos_output.shape[0]
     assert width.itemsize == 4
     assert pij_input.itemsize == 4
     assert pos_output.itemsize == 4
     assert forces.itemsize == 4
+    m = "neighbors array and pos_output shapes are incompatible"
+    assert n == neighbors.shape[0]
+    m = "Forces array and pos_output shapes are incompatible"
+    assert n == forces.shape[0], m
+    m = "Pij and pos_output shapes are incompatible"
+    assert n == pij_input.shape[0], m
+    m = "Pij and pos_output shapes are incompatible"
+    assert n == pij_input.shape[1], m
+    m = "Only 2D and 3D embeddings supported. Width array must be size 2 or 3"
+    assert width.shape[0] <= 3, m
+    if verbose > 10:
+        printf("Initializing tree of dimension %i\n", dimension)
     cdef Tree* qt = init_tree(width, dimension, verbose)
+    if verbose > 10:
+        printf("Inserting %i points\n", pos_output.shape[0])
     insert_many(qt, pos_output)
+    if verbose > 10:
+        printf("Computing gradient\n")
     compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, theta, 0, -1)
-    check_consistency(qt)
+    if verbose > 10:
+        printf("Checking tree consistency \n")
+    assert check_consistency(qt), "Tree consistency check failed"
     free_tree(qt)
