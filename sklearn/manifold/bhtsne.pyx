@@ -224,6 +224,7 @@ cdef int free_tree(Tree* tree) nogil:
         cnt[i] = 0
     free_recursive(tree, tree.root_node, cnt)
     free(tree.root_node)
+    free(tree)
     check = cnt[0] == tree.num_cells
     check &= cnt[2] == tree.num_part
     free(cnt)
