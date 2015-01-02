@@ -231,7 +231,6 @@ cdef int free_tree(Tree* tree) nogil:
     check = cnt[0] == tree.num_cells
     check &= cnt[2] == tree.num_part
     free(cnt)
-    free(tree)
     return check
 
 cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:
