@@ -13,7 +13,7 @@ from sklearn.manifold.t_sne import _kl_divergence
 from sklearn.manifold.t_sne import _gradient_descent
 from sklearn.manifold.t_sne import trustworthiness
 from sklearn.manifold.t_sne import TSNE
-from sklearn.manifold import bhtsne
+from sklearn.manifold import _barnes_hut_tsne
 from sklearn.manifold._utils import _binary_search_perplexity
 from scipy.optimize import check_grad
 from scipy.spatial.distance import pdist
@@ -162,11 +162,12 @@ def test_preserve_trustworthiness_approximately():
     random_state = check_random_state(0)
     X = random_state.randn(100, 2)
     for init in ('random', 'pca'):
-        tsne = TSNE(n_components=2, perplexity=10, learning_rate=100.0,
-                    init=init, random_state=0)
-        X_embedded = tsne.fit_transform(X)
-        assert_almost_equal(trustworthiness(X, X_embedded, n_neighbors=1), 1.0,
-                            decimal=1)
+        for method in ('standard', 'barnes_hut'):
+            tsne = TSNE(n_components=2, perplexity=10, learning_rate=100.0,
+                        init=init, random_state=0, method=method, verbose=True)
+            X_embedded = tsne.fit_transform(X)
+            assert_almost_equal(trustworthiness(X, X_embedded, n_neighbors=1),
+                                1.0, decimal=1)
 
 
 def test_fit_csr_matrix():
@@ -216,9 +217,9 @@ def test_non_square_precomputed_distances():
 
 
 def test_init_not_available():
-    """'init' must be 'pca' or 'random'."""
-    assert_raises_regexp(ValueError, "'init' must be either 'pca' or 'random'",
-                         TSNE, init="not available")
+    """'init' must be 'pca', 'random' or a NumPy array"""
+    m = "'init' must be 'pca', 'random' or a NumPy array"
+    assert_raises_regexp(ValueError, m, TSNE, init="not available")
 
 
 def test_distance_not_available():
@@ -238,19 +239,27 @@ def test_pca_initialization_not_compatible_with_precomputed_kernel():
 
 def test_answer_gradient_two_particles():
     """ This case with two particles test the tree with only a single
-        set of children
+        set of children.
+
+        These tests & answers have been checked against
+        the reference implementation by LvdM
     """
     pos_input = np.array([[1.0, 0.0], [0.0, 1.0]])
     pos_output = np.array([[-4.961291e-05, -1.072243e-04],
                            [9.259460e-05, 2.702024e-04]])
+    neighbors = np.array([[1],
+                          [0]])
     grad_output = np.array([[-2.37012478e-05, -6.29044398e-05],
                             [2.37012478e-05, 6.29044398e-05]])
-    yield _run_answer_test, pos_input, pos_output, grad_output
+    yield _run_answer_test, pos_input, pos_output, neighbors, grad_output
 
 
 def test_answer_gradient_four_particles():
     """ This case with two particles test the tree with
         multiple levels of children
+
+        These tests & answers have been checked against
+        the reference implementation by LvdM
     """
     pos_input = np.array([[1.0, 0.0], [0.0, 1.0],
                           [5.0, 2.0], [7.3, 2.2]])
@@ -258,25 +267,31 @@ def test_answer_gradient_four_particles():
                            [-1.718945e-04, -4.000536e-05],
                            [-2.271720e-04, 8.663310e-05],
                            [-1.032577e-04, -3.582033e-05]])
+    neighbors = np.array([[1, 2, 3],
+                          [0, 2, 3],
+                          [1, 0, 3],
+                          [1, 2, 0]])
     grad_output = np.array([[5.81128448e-05, -7.78033454e-06],
                             [-5.81526851e-05, 7.80976444e-06],
                             [4.24275173e-08, -3.69569698e-08],
                             [-2.58720939e-09, 7.52706374e-09]])
-    yield _run_answer_test, pos_input, pos_output, grad_output
+    yield _run_answer_test, pos_input, pos_output, neighbors, grad_output
 
 
-def _run_answer_test(pos_input, pos_output, grad_output, verbose=False,
-                     perplexity=0.1):
+def _run_answer_test(pos_input, pos_output, neighbors, grad_output,
+                     verbose=False, perplexity=0.1):
     distances = pairwise_distances(pos_input)
     args = distances, perplexity, verbose
     pos_output = pos_output.astype(np.float32)
+    neighbors = neighbors.astype(np.int64)
     pij_input = _joint_probabilities(*args)
     pij_input = squareform(pij_input).astype(np.float32)
     width = pos_output.max(axis=0) - pos_output.min(axis=0)
     width = width.astype(np.float32)
     grad_bh = np.zeros(pos_output.shape, dtype=np.float32)
 
-    bhtsne.gradient(width, pij_input, pos_output, grad_bh, 0.5, 2, 1)
+    _barnes_hut_tsne.gradient(width, pij_input, pos_output, neighbors,
+                              grad_bh, 0.5, 2, 1)
     assert_array_almost_equal(grad_bh, grad_output, decimal=4)
 
 
