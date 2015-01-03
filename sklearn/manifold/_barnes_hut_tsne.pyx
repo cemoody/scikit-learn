@@ -540,3 +540,23 @@ def gradient(float[:] width,
     m = "Tree consistency failed: unexpected number of points on the tree"
     assert count == qt.num_part, m
     free_tree(qt)
+
+# Helper functions
+def check_quadtree(X):
+    """
+    Helper function to access quadtree functions for testing
+    """
+    
+    X = X.astype(np.float32)
+    width = X.max(axis=0) - X.min(axis=0)
+    width = width.astype(np.float32)
+
+    # initialise a tree
+    qt = init_tree(width, 2, 2)
+
+    # insert data into the tree
+    insert_many(qt, X)
+
+    free_tree(qt)
+
+    return
