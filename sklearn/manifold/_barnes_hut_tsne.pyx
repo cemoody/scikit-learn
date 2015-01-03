@@ -133,6 +133,10 @@ cdef Node* select_child(Node *node, float[3] pos) nogil:
         offset[ax] = 0
     for ax in range(node.tree.dimension):
         offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
+        # if the points are arbitraryity close (within machine epsilon)
+        # on a given axis, then flip the offset on this axis
+        if pos[ax] == node.cur_pos[ax]:
+            offset[ax] = 1 - offset[ax]
     return node.children[offset[0]][offset[1]][offset[2]]
 
 cdef void subdivide(Node* node) nogil:
@@ -227,7 +231,6 @@ cdef int free_tree(Tree* tree) nogil:
     check = cnt[0] == tree.num_cells
     check &= cnt[2] == tree.num_part
     free(cnt)
-    free(tree)
     return check
 
 cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:
@@ -537,3 +540,23 @@ def gradient(float[:] width,
     m = "Tree consistency failed: unexpected number of points on the tree"
     assert count == qt.num_part, m
     free_tree(qt)
+
+# Helper functions
+def check_quadtree(X):
+    """
+    Helper function to access quadtree functions for testing
+    """
+    
+    X = X.astype(np.float32)
+    width = X.max(axis=0) - X.min(axis=0)
+    width = width.astype(np.float32)
+
+    # initialise a tree
+    qt = init_tree(width, 2, 2)
+
+    # insert data into the tree
+    insert_many(qt, X)
+
+    free_tree(qt)
+
+    return
