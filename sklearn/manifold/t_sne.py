@@ -651,26 +651,38 @@ class TSNE(BaseEstimator):
         alpha = self.n_components - 1.0
         n_samples = X.shape[0]
         self.training_data_ = X
+        # the number of nearest neighbors to find
+        k = min(n_samples - 1, int(3. * self.perplexity + 1))
 
         neighbors_nn = None
         if self.method == 'barnes_hut':
             if self.verbose:
                 print("[t-SNE] Computing nearest neighbors...")
-            # Find the nearest neighbors for every point
-            bt = BallTree(X)
-            # LVDM uses 3 * perplexity as the number of neighbors
-            # And we add one to not count the data point itself
-            # In the event that we have very small # of points
-            # set the neighbors to n - 1
-            neighbors = min(n_samples - 1, int(3. * self.perplexity + 1))
-            distances_nn, neighbors_nn = bt.query(X, k=neighbors)
-            # Skip the closest
-            distances_nn = distances_nn[:, 1:]
-            neighbors_nn = neighbors_nn[:, 1:]
-            P = _joint_probabilities_nn(distances, neighbors_nn,
+            if self.metric == 'precomputed':
+                # Use the precomputed distances to find
+                # the k nearest neighbors and their distances
+                neighbors_nn = np.argsort(distances, axis=1)[:, 1:k + 1]
+                indices = (np.ones((k, 1), dtype='int64').T *
+                           np.arange(n_samples, dtype='int64')
+                           .reshape((n_samples, 1)))
+                distances_nn = distances[indices, neighbors_nn]
+                import pdb; pdb.set_trace()
+            else:
+                # Find the nearest neighbors for every point
+                bt = BallTree(X)
+                # LvdM uses 3 * perplexity as the number of neighbors
+                # And we add one to not count the data point itself
+                # In the event that we have very small # of points
+                # set the neighbors to n - 1
+                distances_nn, neighbors_nn = bt.query(X, k=k)
+                # Skip the closest
+                distances_nn = distances_nn[:, 1:]
+                neighbors_nn = neighbors_nn[:, 1:]
+            P = _joint_probabilities_nn(distances_nn, neighbors_nn,
                                         self.perplexity, self.verbose)
         else:
             P = _joint_probabilities(distances, self.perplexity, self.verbose)
+
         if self.init == 'pca':
             pca = RandomizedPCA(n_components=self.n_components,
                                 random_state=random_state)
