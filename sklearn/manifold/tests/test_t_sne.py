@@ -20,7 +20,6 @@ from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
 from sklearn.metrics.pairwise import pairwise_distances
 
-
 def test_gradient_descent_stops():
     """Test stopping conditions of gradient descent."""
     class ObjectiveSmallGradient:
@@ -324,3 +323,45 @@ def test_chebyshev_metric():
     tsne = TSNE(verbose=2, metric="chebyshev")
     X = random_state.randn(5, 2)
     tsne.fit_transform(X)
+
+
+def test_quadtree_similar_point():
+    """
+    Test that a point can be introduced into a quad tree
+    where a similar point already exists.
+
+    Test will hang if it doesn't complete.
+
+    TODO: Implement an interrupt so that the test script
+          won't hang
+    """
+
+    # check the case where points are actually different
+    X = np.array([[1, 2], [3, 4]])
+    _barnes_hut_tsne.check_quadtree(X)
+    assert(True)
+
+    # check the case where points are the same on X axis
+    X = np.array([[-9.368728, 10.264389], [-9.368728, 11.264389]])
+    _barnes_hut_tsne.check_quadtree(X)
+    assert(True)
+
+    # check the case where points are arbitraryily close on X axis
+    X = np.array([[-9.368728, 10.264389], [-9.368761, 11.264389]])
+    _barnes_hut_tsne.check_quadtree(X)
+    assert(True)
+
+    # check the case where points are the same on Y axis
+    X = np.array([[-10.368728, 3.264389], [-11.368761, 3.264389]])
+    _barnes_hut_tsne.check_quadtree(X)
+    assert(True)
+
+    # check the case where points are arbitraryily close on Y axis
+    X = np.array([[-10.368728, 3.264339], [-11.368761, 3.264389]])
+    _barnes_hut_tsne.check_quadtree(X)
+    assert(True)
+
+    # check the case where points are arbitraryily close on both axes
+    X = np.array([[-9.368728, 3.264389], [-9.368761, 3.264389]])
+    _barnes_hut_tsne.check_quadtree(X)
+    assert(True)
