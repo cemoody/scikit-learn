@@ -569,10 +569,10 @@ class TSNE(BaseEstimator):
     >>> X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
     >>> model = TSNE(n_components=2, random_state=0)
     >>> model.fit_transform(X) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    array([[ 368.84738776,  154.09619973],
-           [-195.249419  ,  755.49157517],
-           [ 288.57450309, -681.95814067],
-           [-462.1719067 , -227.62947902]])
+    array([[ 181.10080056,  -43.81465995],
+           [  56.77965477,  173.87203809],
+           [-186.64375902, -159.89353193],
+           [-181.80217818,   80.24727573]])
 
     References
     ----------
@@ -677,6 +677,7 @@ class TSNE(BaseEstimator):
         else:
             P = _joint_probabilities(distances, self.perplexity, self.verbose)
         assert np.all(np.isfinite(P)), "All probabilities should be finite"
+        assert np.all(P >= 0), "All probabilities should be zero or positive"
 
         if self.init == 'pca':
             pca = RandomizedPCA(n_components=self.n_components,
