@@ -19,6 +19,13 @@ cdef extern from "math.h":
     double sqrt(double x) nogil
 
 
+# This is effectively an ifdef statement in Cython
+# It allows us to write printf debugging lines
+# and remove them at compile time
+cdef extern from "_debugvars.h":
+    cdef int DEBUGFLAG 
+
+
 cdef extern from "time.h":
     # Declare only what is necessary from `tm` structure.
     ctypedef long clock_t
@@ -71,19 +78,19 @@ cdef struct Tree:
     # Spit out diagnostic information?
     int verbose
 
-cdef Tree* init_tree(float[:] width, int dimension, int verbose) nogil:
+cdef Tree* init_tree(float[:] left_edge, float[:] width, int dimension, int verbose) nogil:
     # tree is freed by free_tree
     cdef Tree* tree = <Tree*> malloc(sizeof(Tree))
     tree.dimension = dimension
     tree.num_cells = 0
     tree.num_part = 0
     tree.verbose = verbose
-    tree.root_node = create_root(width, dimension)
+    tree.root_node = create_root(left_edge, width, dimension)
     tree.root_node.tree = tree
     tree.num_cells += 1
     return tree
 
-cdef Node* create_root(float[:] width, int dimension) nogil:
+cdef Node* create_root(float[:] left_edge, float[:] width, int dimension) nogil:
     # Create a default root node
     cdef int ax
     # root is freed by free_tree
@@ -96,7 +103,7 @@ cdef Node* create_root(float[:] width, int dimension) nogil:
     root.point_index = -1
     for ax in range(dimension):
         root.w[ax] = width[ax]
-        root.le[ax] = 0. - root.w[ax] / 2.0
+        root.le[ax] = left_edge[ax]
         root.c[ax] = 0.0
         root.cum_com[ax] = 0.
         root.cur_pos[ax] = -1.
@@ -123,21 +130,29 @@ cdef Node* create_child(Node *parent, int[3] offset) nogil:
     child.tree.num_cells += 1
     return child
 
-cdef Node* select_child(Node *node, float[3] pos) nogil:
+cdef Node* select_child(Node *node, float[3] pos, long index) nogil:
     # Find which sub-node a position should go into
     # And return the appropriate node
     cdef int[3] offset
     cdef int ax
+    cdef Node* child
     # In case we don't have 3D data, set it to zero
     for ax in range(3):
         offset[ax] = 0
     for ax in range(node.tree.dimension):
         offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
-        # if the points are arbitraryity close (within machine epsilon)
-        # on a given axis, then flip the offset on this axis
-        if pos[ax] == node.cur_pos[ax]:
+        # If the points are arbitrarily close (within machine epsilon)
+        # on a given axis, then flip the offset on this axis.
+        # Only do this when we are considering different points 
+        # (as evidenced by the index)
+        if (pos[ax] == node.cur_pos[ax]) & (index != node.point_index):
             offset[ax] = 1 - offset[ax]
-    return node.children[offset[0]][offset[1]][offset[2]]
+            if DEBUGFLAG:
+                printf("[t-SNE] flipped node.cur_pos %i [%f, %f] pos %i [%f, %f]\n", node.point_index, node.cur_pos[0], node.cur_pos[1], index, pos[0], pos[1])
+    child = node.children[offset[0]][offset[1]][offset[2]]
+    if DEBUGFLAG:
+        printf("[t-SNE] Offset [%i, %i] with LE [%f, %f]\n", offset[0], offset[1], child.le[0], child.le[1])
+    return child
 
 cdef void subdivide(Node* node) nogil:
     # This instantiates 4 or 8 nodes for the current node
@@ -160,7 +175,8 @@ cdef void subdivide(Node* node) nogil:
                 offset[2] = k
                 node.children[i][j][k] = create_child(node, offset)
 
-cdef void insert(Node *root, float pos[3], long point_index) nogil:
+
+cdef int insert(Node *root, float pos[3], long point_index, long depth) nogil:
     # Introduce a new point into the tree
     # by recursively inserting it and subdividng as necessary
     cdef Node *child
@@ -176,49 +192,79 @@ cdef void insert(Node *root, float pos[3], long point_index) nogil:
     cdef double frac_new  = 1.0 / <double> root.cum_size
     for ax in range(dimension):
         root.cum_com[ax] *= frac_seen
+        if (pos[ax] > (root.le[ax] + root.w[ax])):
+            printf("[t-SNE] Error: point (%1.9e) is above right edge of node (%1.9e)\n", pos[ax], root.le[ax] + root.w[ax])
+            return -1
+        if (pos[ax] < root.le[ax]):
+            printf("[t-SNE] Error: point (%1.9e) is below left edge of node (%1.9e)\n", pos[ax], root.le[ax])
+            return -1
     for ax in range(dimension):
         root.cum_com[ax] += pos[ax] * frac_new
+    if root.tree.verbose > 0 and depth > 100 and depth % 100 == 0:
+        printf("[t-SNE] Warning: tree depth has passed %i\n", depth)
+    if DEBUGFLAG:
+        printf("[t-SNE] [d=%i] Inserting pos %i [%f, %f] into child %p\n", 
+                depth, point_index, pos[0], pos[1], root)
     # If this node is unoccupied, fill it.
     # Otherwise, we need to insert recursively.
     # Two insertion scenarios: 
     # 1) Insert into this node if it is a leaf and empty
     # 2) Subdivide this node if it is currently occupied
     if (root.size == 0) & root.is_leaf:
+        if DEBUGFLAG:
+            printf("[t-SNE] [d=%i] Inserting [%f, %f] into blank cell\n", depth,
+                   pos[0], pos[1])
         for ax in range(dimension):
             root.cur_pos[ax] = pos[ax]
         root.point_index = point_index
         root.size = 1
+        return 0
     else:
+        if DEBUGFLAG:
+            printf("[t-SNE] [d=%i] Node %p is occupied or is a leaf\n", depth, root)
         # If necessary, subdivide this node before
         # descending
         if root.is_leaf:
+            if DEBUGFLAG:
+                printf("[t-SNE] [d=%i] Subdividing this leaf node %p\n", depth, root)
             subdivide(root)
         # We have two points to relocate: the one previously
         # at this node, and the new one we're attempting
         # to insert
         if root.size > 0:
-            child = select_child(root, root.cur_pos)
-            insert(child, root.cur_pos, root.point_index)
+            child = select_child(root, root.cur_pos, root.point_index)
+            if DEBUGFLAG:
+                printf("[t-SNE] [d=%i] Relocating old point to node %p\n", depth, child)
+            insert(child, root.cur_pos, root.point_index, depth + 1)
             # Remove the point from this node
             for ax in range(dimension):
                 root.cur_pos[ax] = -1
             root.size = 0
             root.point_index = -1
         # Insert the new point
-        child = select_child(root, pos)
-        insert(child, pos, point_index)
+        if DEBUGFLAG:
+            printf("[t-SNE] [d=%i] Selecting node for new point\n", depth)
+        child = select_child(root, pos, point_index)
+        return insert(child, pos, point_index, depth + 1)
 
-cdef void insert_many(Tree* tree, float[:,:] pos_array) nogil:
+cdef int insert_many(Tree* tree, float[:,:] pos_array) nogil:
     # Insert each data point into the tree one at a time
     cdef long nrows = pos_array.shape[0]
     cdef long i
     cdef int ax
     cdef float row[3]
+    cdef long err = 0
     for i in range(nrows):
         for ax in range(tree.dimension):
             row[ax] = pos_array[i, ax]
-        insert(tree.root_node, row, i)
+        if DEBUGFLAG:
+            printf("[t-SNE] inserting point %i: [%f, %f]\n", i, row[0], row[1])
+        err = insert(tree.root_node, row, i, 0)
+        if err != 0:
+            printf("[t-SNE] ERROR\n ")
+            return err
         tree.num_part += 1
+    return err
 
 cdef int free_tree(Tree* tree) nogil:
     cdef int check
@@ -297,7 +343,7 @@ cdef void compute_gradient(float[:,:] val_P,
     cdef long n = pos_reference.shape[0]
     cdef int dimension = root_node.tree.dimension
     if root_node.tree.verbose > 11:
-        printf("Allocating %i elements in force arrays",
+        printf("[t-SNE] Allocating %i elements in force arrays\n",
                 n * dimension * 2)
     cdef float* sum_Q = <float*> malloc(sizeof(float))
     cdef float* neg_f = <float*> malloc(sizeof(float) * n * dimension)
@@ -306,20 +352,20 @@ cdef void compute_gradient(float[:,:] val_P,
 
     sum_Q[0] = 0.0
     if root_node.tree.verbose > 11:
-        printf("computing positive gradient")
+        printf("[t-SNE] Computing positive gradient\n")
     t1 = clock()
     compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f, dimension)
     t2 = clock()
     if root_node.tree.verbose > 15:
-        printf("  nn pos: %e ticks\n", ((float) (t2 - t1)))
+        printf("[t-SNE]  nn pos: %e ticks\n", ((float) (t2 - t1)))
     if root_node.tree.verbose > 11:
-        printf("computing negative gradient")
+        printf("[t-SNE] Computing negative gradient\n")
     t1 = clock()
     compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q, 
                               theta, start, stop)
     t2 = clock()
     if root_node.tree.verbose > 15:
-        printf("negative: %e ticks\n", ((float) (t2 - t1)))
+        printf("[t-SNE] Negative: %e ticks\n", ((float) (t2 - t1)))
     for i in range(n):
         for ax in range(dimension):
             coord = i * dimension + ax
@@ -494,9 +540,20 @@ cdef void compute_non_edge_forces(Node* node,
 
     free(delta)
 
+def calculate_edge(pos_output):
+    # Make the boundaries slightly outside of the data
+    # to avoid floating point error near the edge
+    left_edge = np.min(pos_output, axis=0)
+    right_edge = np.max(pos_output, axis=0) 
+    center = (right_edge + left_edge) * 0.5
+    width = np.subtract(right_edge, left_edge)
+    # Exagerate width to avoid boundary edge
+    width = width.astype(np.float32) * 1.05
+    left_edge = center - width / 2.0
+    right_edge = center + width / 2.0
+    return left_edge, right_edge, width
 
-def gradient(float[:] width, 
-             float[:,:] pij_input, 
+def gradient(float[:,:] pij_input, 
              float[:,:] pos_output, 
              long[:,:] neighbors, 
              float[:,:] forces, 
@@ -507,6 +564,7 @@ def gradient(float[:] width,
     # it passes the 'forces' array by reference and fills thats array
     # up in-place
     n = pos_output.shape[0]
+    left_edge, right_edge, width = calculate_edge(pos_output)
     assert width.itemsize == 4
     assert pij_input.itemsize == 4
     assert pos_output.itemsize == 4
@@ -524,16 +582,17 @@ def gradient(float[:] width,
     m = "Only 2D and 3D embeddings supported. Width array must be size 2 or 3"
     assert width.shape[0] <= 3, m
     if verbose > 10:
-        printf("Initializing tree of dimension %i\n", dimension)
-    cdef Tree* qt = init_tree(width, dimension, verbose)
+        printf("[t-SNE] Initializing tree of dimension %i\n", dimension)
+    cdef Tree* qt = init_tree(left_edge, width, dimension, verbose)
     if verbose > 10:
-        printf("Inserting %i points\n", pos_output.shape[0])
-    insert_many(qt, pos_output)
+        printf("[t-SNE] Inserting %i points\n", pos_output.shape[0])
+    err = insert_many(qt, pos_output)
+    assert err == 0, "[t-SNE] Insertion failed"
     if verbose > 10:
-        printf("Computing gradient\n")
+        printf("[t-SNE] Computing gradient\n")
     compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, theta, 0, -1)
     if verbose > 10:
-        printf("Checking tree consistency \n")
+        printf("[t-SNE] Checking tree consistency \n")
     cdef long count = count_points(qt.root_node, 0)
     m = "Tree consistency failed: unexpected number of points at root node"
     assert count == qt.root_node.cum_size, m 
@@ -548,15 +607,9 @@ def check_quadtree(X):
     """
     
     X = X.astype(np.float32)
-    width = X.max(axis=0) - X.min(axis=0)
-    width = width.astype(np.float32)
-
-    # initialise a tree
-    qt = init_tree(width, 2, 2)
-
-    # insert data into the tree
+    left_edge, right_edge, width = calculate_edge(X)
+    # Initialise a tree
+    qt = init_tree(left_edge, width, 2, 2)
+    # Insert data into the tree
     insert_many(qt, X)
-
     free_tree(qt)
-
-    return

@@ -255,11 +255,9 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
         sP = P.astype(np.float32)
 
     dimension = X_embedded.shape[1]
-    width = X_embedded.max(axis=0) - X_embedded.min(axis=0)
     grad = np.zeros(X_embedded.shape, dtype=np.float32)
-    _barnes_hut_tsne.gradient(width, sP, X_embedded, neighbors, grad,
-                              angle, dimension, verbose)
-
+    _barnes_hut_tsne.gradient(sP, X_embedded, neighbors,
+                              grad, angle, dimension, verbose)
     c = 2.0 * (alpha + 1.0) / alpha
     grad = grad.ravel()
     grad *= c
@@ -666,7 +664,6 @@ class TSNE(BaseEstimator):
                            np.arange(n_samples, dtype='int64')
                            .reshape((n_samples, 1)))
                 distances_nn = distances[indices, neighbors_nn]
-                import pdb; pdb.set_trace()
             else:
                 # Find the nearest neighbors for every point
                 bt = BallTree(X)
