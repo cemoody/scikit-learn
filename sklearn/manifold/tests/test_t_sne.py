@@ -15,6 +15,7 @@ from sklearn.manifold.t_sne import trustworthiness
 from sklearn.manifold.t_sne import TSNE
 from sklearn.manifold import _barnes_hut_tsne
 from sklearn.manifold._utils import _binary_search_perplexity
+from sklearn.manifold._utils import _binary_search_perplexity_nn
 from scipy.optimize import check_grad
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
@@ -103,7 +104,8 @@ def test_binary_search():
     """Test if the binary search finds Gaussians with desired perplexity."""
     random_state = check_random_state(0)
     distances = random_state.randn(50, 2)
-    distances = distances.dot(distances.T)
+    # Distances shouldn't be negative
+    distances = np.abs(distances.dot(distances.T))
     np.fill_diagonal(distances, 0.0)
     desired_perplexity = 25.0
     P = _binary_search_perplexity(distances, desired_perplexity, verbose=0)
@@ -111,6 +113,39 @@ def test_binary_search():
     mean_perplexity = np.mean([np.exp(-np.sum(P[i] * np.log(P[i])))
                                for i in range(P.shape[0])])
     assert_almost_equal(mean_perplexity, desired_perplexity, decimal=3)
+
+
+def test_binary_search_neighbors():
+    """Test if the binary perplexity search is approximately equal to the
+       slow method when the slow method uses all points as nighbors"""
+    n_samples = 500
+    desired_perplexity = 25.0
+    random_state = check_random_state(0)
+    distances = random_state.randn(n_samples, 2)
+    # Distances shouldn't be negative
+    distances = np.abs(distances.dot(distances.T))
+    np.fill_diagonal(distances, 0.0)
+    P1 = _binary_search_perplexity(distances, desired_perplexity,
+                                   verbose=0)
+
+    # Test that when we use all the neighbors the results are identical
+    k = n_samples
+    neighbors_nn = np.argsort(distances, axis=1)[:, :k]
+    P2 = _binary_search_perplexity_nn(distances, neighbors_nn,
+                                      desired_perplexity, verbose=0)
+    assert_array_almost_equal(P1, P2, decimal=6)
+
+    # Test that the highest P_ij are the same when few neighbors are used
+    for k in np.linspace(80, n_samples, 10):
+        k = int(k)
+        topn = k * 10  # check the top 10 *k entries out of k * k entries
+        neighbors_nn = np.argsort(distances, axis=1)[:, :k]
+        P2k = _binary_search_perplexity_nn(distances, neighbors_nn,
+                                           desired_perplexity, verbose=0)
+        idx = np.argsort(P1.ravel())[::-1]
+        P1top = P1.ravel()[idx][:topn]
+        P2top = P2k.ravel()[idx][:topn]
+        assert_array_almost_equal(P1top, P2top, decimal=2)
 
 
 def test_gradient():
@@ -168,7 +203,7 @@ def test_preserve_trustworthiness_approximately():
     methods = ['standard', 'barnes_hut']
     for init in ('random', 'pca'):
         for method in methods:
-            tsne = TSNE(n_components=2, perplexity=3, learning_rate=100.0,
+            tsne = TSNE(n_components=2, perplexity=2, learning_rate=100.0,
                         init=init, random_state=0, method=method)
             X_embedded = tsne.fit_transform(X)
             T = trustworthiness(X, X_embedded, n_neighbors=1),
@@ -193,7 +228,7 @@ def test_preserve_trustworthiness_approximately_with_precomputed_distances():
     random_state = check_random_state(0)
     X = random_state.randn(100, 2)
     D = squareform(pdist(X), "sqeuclidean")
-    tsne = TSNE(n_components=2, perplexity=3, learning_rate=100.0,
+    tsne = TSNE(n_components=2, perplexity=2, learning_rate=100.0,
                 metric="precomputed", random_state=0, verbose=0)
     X_embedded = tsne.fit_transform(D)
     assert_almost_equal(trustworthiness(D, X_embedded, n_neighbors=1,

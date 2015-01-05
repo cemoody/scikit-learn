@@ -87,6 +87,8 @@ def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
     # the desired perplexity
     conditional_P = _utils._binary_search_perplexity_nn(
         distances, neighbors, desired_perplexity, verbose)
+    m = "All probabilities should be finite"
+    assert np.all(np.isfinite(conditional_P)), m
     P = conditional_P + conditional_P.T
     sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
     P = np.maximum(squareform(P) / sum_P, MACHINE_EPSILON)
@@ -643,6 +645,8 @@ class TSNE(BaseEstimator):
             else:
                 distances = pairwise_distances(X, metric=self.metric)
 
+        assert np.all(distances >= 0), "All distances should be positive"
+
         # Degrees of freedom of the Student's t-distribution. The suggestion
         # alpha = n_components - 1 comes from "Learning a Parametric Embedding
         # by Preserving Local Structure" Laurens van der Maaten, 2009.
@@ -659,11 +663,7 @@ class TSNE(BaseEstimator):
             if self.metric == 'precomputed':
                 # Use the precomputed distances to find
                 # the k nearest neighbors and their distances
-                neighbors_nn = np.argsort(distances, axis=1)[:, 1:k + 1]
-                indices = (np.ones((k, 1), dtype='int64').T *
-                           np.arange(n_samples, dtype='int64')
-                           .reshape((n_samples, 1)))
-                distances_nn = distances[indices, neighbors_nn]
+                neighbors_nn = np.argsort(distances, axis=1)[:, :k]
             else:
                 # Find the nearest neighbors for every point
                 bt = BallTree(X)
@@ -672,14 +672,11 @@ class TSNE(BaseEstimator):
                 # In the event that we have very small # of points
                 # set the neighbors to n - 1
                 distances_nn, neighbors_nn = bt.query(X, k=k)
-                # Skip the closest
-                distances_nn = distances_nn[:, 1:]
-                neighbors_nn = neighbors_nn[:, 1:]
-            P = _joint_probabilities_nn(distances_nn, neighbors_nn,
+            P = _joint_probabilities_nn(distances, neighbors_nn,
                                         self.perplexity, self.verbose)
-            assert np.all(np.isfinite(P)), "All probabilities should be finite"
         else:
             P = _joint_probabilities(distances, self.perplexity, self.verbose)
+        assert np.all(np.isfinite(P)), "All probabilities should be finite"
 
         if self.init == 'pca':
             pca = RandomizedPCA(n_components=self.n_components,

@@ -1,6 +1,3 @@
-# Author: Alexander Fabisch  -- <afabisch@informatik.uni-bremen.de>
-# Author: Christopher Moody <chrisemoody@gmail.com>
-# Author: Nick Travers <nickt@squareup.com>
 from libc cimport math
 cimport cython
 import numpy as np
