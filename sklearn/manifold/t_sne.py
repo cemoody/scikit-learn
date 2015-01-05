@@ -655,7 +655,7 @@ class TSNE(BaseEstimator):
         neighbors_nn = None
         if self.method == 'barnes_hut':
             if self.verbose:
-                print("[t-SNE] Computing nearest neighbors...")
+                print("[t-SNE] Computing %i nearest neighbors..." % k)
             if self.metric == 'precomputed':
                 # Use the precomputed distances to find
                 # the k nearest neighbors and their distances

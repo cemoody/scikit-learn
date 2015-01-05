@@ -20,6 +20,7 @@ from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
 from sklearn.metrics.pairwise import pairwise_distances
 
+
 def test_gradient_descent_stops():
     """Test stopping conditions of gradient descent."""
     class ObjectiveSmallGradient:
@@ -159,14 +160,19 @@ def test_trustworthiness():
 def test_preserve_trustworthiness_approximately():
     """Nearest neighbors should be preserved approximately."""
     random_state = check_random_state(0)
-    X = random_state.randn(100, 2)
+    X = random_state.randn(300, 2)
+    # The Barnes-Hut approximation uses a different method to estimate
+    # P_ij using only a a number of nearest neighbors instead of all
+    # particles (so that k = 3 * perplexity). As a result we set the
+    # perplexity=5, so that the number of neighbors is 5%.
+    methods = ['standard', 'barnes_hut']
     for init in ('random', 'pca'):
-        for method in ('standard', 'barnes_hut'):
-            tsne = TSNE(n_components=2, perplexity=10, learning_rate=100.0,
-                        init=init, random_state=0, method=method, verbose=True)
+        for method in methods:
+            tsne = TSNE(n_components=2, perplexity=5, learning_rate=100.0,
+                        init=init, random_state=0, method=method)
             X_embedded = tsne.fit_transform(X)
-            assert_almost_equal(trustworthiness(X, X_embedded, n_neighbors=1),
-                                1.0, decimal=1)
+            T = trustworthiness(X, X_embedded, n_neighbors=1),
+            assert_almost_equal(T, 1.0, decimal=1)
 
 
 def test_fit_csr_matrix():
@@ -185,10 +191,10 @@ def test_fit_csr_matrix():
 def test_preserve_trustworthiness_approximately_with_precomputed_distances():
     """Nearest neighbors should be preserved approximately."""
     random_state = check_random_state(0)
-    X = random_state.randn(100, 2)
+    X = random_state.randn(300, 2)
     D = squareform(pdist(X), "sqeuclidean")
-    tsne = TSNE(n_components=2, perplexity=10, learning_rate=100.0,
-                metric="precomputed", random_state=0)
+    tsne = TSNE(n_components=2, perplexity=5, learning_rate=100.0,
+                metric="precomputed", random_state=0, verbose=0)
     X_embedded = tsne.fit_transform(D)
     assert_almost_equal(trustworthiness(D, X_embedded, n_neighbors=1,
                                         precomputed=True), 1.0, decimal=1)
@@ -285,11 +291,9 @@ def _run_answer_test(pos_input, pos_output, neighbors, grad_output,
     neighbors = neighbors.astype(np.int64)
     pij_input = _joint_probabilities(*args)
     pij_input = squareform(pij_input).astype(np.float32)
-    width = pos_output.max(axis=0) - pos_output.min(axis=0)
-    width = width.astype(np.float32)
     grad_bh = np.zeros(pos_output.shape, dtype=np.float32)
 
-    _barnes_hut_tsne.gradient(width, pij_input, pos_output, neighbors,
+    _barnes_hut_tsne.gradient(pij_input, pos_output, neighbors,
                               grad_bh, 0.5, 2, 1)
     assert_array_almost_equal(grad_bh, grad_output, decimal=4)
 

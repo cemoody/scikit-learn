@@ -548,7 +548,7 @@ def calculate_edge(pos_output):
     center = (right_edge + left_edge) * 0.5
     width = np.subtract(right_edge, left_edge)
     # Exagerate width to avoid boundary edge
-    width = width.astype(np.float32) * 1.05
+    width = width.astype(np.float32) * 1.001
     left_edge = center - width / 2.0
     right_edge = center + width / 2.0
     return left_edge, right_edge, width
