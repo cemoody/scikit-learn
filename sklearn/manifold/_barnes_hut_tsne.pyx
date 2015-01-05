@@ -603,7 +603,7 @@ def gradient(float[:,:] pij_input,
     free_tree(qt)
 
 # Helper functions
-def check_quadtree(X):
+def check_quadtree(X, long[:] counts):
     """
     Helper function to access quadtree functions for testing
     """
@@ -614,4 +614,10 @@ def check_quadtree(X):
     qt = init_tree(left_edge, width, 2, 2)
     # Insert data into the tree
     insert_many(qt, X)
+
+    cdef long count = count_points(qt.root_node, 0)
+    counts[0] = count
+    counts[1] = qt.root_node.cum_size
+    counts[2] = qt.num_part
     free_tree(qt)
+    return counts

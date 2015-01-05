@@ -375,32 +375,24 @@ def test_quadtree_similar_point():
           won't hang
     """
 
+    Xs = []
     # check the case where points are actually different
-    X = np.array([[1, 2], [3, 4]])
-    _barnes_hut_tsne.check_quadtree(X)
-    assert(True)
-
+    Xs.append(np.array([[1, 2], [3, 4]]))
     # check the case where points are the same on X axis
-    X = np.array([[-9.368728, 10.264389], [-9.368728, 11.264389]])
-    _barnes_hut_tsne.check_quadtree(X)
-    assert(True)
-
+    Xs.append(np.array([[-9.368728, 10.264389], [-9.368728, 11.264389]]))
     # check the case where points are arbitraryily close on X axis
-    X = np.array([[-9.368728, 10.264389], [-9.368761, 11.264389]])
-    _barnes_hut_tsne.check_quadtree(X)
-    assert(True)
-
+    Xs.append(np.array([[-9.368728, 10.264389], [-9.368761, 11.264389]]))
     # check the case where points are the same on Y axis
-    X = np.array([[-10.368728, 3.264389], [-11.368761, 3.264389]])
-    _barnes_hut_tsne.check_quadtree(X)
-    assert(True)
-
-    # check the case where points are arbitraryily close on Y axis
-    X = np.array([[-10.368728, 3.264339], [-11.368761, 3.264389]])
-    _barnes_hut_tsne.check_quadtree(X)
-    assert(True)
-
+    Xs.append(np.array([[-10.368728, 3.264389], [-11.368761, 3.264389]]))
+    # check the case where points are arbitrarily close on Y axis
+    Xs.append(np.array([[-10.368728, 3.264339], [-11.368761, 3.264389]]))
     # check the case where points are arbitraryily close on both axes
-    X = np.array([[-9.368728, 3.264389], [-9.368761, 3.264389]])
-    _barnes_hut_tsne.check_quadtree(X)
-    assert(True)
+    Xs.append(np.array([[-9.368728, 3.264389], [-9.368761, 3.264389]]))
+
+    for X in Xs:
+        counts = np.zeros(3, dtype='int64')
+        _barnes_hut_tsne.check_quadtree(X, counts)
+        m = "Tree consistency failed: unexpected number of points at root node"
+        assert counts[0] == counts[1], m
+        m = "Tree consistency failed: unexpected number of points on the tree"
+        assert counts[0] == counts[2], m
