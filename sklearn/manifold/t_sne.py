@@ -350,7 +350,7 @@ def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
     best_error = np.finfo(np.float).max
     best_iter = 0
 
-    for i in xrange(it, n_iter):
+    for i in range(it, n_iter):
         new_error, grad = objective(p, *args, **kwargs)
         grad_norm = linalg.norm(grad)
 
@@ -569,10 +569,10 @@ class TSNE(BaseEstimator):
     >>> X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
     >>> model = TSNE(n_components=2, random_state=0)
     >>> model.fit_transform(X) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    array([[  887.28...,   238.61...],
-           [ -714.79...,  3243.34...],
-           [  957.30..., -2505.78...],
-           [-1130.28...,  -974.78...])
+    array([[ 368.84738776,  154.09619973],
+           [-195.249419  ,  755.49157517],
+           [ 288.57450309, -681.95814067],
+           [-462.1719067 , -227.62947902]])
 
     References
     ----------
