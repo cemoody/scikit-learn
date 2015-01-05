@@ -1,5 +1,5 @@
 # Author: Alexander Fabisch  -- <afabisch@informatik.uni-bremen.de>
-# Author: Christopher Moodu <chrisemoody@gmail.com>
+# Author: Christopher Moody <chrisemoody@gmail.com>
 # Author: Nick Travers <nickt@squareup.com>
 # License: BSD 3 clause (C) 2014
 
@@ -677,6 +677,7 @@ class TSNE(BaseEstimator):
                 neighbors_nn = neighbors_nn[:, 1:]
             P = _joint_probabilities_nn(distances_nn, neighbors_nn,
                                         self.perplexity, self.verbose)
+            assert np.all(np.isfinite(P)), "All probabilities should be finite"
         else:
             P = _joint_probabilities(distances, self.perplexity, self.verbose)
 

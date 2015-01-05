@@ -160,7 +160,7 @@ def test_trustworthiness():
 def test_preserve_trustworthiness_approximately():
     """Nearest neighbors should be preserved approximately."""
     random_state = check_random_state(0)
-    X = random_state.randn(300, 2)
+    X = random_state.randn(100, 2)
     # The Barnes-Hut approximation uses a different method to estimate
     # P_ij using only a a number of nearest neighbors instead of all
     # particles (so that k = 3 * perplexity). As a result we set the
@@ -168,7 +168,7 @@ def test_preserve_trustworthiness_approximately():
     methods = ['standard', 'barnes_hut']
     for init in ('random', 'pca'):
         for method in methods:
-            tsne = TSNE(n_components=2, perplexity=5, learning_rate=100.0,
+            tsne = TSNE(n_components=2, perplexity=3, learning_rate=100.0,
                         init=init, random_state=0, method=method)
             X_embedded = tsne.fit_transform(X)
             T = trustworthiness(X, X_embedded, n_neighbors=1),
@@ -191,9 +191,9 @@ def test_fit_csr_matrix():
 def test_preserve_trustworthiness_approximately_with_precomputed_distances():
     """Nearest neighbors should be preserved approximately."""
     random_state = check_random_state(0)
-    X = random_state.randn(300, 2)
+    X = random_state.randn(100, 2)
     D = squareform(pdist(X), "sqeuclidean")
-    tsne = TSNE(n_components=2, perplexity=5, learning_rate=100.0,
+    tsne = TSNE(n_components=2, perplexity=3, learning_rate=100.0,
                 metric="precomputed", random_state=0, verbose=0)
     X_embedded = tsne.fit_transform(D)
     assert_almost_equal(trustworthiness(D, X_embedded, n_neighbors=1,

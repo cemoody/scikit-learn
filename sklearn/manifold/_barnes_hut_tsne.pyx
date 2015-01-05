@@ -1,6 +1,8 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
+# Author: Christopher Moody <chrisemoody@gmail.com>
+# Author: Nick Travers <nickt@squareup.com>
 import numpy as np
 from cython.parallel cimport prange, parallel
 from libc.stdio cimport printf
