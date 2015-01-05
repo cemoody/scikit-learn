@@ -222,6 +222,10 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
     P : array, shape (n_samples * (n_samples-1) / 2,)
         Condensed joint probability matrix.
 
+    neighbors: int64 array, shape (n_samples, K)
+        Array with element [i, j] giving the index for the jth
+        closest neighbor to point i.
+
     alpha : float
         Degrees of freedom of the Student's-t distribution.
 
@@ -239,6 +243,9 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
         This method is not very sensitive to changes in this parameter
         in the range of 0.2 - 0.8. Angle less than 0.2 has quickly increasing
         computation time and angle greater 0.8 has quickly increasing error.
+
+    verbose : int
+        Verbosity level.
 
     Returns
     -------
