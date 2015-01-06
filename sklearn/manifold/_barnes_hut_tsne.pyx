@@ -24,9 +24,8 @@ cdef extern from "math.h":
 # This is effectively an ifdef statement in Cython
 # It allows us to write printf debugging lines
 # and remove them at compile time
-cdef extern from "_debugvars.h":
-    cdef int DEBUGFLAG 
-
+cdef enum:
+    DEBUGFLAG = 0
 
 cdef extern from "time.h":
     # Declare only what is necessary from `tm` structure.
