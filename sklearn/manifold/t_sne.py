@@ -612,11 +612,7 @@ class TSNE(BaseEstimator):
         self.init = init
         self.verbose = verbose
         self.random_state = random_state
-        if method not in ['barnes_hut', 'standard']:
-            raise ValueError("'method' must be 'barnes_hut' or 'standard'")
         self.method = method
-        if angle < 0.0 or angle > 1.0:
-            raise ValueError("'angle' must be between 0.0 - 1.0")
         self.angle = angle
 
     def _fit(self, X):
@@ -629,6 +625,13 @@ class TSNE(BaseEstimator):
             matrix. Otherwise it contains a sample per row. Note that this
             array can be sparse only with method='standard'
         """
+        if self.method not in ['barnes_hut', 'standard']:
+            raise ValueError("'method' must be 'barnes_hut' or 'standard'")
+        if self.angle < 0.0 or self.angle > 1.0:
+            raise ValueError("'angle' must be between 0.0 - 1.0")
+        if self.method == 'barnes_hut' and self.n_components > 3:
+            raise ValueError("method='barnes_hut' only available for "
+                             "n_components < 4.")
         if self.method == 'barnes_hut' and sp.issparse(X):
             raise TypeError('A sparse matrix was passed, but dense '
                             'data is required. Use X.toarray() to '

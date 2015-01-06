@@ -375,6 +375,16 @@ def test_no_sparse_on_barnes_hut():
                          X_csr)
 
 
+def test_no_4D_on_barnes_hut():
+    """No sparse matrices allowed on Barnes-Hut"""
+    random_state = check_random_state(0)
+    X = random_state.randn(5, 2)
+    for nc in [4, 100]:
+        tsne = TSNE(n_iter=199, method='barnes_hut', n_components=nc)
+        m = ".*method='barnes_hut' only available for.*"
+        assert_raises_regexp(ValueError, m, tsne.fit_transform, X)
+
+
 def test_quadtree_similar_point():
     """
     Test that a point can be introduced into a quad tree
@@ -407,3 +417,6 @@ def test_quadtree_similar_point():
         assert counts[0] == counts[1], m
         m = "Tree consistency failed: unexpected number of points on the tree"
         assert counts[0] == counts[2], m
+
+if __name__ == '__main__':
+    test_no_4D_on_barnes_hut()
