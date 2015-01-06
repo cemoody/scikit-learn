@@ -667,7 +667,10 @@ class TSNE(BaseEstimator):
             else:
                 distances = pairwise_distances(X, metric=self.metric)
 
-        assert np.all(distances >= 0), "All distances should be positive"
+        if not np.all(distances >= 0):
+            raise ValueError("All distances should be positive, either "
+                             "the metric or precomputed distances given "
+                             "as X are not correct")
 
         # Degrees of freedom of the Student's t-distribution. The suggestion
         # alpha = n_components - 1 comes from "Learning a Parametric Embedding
