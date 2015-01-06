@@ -502,6 +502,7 @@ three parameters that control the optimization of t-SNE:
 * early exaggeration factor
 * learning rate
 * maximum number of iterations
+* angle
 
 The maximum number of iterations is usually high enough and does not need
 any tuning. The optimization consists of two phases: the early exaggeration
@@ -513,12 +514,16 @@ divergence could increase during this phase. Usually it does not have to be
 tuned. A critical parameter is the learning rate. If it is too low gradient
 descent will get stuck in a bad local minimum. If it is too high the KL
 divergence will increase during optimization. More tips can be found in
-Laurens van der Maaten's FAQ (see references).
+Laurens van der Maaten's FAQ (see references). The last parameter, angle,
+is a tradeoff between performance and accuracy. Larger angles imply that we
+can approximate larger regions by a single point,leading to better speed
+but less accurate results. 
 
-Standard t-SNE that has been implemented here is usually much slower than
+The Barnes-Hut t-SNE that has been implemented here is usually much slower than
 other manifold learning algorithms. The optimization is quite difficult
-and the computation of the gradient is on :math:`O[d N^2]`, where :math:`d`
-is the number of output dimensions and :math:`N` is the number of samples.
+and the computation of the gradient is on :math:`O[d N log(N)]`, where :math:`d`
+is the number of output dimensions and :math:`N` is the number of samples. This
+improves on the standard t-SNE which is :math:`O[d N^2]`. 
 
 While Isomap, LLE and variants are best suited to unfold a single continuous
 low dimensional manifold, t-SNE will focus on the local structure of the data
