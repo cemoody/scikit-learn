@@ -443,7 +443,7 @@ def test_transform_warning():
                     random_state=0, method='barnes_hut')
         tsne.fit(X)
         tsne.transform(X)
-        m = str(w[-1].message)
+        m = str(w[0].message)
     assert "The transform input appears to be similar" in m
 
 

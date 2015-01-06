@@ -868,8 +868,7 @@ class TSNE(BaseEstimator):
         if self.embedding_ is None:
             raise ValueError("Cannot call `transform` unless `fit` has"
                              "already been called")
-        if np.all(np.isclose(X, self.training_data_, rtol=1e-4,
-                  equal_nan=True)):
+        if np.allclose(X, self.training_data_, rtol=1e-4):
             warnings.warn("The transform input appears to be similar "
                           "to previously fit data. This can result in "
                           "duplicated data; consider using fit_transform")
