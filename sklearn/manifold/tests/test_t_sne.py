@@ -385,15 +385,24 @@ def test_no_4D_on_barnes_hut():
         assert_raises_regexp(ValueError, m, tsne.fit_transform, X)
 
 
+def test_64bit():
+    """Test to ensure 64bit arrays are handled correctly"""
+    random_state = check_random_state(0)
+    methods = ['barnes_hut', 'standard']
+    for method in methods:
+        for dt in [np.float32, np.float64]:
+            X = random_state.randn(100, 2).astype(dt)
+            tsne = TSNE(n_components=2, perplexity=2, learning_rate=100.0,
+                        random_state=0, method=method)
+            tsne.fit_transform(X)
+
+
 def test_quadtree_similar_point():
     """
     Test that a point can be introduced into a quad tree
     where a similar point already exists.
 
     Test will hang if it doesn't complete.
-
-    TODO: Implement an interrupt so that the test script
-          won't hang
     """
 
     Xs = []
@@ -417,6 +426,3 @@ def test_quadtree_similar_point():
         assert counts[0] == counts[1], m
         m = "Tree consistency failed: unexpected number of points on the tree"
         assert counts[0] == counts[2], m
-
-if __name__ == '__main__':
-    test_no_4D_on_barnes_hut()

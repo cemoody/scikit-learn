@@ -51,7 +51,7 @@ def _joint_probabilities(distances, desired_perplexity, verbose):
     # Compute conditional probabilities such that they approximately match
     # the desired perplexity
     conditional_P = _utils._binary_search_perplexity(
-        distances, desired_perplexity, verbose)
+        distances.astype(np.float), desired_perplexity, verbose)
     P = conditional_P + conditional_P.T
     sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
     P = np.maximum(squareform(P) / sum_P, MACHINE_EPSILON)
@@ -87,7 +87,7 @@ def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
     # Compute conditional probabilities such that they approximately match
     # the desired perplexity
     conditional_P = _utils._binary_search_perplexity_nn(
-        distances, neighbors, desired_perplexity, verbose)
+        distances.astype(np.float), neighbors, desired_perplexity, verbose)
     m = "All probabilities should be finite"
     assert np.all(np.isfinite(conditional_P)), m
     P = conditional_P + conditional_P.T
@@ -623,7 +623,9 @@ class TSNE(BaseEstimator):
         X : array, shape (n_samples, n_features) or (n_samples, n_samples)
             If the metric is 'precomputed' X must be a square distance
             matrix. Otherwise it contains a sample per row. Note that this
-            array can be sparse only with method='standard'
+            when method='barnes_hut', X cannot be a sparse array and if need be
+            will be converted to a 32 bit float array. Method='standard' allows
+            sparse arrays and 64bit floating point inputs.
         """
         if self.method not in ['barnes_hut', 'standard']:
             raise ValueError("'method' must be 'barnes_hut' or 'standard'")
@@ -637,6 +639,7 @@ class TSNE(BaseEstimator):
                             'data is required. Use X.toarray() to '
                             'convert to a dense numpy array or '
                             'use method="standard"')
+            X = check_array(X, dtype=np.float32)
         else:
             X = check_array(X, accept_sparse=['csr', 'csc', 'coo'])
         random_state = check_random_state(self.random_state)
