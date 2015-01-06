@@ -318,8 +318,33 @@ def test_answer_gradient_four_particles():
     yield _run_answer_test, pos_input, pos_output, neighbors, grad_output
 
 
+def test_skip_num_points():
+    """ Skip num points should make it such that the Barnes_hut gradient
+        is not calculated for indices below skip_num_point.
+    """
+    # Aside from skip_num_points=2 and the first two gradient rows
+    # being set to zero, these data points are the same as in
+    # test_answer_gradient_four_particles()
+    pos_input = np.array([[1.0, 0.0], [0.0, 1.0],
+                          [5.0, 2.0], [7.3, 2.2]])
+    pos_output = np.array([[6.080564e-05, -7.120823e-05],
+                           [-1.718945e-04, -4.000536e-05],
+                           [-2.271720e-04, 8.663310e-05],
+                           [-1.032577e-04, -3.582033e-05]])
+    neighbors = np.array([[1, 2, 3],
+                          [0, 2, 3],
+                          [1, 0, 3],
+                          [1, 2, 0]])
+    grad_output = np.array([[0.0, 0.0],
+                            [0.0, 0.0],
+                            [4.24275173e-08, -3.69569698e-08],
+                            [-2.58720939e-09, 7.52706374e-09]])
+    yield (_run_answer_test, pos_input, pos_output, neighbors, grad_output,
+           False, 0.1, 2)
+
+
 def _run_answer_test(pos_input, pos_output, neighbors, grad_output,
-                     verbose=False, perplexity=0.1):
+                     verbose=False, perplexity=0.1, skip_num_points=0):
     distances = pairwise_distances(pos_input)
     args = distances, perplexity, verbose
     pos_output = pos_output.astype(np.float32)
@@ -329,7 +354,7 @@ def _run_answer_test(pos_input, pos_output, neighbors, grad_output,
     grad_bh = np.zeros(pos_output.shape, dtype=np.float32)
 
     _barnes_hut_tsne.gradient(pij_input, pos_output, neighbors,
-                              grad_bh, 0.5, 2, 1)
+                              grad_bh, 0.5, 2, 1, skip_num_points=0)
     assert_array_almost_equal(grad_bh, grad_output, decimal=4)
 
 
@@ -395,6 +420,16 @@ def test_64bit():
             tsne = TSNE(n_components=2, perplexity=2, learning_rate=100.0,
                         random_state=0, method=method)
             tsne.fit_transform(X)
+
+
+def test_transform():
+    """transform() cannot be called before fit()"""
+    random_state = check_random_state(0)
+    X = random_state.randn(100, 2)
+    tsne = TSNE(n_components=2, perplexity=2, learning_rate=100.0,
+                random_state=0, method='barnes_hut')
+    m = ".*Cannot call `transform` unless `fit` has.*"
+    assert_raises_regexp(ValueError, m, tsne.transform, X)
 
 
 def test_quadtree_similar_point():

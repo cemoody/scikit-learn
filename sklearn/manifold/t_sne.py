@@ -734,10 +734,10 @@ class TSNE(BaseEstimator):
             raise ValueError("Unsupported initialization scheme: %s"
                              % self.init)
 
-        self.embedding_ = self._tsne(P, alpha, n_samples, random_state,
-                                     X_embedded=X_embedded,
-                                     neighbors=neighbors_nn,
-                                     skip_num_points=skip_num_points)
+        return self._tsne(P, alpha, n_samples, random_state,
+                          X_embedded=X_embedded,
+                          neighbors=neighbors_nn,
+                          skip_num_points=skip_num_points)
 
     def _tsne(self, P, alpha, n_samples, random_state, X_embedded=None,
               neighbors=None, skip_num_points=0):
@@ -813,7 +813,8 @@ class TSNE(BaseEstimator):
         return X_embedded
 
     def fit_transform(self, X):
-        """Transform X to the embedded space.
+        """Fit X into an embedded space and return that transformed
+        output.
 
         Parameters
         ----------
@@ -826,13 +827,25 @@ class TSNE(BaseEstimator):
         X_new : array, shape (n_samples, n_components)
             Embedding of the training data in low-dimensional space.
         """
-        self._fit(X)
+        embedding = self._fit(X)
+        self.embedding_ = embedding
         return self.embedding_
 
+    def fit(self, X):
+        """Fit X into an embedded space.
+
+        Parameters
+        ----------
+        X : array, shape (n_samples, n_features) or (n_samples, n_samples)
+            If the metric is 'precomputed' X must be a square distance
+            matrix. Otherwise it contains a sample per row.
+        """
+        self.fit_transform(X)
+
     def transform(self, X):
-        """Transform X to the embedded space. A previous training set
-        must have already been fit. The new gradient is updated just
-        for the new data.
+        """Transform X to the previoudly fit embedded space.
+        A previous training set must have already been fit.
+        The new gradient is updated just for the new data.
 
         Parameters
         ----------
@@ -848,5 +861,7 @@ class TSNE(BaseEstimator):
         if self.embedding_ is None:
             raise ValueError("Cannot call `transform` unless `fit` has"
                              "already been called")
-        self._fit(X)
-        return self.embedding_
+        skip_num_points = self.embedding_.shape[0]
+        full_set = np.vstack((self.embedding_, X))
+        Xt = self._fit(full_set, skip_num_points=skip_num_points)
+        return Xt
