@@ -364,6 +364,17 @@ def test_chebyshev_metric():
     tsne.fit_transform(X)
 
 
+def test_no_sparse_on_barnes_hut():
+    """No sparse matrices allowed on Barnes-Hut"""
+    random_state = check_random_state(0)
+    X = random_state.randn(100, 2)
+    X[(np.random.randint(0, 100, 50), np.random.randint(0, 2, 50))] = 0.0
+    X_csr = sp.csr_matrix(X)
+    tsne = TSNE(n_iter=199, method='barnes_hut')
+    assert_raises_regexp(TypeError, ".*sparse.*standard.*", tsne.fit_transform,
+                         X_csr)
+
+
 def test_quadtree_similar_point():
     """
     Test that a point can be introduced into a quad tree

@@ -10,6 +10,7 @@
 
 import numpy as np
 from scipy import linalg
+import scipy.sparse as sp
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
 from ..neighbors import BallTree
@@ -551,6 +552,7 @@ class TSNE(BaseEstimator):
         millions of examples.
 
     angle : float (default: 0.5)
+        Only used if method='barnes_hut'
         This is the trade-off between speed and accuracy for Barnes-Hut T-SNE.
         'angle' is the angular size (referred to as theta in [3]) of a distant
         node as measured from a point. If this size is below 'angle' then it is
@@ -624,9 +626,16 @@ class TSNE(BaseEstimator):
         ----------
         X : array, shape (n_samples, n_features) or (n_samples, n_samples)
             If the metric is 'precomputed' X must be a square distance
-            matrix. Otherwise it contains a sample per row.
+            matrix. Otherwise it contains a sample per row. Note that this
+            array can be sparse only with method='standard'
         """
-        X = check_array(X, accept_sparse=['csr', 'csc', 'coo'])
+        if self.method == 'barnes_hut' and sp.issparse(X):
+            raise TypeError('A sparse matrix was passed, but dense '
+                            'data is required. Use X.toarray() to '
+                            'convert to a dense numpy array or '
+                            'use method="standard"')
+        else:
+            X = check_array(X, accept_sparse=['csr', 'csc', 'coo'])
         random_state = check_random_state(self.random_state)
 
         if self.early_exaggeration < 1.0:
