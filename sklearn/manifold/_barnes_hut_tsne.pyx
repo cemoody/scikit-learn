@@ -356,7 +356,7 @@ cdef void compute_gradient(float[:,:] val_P,
     if root_node.tree.verbose > 11:
         printf("[t-SNE] Computing positive gradient\n")
     t1 = clock()
-    compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f, dimension)
+    compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f, dimension, start)
     t2 = clock()
     if root_node.tree.verbose > 15:
         printf("[t-SNE]  nn pos: %e ticks\n", ((float) (t2 - t1)))
@@ -368,7 +368,7 @@ cdef void compute_gradient(float[:,:] val_P,
     t2 = clock()
     if root_node.tree.verbose > 15:
         printf("[t-SNE] Negative: %e ticks\n", ((float) (t2 - t1)))
-    for i in range(n):
+    for i in range(start, n):
         for ax in range(dimension):
             coord = i * dimension + ax
             tot_force[i, ax] = pos_f[coord] - (neg_f[coord] / sum_Q[0])
@@ -409,7 +409,8 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
                                        float[:,:] pos_reference,
                                        long[:,:] neighbors,
                                        float* pos_f,
-                                       int dimension) nogil:
+                                       int dimension,
+                                       long start) nogil:
     # Sum over the following expression for i not equal to j
     # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
     # This is equivalent to compute_edge_forces in the authors' code
@@ -422,7 +423,7 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
         long n = val_P.shape[0]
         float[3] buff
         float D
-    for i in range(n):
+    for i in range(start, n):
         for ax in range(dimension):
             pos_f[i * dimension + ax] = 0.0
         for k in range(K):
@@ -561,7 +562,8 @@ def gradient(float[:,:] pij_input,
              float[:,:] forces, 
              float theta,
              int dimension,
-             int verbose):
+             int verbose,
+             long skip_num_points=0):
     # This function is designed to be called from external Python
     # it passes the 'forces' array by reference and fills thats array
     # up in-place
@@ -592,7 +594,8 @@ def gradient(float[:,:] pij_input,
     assert err == 0, "[t-SNE] Insertion failed"
     if verbose > 10:
         printf("[t-SNE] Computing gradient\n")
-    compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, theta, 0, -1)
+    compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, 
+                     theta, skip_num_points, -1)
     if verbose > 10:
         printf("[t-SNE] Checking tree consistency \n")
     cdef long count = count_points(qt.root_node, 0)

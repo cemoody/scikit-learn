@@ -96,7 +96,8 @@ def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
     return P
 
 
-def _kl_divergence(params, P, alpha, n_samples, n_components):
+def _kl_divergence(params, P, alpha, n_samples, n_components,
+                   skip_num_points=0):
     """t-SNE objective function: gradient of the KL divergence
     of p_ijs and q_ijs and the absolute error.
 
@@ -116,6 +117,11 @@ def _kl_divergence(params, P, alpha, n_samples, n_components):
 
     n_components : int
         Dimension of the embedded space.
+
+    skip_num_points : int (optional, default:0)
+        This does not compute the gradient for points with indices below
+        `skip_num_points`. This is useful when computing transforms of new
+        data where you'd like to keep the old data fixed.
 
     Returns
     -------
@@ -144,7 +150,7 @@ def _kl_divergence(params, P, alpha, n_samples, n_components):
     # Gradient: dC/dY
     grad = np.ndarray((n_samples, n_components))
     PQd = squareform((P - Q) * n)
-    for i in range(n_samples):
+    for i in range(skip_num_points, n_samples):
         np.dot(_ravel(PQd[i]), X_embedded[i] - X_embedded, out=grad[i])
     grad = grad.ravel()
     c = 2.0 * (alpha + 1.0) / alpha
@@ -209,7 +215,7 @@ def _kl_divergence_error(params, P, neighbors, alpha, n_samples, n_components):
 
 
 def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
-                      angle=0.5, verbose=False):
+                      angle=0.5, skip_num_points=0, verbose=False):
     """t-SNE objective function: KL divergence of p_ijs and q_ijs.
 
     Uses Barnes-Hut tree methods to calculate the gradient that
@@ -244,6 +250,11 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
         This method is not very sensitive to changes in this parameter
         in the range of 0.2 - 0.8. Angle less than 0.2 has quickly increasing
         computation time and angle greater 0.8 has quickly increasing error.
+
+    skip_num_points : int (optional, default:0)
+        This does not compute the gradient for points with indices below
+        `skip_num_points`. This is useful when computing transforms of new
+        data where you'd like to keep the old data fixed.
 
     verbose : int
         Verbosity level.
@@ -596,6 +607,7 @@ class TSNE(BaseEstimator):
         Journal of Machine Learning Research 15(Oct):3221-3245, 2014.
         http://lvdmaaten.github.io/publications/papers/JMLR_2014.pdf
     """
+
     def __init__(self, n_components=2, perplexity=30.0,
                  early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000,
                  metric="euclidean", init="random", verbose=0,
@@ -614,8 +626,9 @@ class TSNE(BaseEstimator):
         self.random_state = random_state
         self.method = method
         self.angle = angle
+        self.embedding_ = None
 
-    def _fit(self, X):
+    def _fit(self, X, skip_num_points=0):
         """Fit the model using X as training data.
 
         Parameters
@@ -626,6 +639,11 @@ class TSNE(BaseEstimator):
             when method='barnes_hut', X cannot be a sparse array and if need be
             will be converted to a 32 bit float array. Method='standard' allows
             sparse arrays and 64bit floating point inputs.
+
+        skip_num_points : int (optional, default:0)
+            This does not compute the gradient for points with indices below
+            `skip_num_points`. This is useful when computing transforms of new
+            data where you'd like to keep the old data fixed.
         """
         if self.method not in ['barnes_hut', 'standard']:
             raise ValueError("'method' must be 'barnes_hut' or 'standard'")
@@ -718,10 +736,11 @@ class TSNE(BaseEstimator):
 
         self.embedding_ = self._tsne(P, alpha, n_samples, random_state,
                                      X_embedded=X_embedded,
-                                     neighbors=neighbors_nn)
+                                     neighbors=neighbors_nn,
+                                     skip_num_points=skip_num_points)
 
     def _tsne(self, P, alpha, n_samples, random_state, X_embedded=None,
-              neighbors=None):
+              neighbors=None, skip_num_points=0):
         """Runs t-SNE."""
         # t-SNE minimizes the Kullback-Leiber divergence of the Gaussians P
         # and the Student's t-distributions Q. The optimization algorithm that
@@ -745,6 +764,7 @@ class TSNE(BaseEstimator):
         kwargs['verbose'] = self.verbose
         kwargs['it'] = 0
         kwargs['n_iter_check'] = 25
+        kwargs['kwargs'] = dict(skip_num_points=skip_num_points)
         if self.method == 'barnes_hut':
             m = "Must provide an array of neighbors to use Barnes-Hut"
             assert neighbors is not None, m
@@ -759,7 +779,8 @@ class TSNE(BaseEstimator):
             # Don't always calculate the cost since that calculation
             # can be nearly as expensive as the gradient
             kwargs['objective_error'] = objective_error
-            kwargs['kwargs'] = dict(angle=self.angle, verbose=self.verbose)
+            kwargs['kwargs']['angle'] = self.angle
+            kwargs['kwargs']['verbose'] = self.verbose
         else:
             obj_func = _kl_divergence
             kwargs['args'] = [P, alpha, n_samples, self.n_components]
@@ -805,5 +826,27 @@ class TSNE(BaseEstimator):
         X_new : array, shape (n_samples, n_components)
             Embedding of the training data in low-dimensional space.
         """
+        self._fit(X)
+        return self.embedding_
+
+    def transform(self, X):
+        """Transform X to the embedded space. A previous training set
+        must have already been fit. The new gradient is updated just
+        for the new data.
+
+        Parameters
+        ----------
+        X : array, shape (n_samples, n_features) or (n_samples, n_samples)
+            If the metric is 'precomputed' X must be a square distance
+            matrix. Otherwise it contains a sample per row.
+
+        Returns
+        -------
+        X_new : array, shape (n_samples, n_components)
+            Embedding of the training data in low-dimensional space.
+        """
+        if self.embedding_ is None:
+            raise ValueError("Cannot call `transform` unless `fit` has"
+                             "already been called")
         self._fit(X)
         return self.embedding_
