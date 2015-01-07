@@ -433,7 +433,7 @@ def test_transform_before_fit():
     X = random_state.randn(100, 2)
     tsne = TSNE(n_components=2, perplexity=2, learning_rate=100.0,
                 random_state=0, method='barnes_hut')
-    m = ".*Cannot call `transform` unless `fit` has.*"
+    m = "Cannot call `transform` unless `fit` has"
     assert_raises_regexp(ValueError, m, tsne.transform, X)
 
 
