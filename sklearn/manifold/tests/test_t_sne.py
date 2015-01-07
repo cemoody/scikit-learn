@@ -406,7 +406,7 @@ def test_no_sparse_on_barnes_hut():
 
 
 def test_no_4D_on_barnes_hut():
-    """No sparse matrices allowed on Barnes-Hut."""
+    """No embeddings of dimension greater than 3 when method='barnes_hut'."""
     random_state = check_random_state(0)
     X = random_state.randn(5, 2)
     for nc in [4, 100]:
