@@ -3,17 +3,14 @@
 # cython: cdivision=True
 # Author: Christopher Moody <chrisemoody@gmail.com>
 # Author: Nick Travers <nickt@squareup.com>
-import numpy as np
-from cython.parallel cimport prange, parallel
-from libc.stdio cimport printf
-cimport numpy as np
-cimport cython
-
 # Implementation by Chris Moody & Nick Travers
 # See http://homepage.tudelft.nl/19j49/t-SNE.html for reference
 # implementations and papers describing the technique
 
+
 from libc.stdlib cimport malloc, free, abs
+from libc.stdio cimport printf
+cimport numpy as np
 
 cdef extern from "math.h":
     double sqrt(double x) nogil
