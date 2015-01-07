@@ -101,7 +101,7 @@ def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
     return P
 
 
-def _kl_divergence(params, P, alpha, n_samples, n_components,
+def _kl_divergence(params, P, degrees_of_freedom, n_samples, n_components,
                    skip_num_points=0):
     """t-SNE objective function: gradient of the KL divergence
     of p_ijs and q_ijs and the absolute error.
@@ -114,7 +114,7 @@ def _kl_divergence(params, P, alpha, n_samples, n_components,
     P : array, shape (n_samples * (n_samples-1) / 2,)
         Condensed joint probability matrix.
 
-    alpha : float
+    degrees_of_freedom : float
         Degrees of freedom of the Student's-t distribution.
 
     n_samples : int
@@ -142,8 +142,8 @@ def _kl_divergence(params, P, alpha, n_samples, n_components,
     # Q is a heavy-tailed distribution: Student's t-distribution
     n = pdist(X_embedded, "sqeuclidean")
     n += 1.
-    n /= alpha
-    n **= (alpha + 1.0) / -2.0
+    n /= degrees_of_freedom
+    n **= (degrees_of_freedom + 1.0) / -2.0
     Q = np.maximum(n / (2.0 * np.sum(n)), MACHINE_EPSILON)
 
     # Optimization trick below: np.dot(x, y) is faster than
@@ -158,13 +158,14 @@ def _kl_divergence(params, P, alpha, n_samples, n_components,
     for i in range(skip_num_points, n_samples):
         np.dot(_ravel(PQd[i]), X_embedded[i] - X_embedded, out=grad[i])
     grad = grad.ravel()
-    c = 2.0 * (alpha + 1.0) / alpha
+    c = 2.0 * (degrees_of_freedom + 1.0) / degrees_of_freedom
     grad *= c
 
     return kl_divergence, grad
 
 
-def _kl_divergence_error(params, P, neighbors, alpha, n_samples, n_components):
+def _kl_divergence_error(params, P, neighbors, degrees_of_freedom, n_samples,
+                         n_components):
     """t-SNE objective function: the absolute error of the
     KL divergence of p_ijs and q_ijs.
 
@@ -181,7 +182,7 @@ def _kl_divergence_error(params, P, neighbors, alpha, n_samples, n_components):
         divergence, but is here to match the signature of the
         gradient function
 
-    alpha : float
+    degrees_of_freedom : float
         Degrees of freedom of the Student's-t distribution.
 
     n_samples : int
@@ -204,8 +205,8 @@ def _kl_divergence_error(params, P, neighbors, alpha, n_samples, n_components):
     # Q is a heavy-tailed distribution: Student's t-distribution
     n = pdist(X_embedded, "sqeuclidean")
     n += 1.
-    n /= alpha
-    n **= (alpha + 1.0) / -2.0
+    n /= degrees_of_freedom
+    n **= (degrees_of_freedom + 1.0) / -2.0
     Q = np.maximum(n / (2.0 * np.sum(n)), MACHINE_EPSILON)
 
     # Optimization trick below: np.dot(x, y) is faster than
@@ -219,8 +220,9 @@ def _kl_divergence_error(params, P, neighbors, alpha, n_samples, n_components):
     return kl_divergence
 
 
-def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
-                      angle=0.5, skip_num_points=0, verbose=False):
+def _kl_divergence_bh(params, P, neighbors, degrees_of_freedom, n_samples,
+                      n_components, angle=0.5, skip_num_points=0,
+                      verbose=False):
     """t-SNE objective function: KL divergence of p_ijs and q_ijs.
 
     Uses Barnes-Hut tree methods to calculate the gradient that
@@ -238,7 +240,7 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
         Array with element [i, j] giving the index for the jth
         closest neighbor to point i.
 
-    alpha : float
+    degrees_of_freedom : float
         Degrees of freedom of the Student's-t distribution.
 
     n_samples : int
@@ -285,7 +287,7 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
     grad = np.zeros(X_embedded.shape, dtype=np.float32)
     _barnes_hut_tsne.gradient(sP, X_embedded, neighbors,
                               grad, angle, dimension, verbose)
-    c = 2.0 * (alpha + 1.0) / alpha
+    c = 2.0 * (degrees_of_freedom + 1.0) / degrees_of_freedom
     grad = grad.ravel()
     grad *= c
 
@@ -697,9 +699,10 @@ class TSNE(BaseEstimator):
                              "as X are not correct")
 
         # Degrees of freedom of the Student's t-distribution. The suggestion
-        # alpha = n_components - 1 comes from "Learning a Parametric Embedding
-        # by Preserving Local Structure" Laurens van der Maaten, 2009.
-        alpha = self.n_components - 1.0
+        # degrees_of_freedom = n_components - 1 comes from
+        # "Learning a Parametric Embedding by Preserving Local Structure"
+        # Laurens van der Maaten, 2009.
+        degrees_of_freedom = self.n_components - 1.0
         n_samples = X.shape[0]
         self.training_data_ = X
         # the number of nearest neighbors to find
@@ -741,13 +744,13 @@ class TSNE(BaseEstimator):
             raise ValueError("Unsupported initialization scheme: %s"
                              % self.init)
 
-        return self._tsne(P, alpha, n_samples, random_state,
+        return self._tsne(P, degrees_of_freedom, n_samples, random_state,
                           X_embedded=X_embedded,
                           neighbors=neighbors_nn,
                           skip_num_points=skip_num_points)
 
-    def _tsne(self, P, alpha, n_samples, random_state, X_embedded=None,
-              neighbors=None, skip_num_points=0):
+    def _tsne(self, P, degrees_of_freedom, n_samples, random_state,
+              X_embedded=None, neighbors=None, skip_num_points=0):
         """Runs t-SNE."""
         # t-SNE minimizes the Kullback-Leiber divergence of the Gaussians P
         # and the Student's t-distributions Q. The optimization algorithm that
@@ -776,7 +779,8 @@ class TSNE(BaseEstimator):
             objective_error = _kl_divergence_error
             sP = squareform(P).astype(np.float32)
             neighbors = neighbors.astype(np.int64)
-            args = [sP, neighbors, alpha, n_samples, self.n_components]
+            args = [sP, neighbors, degrees_of_freedom, n_samples,
+                    self.n_components]
             opt_args['args'] = args
             opt_args['min_grad_norm'] = 1e-3
             opt_args['n_iter_without_progress'] = 30
@@ -787,7 +791,8 @@ class TSNE(BaseEstimator):
             opt_args['kwargs']['verbose'] = self.verbose
         else:
             obj_func = _kl_divergence
-            opt_args['args'] = [P, alpha, n_samples, self.n_components]
+            opt_args['args'] = [P, degrees_of_freedom, n_samples,
+                                self.n_components]
             opt_args['min_error_diff'] = 0.0
             opt_args['min_grad_norm'] = 0.0
 
