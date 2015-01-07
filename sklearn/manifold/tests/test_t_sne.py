@@ -117,8 +117,11 @@ def test_binary_search():
 
 
 def test_binary_search_neighbors():
-    """Test if the binary perplexity search is approximately equal to the
-       slow method when the slow method uses all points as nighbors"""
+    """Binary perplexity search approximation.
+
+    Should be approximately equal to the slow method when we use
+    all points as nighbors.
+    """
     n_samples = 500
     desired_perplexity = 25.0
     random_state = check_random_state(0)
@@ -258,7 +261,7 @@ def test_non_square_precomputed_distances():
 
 
 def test_init_not_available():
-    """'init' must be 'pca', 'random' or a NumPy array"""
+    """'init' must be 'pca', 'random' or a NumPy array."""
     m = "'init' must be 'pca', 'random' or a NumPy array"
     assert_raises_regexp(ValueError, m, TSNE, init="not available")
 
@@ -279,11 +282,10 @@ def test_pca_initialization_not_compatible_with_precomputed_kernel():
 
 
 def test_answer_gradient_two_particles():
-    """ This case with two particles test the tree with only a single
-        set of children.
+    """Test the tree with only a single set of children.
 
-        These tests & answers have been checked against
-        the reference implementation by LvdM
+    These tests & answers have been checked against the reference
+    implementation by LvdM.
     """
     pos_input = np.array([[1.0, 0.0], [0.0, 1.0]])
     pos_output = np.array([[-4.961291e-05, -1.072243e-04],
@@ -296,11 +298,10 @@ def test_answer_gradient_two_particles():
 
 
 def test_answer_gradient_four_particles():
-    """ This case with two particles test the tree with
-        multiple levels of children
+    """Four particles tests the tree with multiple levels of children.
 
-        These tests & answers have been checked against
-        the reference implementation by LvdM
+    These tests & answers have been checked against the reference
+    implementation by LvdM.
     """
     pos_input = np.array([[1.0, 0.0], [0.0, 1.0],
                           [5.0, 2.0], [7.3, 2.2]])
@@ -320,8 +321,10 @@ def test_answer_gradient_four_particles():
 
 
 def test_skip_num_points_gradient():
-    """ Skip num points should make it such that the Barnes_hut gradient
-        is not calculated for indices below skip_num_point.
+    """Test the kwargs option skip_num_points.
+
+    Skip num points should make it such that the Barnes_hut gradient
+    is not calculated for indices below skip_num_point.
     """
     # Aside from skip_num_points=2 and the first two gradient rows
     # being set to zero, these data points are the same as in
@@ -360,6 +363,7 @@ def _run_answer_test(pos_input, pos_output, neighbors, grad_output,
 
 
 def test_verbose():
+    """Verbose options write to stdout."""
     random_state = check_random_state(0)
     tsne = TSNE(verbose=2)
     X = random_state.randn(5, 2)
@@ -391,7 +395,7 @@ def test_chebyshev_metric():
 
 
 def test_no_sparse_on_barnes_hut():
-    """No sparse matrices allowed on Barnes-Hut"""
+    """No sparse matrices allowed on Barnes-Hut."""
     random_state = check_random_state(0)
     X = random_state.randn(100, 2)
     X[(np.random.randint(0, 100, 50), np.random.randint(0, 2, 50))] = 0.0
@@ -402,7 +406,7 @@ def test_no_sparse_on_barnes_hut():
 
 
 def test_no_4D_on_barnes_hut():
-    """No sparse matrices allowed on Barnes-Hut"""
+    """No sparse matrices allowed on Barnes-Hut."""
     random_state = check_random_state(0)
     X = random_state.randn(5, 2)
     for nc in [4, 100]:
@@ -412,7 +416,7 @@ def test_no_4D_on_barnes_hut():
 
 
 def test_64bit():
-    """Test to ensure 64bit arrays are handled correctly"""
+    """Ensure 64bit arrays are handled correctly."""
     random_state = check_random_state(0)
     methods = ['barnes_hut', 'standard']
     for method in methods:
@@ -424,7 +428,7 @@ def test_64bit():
 
 
 def test_transform_before_fit():
-    """transform() cannot be called before fit()"""
+    """transform() cannot be called before fit()."""
     random_state = check_random_state(0)
     X = random_state.randn(100, 2)
     tsne = TSNE(n_components=2, perplexity=2, learning_rate=100.0,
@@ -434,7 +438,7 @@ def test_transform_before_fit():
 
 
 def test_transform_warning():
-    """Raises a warning if fit and transform encountered the same data """
+    """Raise a warning if fit and transform encountered the same data."""
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
         random_state = check_random_state(0)
@@ -448,13 +452,10 @@ def test_transform_warning():
 
 
 def test_quadtree_similar_point():
-    """
-    Test that a point can be introduced into a quad tree
-    where a similar point already exists.
+    """Introduce a point into a quad tree where a similar point already exists.
 
     Test will hang if it doesn't complete.
     """
-
     Xs = []
     # check the case where points are actually different
     Xs.append(np.array([[1, 2], [3, 4]]))
