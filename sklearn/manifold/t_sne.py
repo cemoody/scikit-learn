@@ -564,7 +564,7 @@ class TSNE(BaseEstimator):
 
     method : string (default: 'barnes_hut')
         By default the gradient calculation algorithm uses Barnes-Hut
-        approximation running in O(NlogN) time. method='standard' will use
+        approximation running in O(NlogN) time. method='standard'
         will run on the slower, but exact, algorithm in O(N^2) time. The
         exact algorithm should be used when nearest-neighbor errors need
         to be better than 3%. However, the exact method cannot scale to
