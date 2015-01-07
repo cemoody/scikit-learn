@@ -474,6 +474,6 @@ def test_quadtree_similar_point():
         counts = np.zeros(3, dtype='int64')
         _barnes_hut_tsne.check_quadtree(X, counts)
         m = "Tree consistency failed: unexpected number of points at root node"
-        assert counts[0] == counts[1], m
+        assert_equal(counts[0], counts[1], m)
         m = "Tree consistency failed: unexpected number of points on the tree"
-        assert counts[0] == counts[2], m
+        assert_equal(counts[0], counts[2], m)
