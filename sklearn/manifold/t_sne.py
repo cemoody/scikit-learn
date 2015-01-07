@@ -23,6 +23,7 @@ from ..decomposition import RandomizedPCA
 from ..metrics.pairwise import pairwise_distances
 from . import _utils
 from . import _barnes_hut_tsne
+from ..utils.fixes import astype
 
 
 MACHINE_EPSILON = np.finfo(np.double).eps
@@ -51,8 +52,9 @@ def _joint_probabilities(distances, desired_perplexity, verbose):
     """
     # Compute conditional probabilities such that they approximately match
     # the desired perplexity
+    distances = astype(distances, np.float32, copy=False)
     conditional_P = _utils._binary_search_perplexity(
-        distances.astype(np.float), desired_perplexity, verbose)
+        distances, None, desired_perplexity, verbose)
     P = conditional_P + conditional_P.T
     sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
     P = np.maximum(squareform(P) / sum_P, MACHINE_EPSILON)
@@ -87,8 +89,10 @@ def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
     """
     # Compute conditional probabilities such that they approximately match
     # the desired perplexity
-    conditional_P = _utils._binary_search_perplexity_nn(
-        distances.astype(np.float), neighbors, desired_perplexity, verbose)
+    distances = astype(distances, np.float32, copy=False)
+    neighbors = astype(neighbors, np.int64, copy=False)
+    conditional_P = _utils._binary_search_perplexity(
+        distances, neighbors, desired_perplexity, verbose)
     m = "All probabilities should be finite"
     assert np.all(np.isfinite(conditional_P)), m
     P = conditional_P + conditional_P.T
@@ -269,8 +273,9 @@ def _kl_divergence_bh(params, P, neighbors, alpha, n_samples, n_components,
         Unraveled gradient of the Kullback-Leibler divergence with respect to
         the embedding.
     """
-    X_embedded = params.reshape(n_samples, n_components).astype(np.float32)
-
+    params = astype(params, np.float32, copy=False)
+    X_embedded = params.reshape(n_samples, n_components)
+    neighbors = astype(neighbors, np.int64, copy=False)
     if len(P.shape) == 1:
         sP = squareform(P).astype(np.float32)
     else:
@@ -715,7 +720,8 @@ class TSNE(BaseEstimator):
                 # And we add one to not count the data point itself
                 # In the event that we have very small # of points
                 # set the neighbors to n - 1
-                distances_nn, neighbors_nn = bt.query(X, k=k)
+                distances_nn, neighbors_nn = bt.query(X, k=k+1)
+                neighbors_nn = neighbors_nn[:, 1:]
             P = _joint_probabilities_nn(distances, neighbors_nn,
                                         self.perplexity, self.verbose)
         else:

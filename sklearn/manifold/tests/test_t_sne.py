@@ -16,7 +16,6 @@ from sklearn.manifold.t_sne import trustworthiness
 from sklearn.manifold.t_sne import TSNE
 from sklearn.manifold import _barnes_hut_tsne
 from sklearn.manifold._utils import _binary_search_perplexity
-from sklearn.manifold._utils import _binary_search_perplexity_nn
 from scipy.optimize import check_grad
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
@@ -104,12 +103,13 @@ def test_gradient_descent_stops():
 def test_binary_search():
     """Test if the binary search finds Gaussians with desired perplexity."""
     random_state = check_random_state(0)
-    distances = random_state.randn(50, 2)
+    distances = random_state.randn(50, 2).astype(np.float32)
     # Distances shouldn't be negative
     distances = np.abs(distances.dot(distances.T))
     np.fill_diagonal(distances, 0.0)
     desired_perplexity = 25.0
-    P = _binary_search_perplexity(distances, desired_perplexity, verbose=0)
+    P = _binary_search_perplexity(distances, None, desired_perplexity,
+                                  verbose=0)
     P = np.maximum(P, np.finfo(np.double).eps)
     mean_perplexity = np.mean([np.exp(-np.sum(P[i] * np.log(P[i])))
                                for i in range(P.shape[0])])
@@ -122,27 +122,27 @@ def test_binary_search_neighbors():
     n_samples = 500
     desired_perplexity = 25.0
     random_state = check_random_state(0)
-    distances = random_state.randn(n_samples, 2)
+    distances = random_state.randn(n_samples, 2).astype(np.float32)
     # Distances shouldn't be negative
     distances = np.abs(distances.dot(distances.T))
     np.fill_diagonal(distances, 0.0)
-    P1 = _binary_search_perplexity(distances, desired_perplexity,
+    P1 = _binary_search_perplexity(distances, None, desired_perplexity,
                                    verbose=0)
 
     # Test that when we use all the neighbors the results are identical
     k = n_samples
-    neighbors_nn = np.argsort(distances, axis=1)[:, :k]
-    P2 = _binary_search_perplexity_nn(distances, neighbors_nn,
-                                      desired_perplexity, verbose=0)
-    assert_array_almost_equal(P1, P2, decimal=6)
+    neighbors_nn = np.argsort(distances, axis=1)[:, :k].astype(np.int64)
+    P2 = _binary_search_perplexity(distances, neighbors_nn,
+                                   desired_perplexity, verbose=0)
+    assert_array_almost_equal(P1, P2, decimal=4)
 
     # Test that the highest P_ij are the same when few neighbors are used
     for k in np.linspace(80, n_samples, 10):
         k = int(k)
         topn = k * 10  # check the top 10 *k entries out of k * k entries
         neighbors_nn = np.argsort(distances, axis=1)[:, :k]
-        P2k = _binary_search_perplexity_nn(distances, neighbors_nn,
-                                           desired_perplexity, verbose=0)
+        P2k = _binary_search_perplexity(distances, neighbors_nn,
+                                        desired_perplexity, verbose=0)
         idx = np.argsort(P1.ravel())[::-1]
         P1top = P1.ravel()[idx][:topn]
         P2top = P2k.ravel()[idx][:topn]
@@ -158,7 +158,7 @@ def test_gradient():
     n_components = 2
     alpha = 1.0
 
-    distances = random_state.randn(n_samples, n_features)
+    distances = random_state.randn(n_samples, n_features).astype(np.float32)
     distances = distances.dot(distances.T)
     np.fill_diagonal(distances, 0.0)
     X_embedded = random_state.randn(n_samples, n_components)
@@ -196,7 +196,7 @@ def test_trustworthiness():
 def test_preserve_trustworthiness_approximately():
     """Nearest neighbors should be preserved approximately."""
     random_state = check_random_state(0)
-    X = random_state.randn(100, 2)
+    X = random_state.randn(100, 2).astype(np.float32)
     # The Barnes-Hut approximation uses a different method to estimate
     # P_ij using only a a number of nearest neighbors instead of all
     # particles (so that k = 3 * perplexity). As a result we set the
@@ -346,7 +346,7 @@ def test_skip_num_points_gradient():
 
 def _run_answer_test(pos_input, pos_output, neighbors, grad_output,
                      verbose=False, perplexity=0.1, skip_num_points=0):
-    distances = pairwise_distances(pos_input)
+    distances = pairwise_distances(pos_input).astype(np.float32)
     args = distances, perplexity, verbose
     pos_output = pos_output.astype(np.float32)
     neighbors = neighbors.astype(np.int64)
