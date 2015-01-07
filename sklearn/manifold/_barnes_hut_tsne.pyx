@@ -11,6 +11,7 @@
 from libc.stdlib cimport malloc, free, abs
 from libc.stdio cimport printf
 cimport numpy as np
+import numpy as np
 
 cdef extern from "math.h":
     double sqrt(double x) nogil
