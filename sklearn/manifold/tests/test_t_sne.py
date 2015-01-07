@@ -294,7 +294,7 @@ def test_answer_gradient_two_particles():
                           [0]])
     grad_output = np.array([[-2.37012478e-05, -6.29044398e-05],
                             [2.37012478e-05, 6.29044398e-05]])
-    yield _run_answer_test, pos_input, pos_output, neighbors, grad_output
+    _run_answer_test(pos_input, pos_output, neighbors, grad_output)
 
 
 def test_answer_gradient_four_particles():
@@ -317,7 +317,7 @@ def test_answer_gradient_four_particles():
                             [-5.81526851e-05, 7.80976444e-06],
                             [4.24275173e-08, -3.69569698e-08],
                             [-2.58720939e-09, 7.52706374e-09]])
-    yield _run_answer_test, pos_input, pos_output, neighbors, grad_output
+    _run_answer_test(pos_input, pos_output, neighbors, grad_output)
 
 
 def test_skip_num_points_gradient():
@@ -343,7 +343,7 @@ def test_skip_num_points_gradient():
                             [0.0, 0.0],
                             [4.24275173e-08, -3.69569698e-08],
                             [-2.58720939e-09, 7.52706374e-09]])
-    yield (_run_answer_test, pos_input, pos_output, neighbors, grad_output,
+    _run_answer_test(pos_input, pos_output, neighbors, grad_output,
            False, 0.1, 2)
 
 
