@@ -847,7 +847,9 @@ class TSNE(BaseEstimator):
         ----------
         X : array, shape (n_samples, n_features) or (n_samples, n_samples)
             If the metric is 'precomputed' X must be a square distance
-            matrix. Otherwise it contains a sample per row.
+            matrix. Otherwise it contains a sample per row. If the method
+            is 'standard', X may be a sparse matrix of type 'csr', 'csc'
+            or 'coo'.
         """
         self.fit_transform(X)
 
