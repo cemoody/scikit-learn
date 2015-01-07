@@ -10,10 +10,8 @@ cimport numpy as np
 cimport cython
 
 # Implementation by Chris Moody & Nick Travers
-# original code by Laurens van der Maaten
-# for reference implemenations and papers describing the technique:
-# http://homepage.tudelft.nl/19j49/t-SNE.html
-
+# See http://homepage.tudelft.nl/19j49/t-SNE.html for reference
+# implementations and papers describing the technique
 
 from libc.stdlib cimport malloc, free, abs
 
