@@ -144,10 +144,13 @@ cdef Node* select_child(Node *node, float[3] pos, long index) nogil:
         if (pos[ax] == node.cur_pos[ax]) & (index != node.point_index):
             offset[ax] = 1 - offset[ax]
             if DEBUGFLAG:
-                printf("[t-SNE] flipped node.cur_pos %i [%f, %f] pos %i [%f, %f]\n", node.point_index, node.cur_pos[0], node.cur_pos[1], index, pos[0], pos[1])
+                printf("[t-SNE] flipped node.cur_pos %i [%f, %f] pos %i [%f, %f]\n",
+                       node.point_index, node.cur_pos[0], node.cur_pos[1], index,
+                       pos[0], pos[1])
     child = node.children[offset[0]][offset[1]][offset[2]]
     if DEBUGFLAG:
-        printf("[t-SNE] Offset [%i, %i] with LE [%f, %f]\n", offset[0], offset[1], child.le[0], child.le[1])
+        printf("[t-SNE] Offset [%i, %i] with LE [%f, %f]\n",
+               offset[0], offset[1], child.le[0], child.le[1])
     return child
 
 cdef void subdivide(Node* node) nogil:
@@ -189,10 +192,12 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth) nogil:
     for ax in range(dimension):
         root.cum_com[ax] *= frac_seen
         if (pos[ax] > (root.le[ax] + root.w[ax])):
-            printf("[t-SNE] Error: point (%1.9e) is above right edge of node (%1.9e)\n", pos[ax], root.le[ax] + root.w[ax])
+            printf("[t-SNE] Error: point (%1.9e) is above right edge of node (%1.9e)\n",
+                   pos[ax], root.le[ax] + root.w[ax])
             return -1
         if (pos[ax] < root.le[ax]):
-            printf("[t-SNE] Error: point (%1.9e) is below left edge of node (%1.9e)\n", pos[ax], root.le[ax])
+            printf("[t-SNE] Error: point (%1.9e) is below left edge of node (%1.9e)\n",
+                   pos[ax], root.le[ax])
             return -1
     for ax in range(dimension):
         root.cum_com[ax] += pos[ax] * frac_new
@@ -517,7 +522,8 @@ cdef void compute_non_edge_forces(Node* node,
         summary = (wmax / sqrt(dist2) < theta)
 
         if node.is_leaf or summary:
-            # Compute the t-SNE force between the reference point and the current node
+            # Compute the t-SNE force between the reference point and the
+            # current node
             qijZ = 1.0 / (1.0 + dist2)
             sum_Q[0] += node.cum_size * qijZ
             mult = node.cum_size * qijZ * qijZ
