@@ -764,14 +764,11 @@ class TSNE(BaseEstimator):
                                                    self.n_components)
         params = X_embedded.ravel()
 
-        kwargs = {}
-        kwargs['n_iter'] = 50
-        kwargs['momentum'] = 0.5
-        kwargs['learning_rate'] = self.learning_rate
-        kwargs['verbose'] = self.verbose
-        kwargs['it'] = 0
-        kwargs['n_iter_check'] = 25
-        kwargs['kwargs'] = dict(skip_num_points=skip_num_points)
+        opt_args = {}
+        opt_args = {"n_iter": 50, "momentum": 0.5, "it": 0,
+                    "learning_rate": self.learning_rate,
+                    "verbose": self.verbose, "n_iter_check": 25,
+                    "kwargs": dict(skip_num_points=skip_num_points)}
         if self.method == 'barnes_hut':
             m = "Must provide an array of neighbors to use Barnes-Hut"
             assert neighbors is not None, m
@@ -780,27 +777,27 @@ class TSNE(BaseEstimator):
             sP = squareform(P).astype(np.float32)
             neighbors = neighbors.astype(np.int64)
             args = [sP, neighbors, alpha, n_samples, self.n_components]
-            kwargs['args'] = args
-            kwargs['min_grad_norm'] = 1e-3
-            kwargs['n_iter_without_progress'] = 30
+            opt_args['args'] = args
+            opt_args['min_grad_norm'] = 1e-3
+            opt_args['n_iter_without_progress'] = 30
             # Don't always calculate the cost since that calculation
             # can be nearly as expensive as the gradient
-            kwargs['objective_error'] = objective_error
-            kwargs['kwargs']['angle'] = self.angle
-            kwargs['kwargs']['verbose'] = self.verbose
+            opt_args['objective_error'] = objective_error
+            opt_args['kwargs']['angle'] = self.angle
+            opt_args['kwargs']['verbose'] = self.verbose
         else:
             obj_func = _kl_divergence
-            kwargs['args'] = [P, alpha, n_samples, self.n_components]
-            kwargs['min_error_diff'] = 0.0
-            kwargs['min_grad_norm'] = 0.0
+            opt_args['args'] = [P, alpha, n_samples, self.n_components]
+            opt_args['min_error_diff'] = 0.0
+            opt_args['min_grad_norm'] = 0.0
 
         # Early exaggeration
         P *= self.early_exaggeration
-        params, error, it = _gradient_descent(obj_func, params, **kwargs)
-        kwargs['n_iter'] = 100
-        kwargs['momentum'] = 0.8
-        kwargs['it'] = it + 1
-        params, error, it = _gradient_descent(obj_func, params, **kwargs)
+        params, error, it = _gradient_descent(obj_func, params, **opt_args)
+        opt_args['n_iter'] = 100
+        opt_args['momentum'] = 0.8
+        opt_args['it'] = it + 1
+        params, error, it = _gradient_descent(obj_func, params, **opt_args)
         if self.verbose:
             print("[t-SNE] Error after %d iterations with early "
                   "exaggeration: %f" % (it + 1, error))
@@ -809,9 +806,9 @@ class TSNE(BaseEstimator):
 
         # Final optimization
         P /= self.early_exaggeration
-        kwargs['n_iter'] = self.n_iter
-        kwargs['it'] = it + 1
-        params, error, it = _gradient_descent(obj_func, params, **kwargs)
+        opt_args['n_iter'] = self.n_iter
+        opt_args['it'] = it + 1
+        params, error, it = _gradient_descent(obj_func, params, **opt_args)
         if self.verbose:
             print("[t-SNE] Error after %d iterations: %f" % (it + 1, error))
 
