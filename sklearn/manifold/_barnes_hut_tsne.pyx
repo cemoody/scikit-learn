@@ -133,21 +133,12 @@ cdef Node* select_child(Node *node, float[3] pos, long index) nogil:
     cdef int[3] offset
     cdef int ax
     cdef Node* child
+    cdef int error
     # In case we don't have 3D data, set it to zero
     for ax in range(3):
         offset[ax] = 0
     for ax in range(node.tree.dimension):
         offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
-        # If the points are arbitrarily close (within machine epsilon)
-        # on a given axis, then flip the offset on this axis.
-        # Only do this when we are considering different points 
-        # (as evidenced by the index)
-        if (pos[ax] == node.cur_pos[ax]) & (index != node.point_index):
-            offset[ax] = 1 - offset[ax]
-            if DEBUGFLAG:
-                printf("[t-SNE] flipped node.cur_pos %i [%f, %f] pos %i [%f, %f]\n",
-                       node.point_index, node.cur_pos[0], node.cur_pos[1], index,
-                       pos[0], pos[1])
     child = node.children[offset[0]][offset[1]][offset[2]]
     if DEBUGFLAG:
         printf("[t-SNE] Offset [%i, %i] with LE [%f, %f]\n",
@@ -176,20 +167,30 @@ cdef void subdivide(Node* node) nogil:
                 node.children[i][j][k] = create_child(node, offset)
 
 
-cdef int insert(Node *root, float pos[3], long point_index, long depth) nogil:
+cdef int insert(Node *root, float pos[3], long point_index, long depth, long duplicate_count) nogil:
     # Introduce a new point into the tree
     # by recursively inserting it and subdividng as necessary
+    # Carefully treat the case of identical points at the same node
+    # by increasing the root.size and tracking duplicate_count
     cdef Node *child
     cdef long i
     cdef int ax
+    cdef int not_identical = 1
     cdef int dimension = root.tree.dimension
+    if DEBUGFLAG:
+        printf("[t-SNE] [d=%i] Inserting pos %i [%f, %f] duplicate_count=%i into child %p\n", 
+                depth, point_index, pos[0], pos[1], duplicate_count, root)    
     # Increment the total number points including this
     # node and below it
-    root.cum_size += 1
+    root.cum_size += duplicate_count
     # Evaluate the new center of mass, weighting the previous
     # center of mass against the new point data
     cdef double frac_seen = <double>(root.cum_size - 1) / (<double> root.cum_size)
     cdef double frac_new  = 1.0 / <double> root.cum_size
+    # Assert that duplicate_count > 0
+    if duplicate_count < 1:
+        return -1
+    # Assert that the point is inside the left & right edges
     for ax in range(dimension):
         root.cum_com[ax] *= frac_seen
         if (pos[ax] > (root.le[ax] + root.w[ax])):
@@ -204,26 +205,37 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth) nogil:
         root.cum_com[ax] += pos[ax] * frac_new
     if root.tree.verbose > 0 and depth > 100 and depth % 100 == 0:
         printf("[t-SNE] Warning: tree depth has passed %i\n", depth)
-    if DEBUGFLAG:
-        printf("[t-SNE] [d=%i] Inserting pos %i [%f, %f] into child %p\n", 
-                depth, point_index, pos[0], pos[1], root)
+        printf("[t-SNE]\tInserting point: (%f, %f, %f)\n", pos[0], pos[1], pos[2])
+        printf("[t-SNE]\tInto node with existing point: (%f, %f, %f)\n", root.cur_pos[0], root.cur_pos[1], root.cur_pos[2])
+        printf("[t-SNE]\tExisting node has le: (%f, %f, %f)\n", root.le[0], root.le[1], root.le[2])
+        printf("[t-SNE]\tExisting node has w: (%f, %f, %f)\n", root.w[0], root.w[1], root.w[2])
+
     # If this node is unoccupied, fill it.
     # Otherwise, we need to insert recursively.
     # Two insertion scenarios: 
     # 1) Insert into this node if it is a leaf and empty
     # 2) Subdivide this node if it is currently occupied
     if (root.size == 0) & root.is_leaf:
+        # Root node is empty and a leaf
         if DEBUGFLAG:
             printf("[t-SNE] [d=%i] Inserting [%f, %f] into blank cell\n", depth,
                    pos[0], pos[1])
         for ax in range(dimension):
             root.cur_pos[ax] = pos[ax]
         root.point_index = point_index
-        root.size = 1
+        root.size = duplicate_count
         return 0
     else:
+        # Root node is occupied or not a leaf
         if DEBUGFLAG:
             printf("[t-SNE] [d=%i] Node %p is occupied or is a leaf\n", depth, root)
+        if root.is_leaf & root.size > 0:
+            for ax in range(dimension):
+                not_identical &= (pos[ax] == root.cur_pos[ax])
+            if not_identical == 1:
+                root.size += duplicate_count
+                printf("[t-SNE] Warning: [d=%i] Detected identical particles\n", depth, root)
+                return 0
         # If necessary, subdivide this node before
         # descending
         if root.is_leaf:
@@ -237,17 +249,18 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth) nogil:
             child = select_child(root, root.cur_pos, root.point_index)
             if DEBUGFLAG:
                 printf("[t-SNE] [d=%i] Relocating old point to node %p\n", depth, child)
-            insert(child, root.cur_pos, root.point_index, depth + 1)
-            # Remove the point from this node
-            for ax in range(dimension):
-                root.cur_pos[ax] = -1
-            root.size = 0
-            root.point_index = -1
+            insert(child, root.cur_pos, root.point_index, depth + 1, root.size)
         # Insert the new point
         if DEBUGFLAG:
             printf("[t-SNE] [d=%i] Selecting node for new point\n", depth)
         child = select_child(root, pos, point_index)
-        return insert(child, pos, point_index, depth + 1)
+        if root.size > 0:
+            # Remove the point from this node
+            for ax in range(dimension):
+                root.cur_pos[ax] = -1            
+            root.size = 0
+            root.point_index = -1            
+        return insert(child, pos, point_index, depth + 1, 1)
 
 cdef int insert_many(Tree* tree, float[:,:] pos_array) nogil:
     # Insert each data point into the tree one at a time
@@ -261,7 +274,7 @@ cdef int insert_many(Tree* tree, float[:,:] pos_array) nogil:
             row[ax] = pos_array[i, ax]
         if DEBUGFLAG:
             printf("[t-SNE] inserting point %i: [%f, %f]\n", i, row[0], row[1])
-        err = insert(tree.root_node, row, i, 0)
+        err = insert(tree.root_node, row, i, 0, 1)
         if err != 0:
             printf("[t-SNE] ERROR\n ")
             return err
@@ -320,7 +333,7 @@ cdef long count_points(Node* root, long count) nogil:
             for k in range(krange):
                 child = root.children[i][j][k]
                 if child.is_leaf and child.size > 0:
-                    count += 1
+                    count += child.size
                 elif not child.is_leaf:
                     count = count_points(child, count)
                 # else case is we have an empty leaf node
@@ -600,7 +613,7 @@ def gradient(float[:,:] pij_input,
     if verbose > 10:
         printf("[t-SNE] Checking tree consistency \n")
     cdef long count = count_points(qt.root_node, 0)
-    m = "Tree consistency failed: unexpected number of points at root node"
+    m = "Tree consistency failed: unexpected number of points=%i at root node=%i" % (count, qt.root_node.cum_size)
     assert count == qt.root_node.cum_size, m 
     m = "Tree consistency failed: unexpected number of points on the tree"
     assert count == qt.num_part, m

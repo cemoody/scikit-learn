@@ -468,7 +468,7 @@ def test_quadtree_similar_point():
     # check the case where points are arbitrarily close on Y axis
     Xs.append(np.array([[-10.368728, 3.264339], [-11.368761, 3.264389]]))
     # check the case where points are arbitraryily close on both axes
-    Xs.append(np.array([[-9.368728, 3.264389], [-9.368761, 3.264389]]))
+    Xs.append(np.array([[-9.368761, 3.264389], [-9.368761, 3.264389]]))
 
     for X in Xs:
         counts = np.zeros(3, dtype='int64')
