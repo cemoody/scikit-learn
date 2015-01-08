@@ -104,6 +104,8 @@ cdef Node* create_root(float[:] left_edge, float[:] width, int dimension) nogil:
         root.c[ax] = 0.0
         root.cum_com[ax] = 0.
         root.cur_pos[ax] = -1.
+    if DEBUGFLAG:
+        printf("[t-SNE] Created root node %p\n", root)
     return root
 
 cdef Node* create_child(Node *parent, int[3] offset) nogil:
@@ -203,12 +205,6 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth, long dup
             return -1
     for ax in range(dimension):
         root.cum_com[ax] += pos[ax] * frac_new
-    if root.tree.verbose > 0 and depth > 100 and depth % 100 == 0:
-        printf("[t-SNE] Warning: tree depth has passed %i\n", depth)
-        printf("[t-SNE]\tInserting point: (%f, %f, %f)\n", pos[0], pos[1], pos[2])
-        printf("[t-SNE]\tInto node with existing point: (%f, %f, %f)\n", root.cur_pos[0], root.cur_pos[1], root.cur_pos[2])
-        printf("[t-SNE]\tExisting node has le: (%f, %f, %f)\n", root.le[0], root.le[1], root.le[2])
-        printf("[t-SNE]\tExisting node has w: (%f, %f, %f)\n", root.w[0], root.w[1], root.w[2])
 
     # If this node is unoccupied, fill it.
     # Otherwise, we need to insert recursively.
@@ -228,13 +224,16 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth, long dup
     else:
         # Root node is occupied or not a leaf
         if DEBUGFLAG:
-            printf("[t-SNE] [d=%i] Node %p is occupied or is a leaf\n", depth, root)
-        if root.is_leaf & root.size > 0:
+            printf("[t-SNE] [d=%i] Node %p is occupied or is a leaf.\n", depth, root)
+            printf("[t-SNE] [d=%i] Node %p leaf = %i. Size %i\n", depth, root, root.is_leaf, root.size)
+        if root.is_leaf & (root.size > 0):
+            # is a leaf node and is occupied
             for ax in range(dimension):
-                not_identical &= (pos[ax] == root.cur_pos[ax])
+                not_identical &= ((pos[ax] == root.cur_pos[ax]) & (root.point_index != point_index))
             if not_identical == 1:
                 root.size += duplicate_count
-                printf("[t-SNE] Warning: [d=%i] Detected identical particles\n", depth, root)
+                if DEBUGFLAG:
+                    printf("[t-SNE] Warning: [d=%i] Detected identical particles. Returning. Leaf now has size %i\n", depth, root.size)
                 return 0
         # If necessary, subdivide this node before
         # descending
@@ -322,6 +321,8 @@ cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:
 cdef long count_points(Node* root, long count) nogil:
     # Walk through the whole tree and count the number 
     # of points at the leaf nodes
+    if DEBUGFLAG:
+        printf("[t-SNE] Counting nodes at root node %p\n", root)
     cdef Node* child
     cdef int i, j
     if root.tree.dimension > 2:
@@ -331,15 +332,32 @@ cdef long count_points(Node* root, long count) nogil:
     for i in range(2):
         for j in range(2):
             for k in range(krange):
-                child = root.children[i][j][k]
+                # if this is a leaf node, there will be no children
+                if root.is_leaf:
+                    count += root.size
+                    if DEBUGFLAG : 
+                        printf("[t-SNE] %p is a leaf node, no children\n", root)
+                        printf("[t-SNE] %i particles in node %p\n", count, root)
+                    return count
+                # otherwise, get the children
+                else:
+                    child = root.children[i][j][k]
+                if DEBUGFLAG:
+                    printf("[t-SNE] Counting points for child %p\n", child)
                 if child.is_leaf and child.size > 0:
+                    if DEBUGFLAG:
+                        printf("[t-SNE] Child has size %d\n", child.size)
                     count += child.size
                 elif not child.is_leaf:
+                    if DEBUGFLAG:
+                        printf("[t-SNE] Child is not a leaf. Descending\n")
                     count = count_points(child, count)
                 # else case is we have an empty leaf node
                 # which happens when we create a quadtree for
                 # one point, and then the other neighboring cells
                 # don't get filled in
+    if DEBUGFLAG:
+        printf("[t-SNE] %i particles in this node\n", count)
     return count
 
 
