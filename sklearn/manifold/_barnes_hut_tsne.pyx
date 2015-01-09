@@ -15,7 +15,12 @@ import numpy as np
 
 cdef extern from "math.h":
     double sqrt(double x) nogil
+    float fabsf(float x) nogil
 
+# Round points differing by less than this amount
+# effectively ignoring differences near the 32bit 
+# floating point precision
+cdef float EPSILON = 1e-6
 
 # This is effectively an ifdef statement in Cython
 # It allows us to write printf debugging lines
@@ -85,6 +90,9 @@ cdef Tree* init_tree(float[:] left_edge, float[:] width, int dimension, int verb
     tree.root_node = create_root(left_edge, width, dimension)
     tree.root_node.tree = tree
     tree.num_cells += 1
+    if DEBUGFLAG:
+        printf("[t-SNE] Tree initialised. Left_edge = (%1.9e, %1.9e, %1.9e)\n", left_edge[0], left_edge[1], left_edge[2])
+        printf("[t-SNE] Tree initialised. Width = (%1.9e, %1.9e, %1.9e)\n", width[0], width[1], width[2])
     return tree
 
 cdef Node* create_root(float[:] left_edge, float[:] width, int dimension) nogil:
@@ -195,11 +203,11 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth, long dup
     # Assert that the point is inside the left & right edges
     for ax in range(dimension):
         root.cum_com[ax] *= frac_seen
-        if (pos[ax] > (root.le[ax] + root.w[ax])):
+        if (pos[ax] > (root.le[ax] + root.w[ax] + EPSILON)):
             printf("[t-SNE] Error: point (%1.9e) is above right edge of node (%1.9e)\n",
                    pos[ax], root.le[ax] + root.w[ax])
             return -1
-        if (pos[ax] < root.le[ax]):
+        if (pos[ax] < root.le[ax] - EPSILON):
             printf("[t-SNE] Error: point (%1.9e) is below left edge of node (%1.9e)\n",
                    pos[ax], root.le[ax])
             return -1
@@ -229,7 +237,7 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth, long dup
         if root.is_leaf & (root.size > 0):
             # is a leaf node and is occupied
             for ax in range(dimension):
-                not_identical &= ((pos[ax] == root.cur_pos[ax]) & (root.point_index != point_index))
+                not_identical &= (fabsf(pos[ax] - root.cur_pos[ax]) < EPSILON) & (root.point_index != point_index)
             if not_identical == 1:
                 root.size += duplicate_count
                 if DEBUGFLAG:
@@ -275,7 +283,7 @@ cdef int insert_many(Tree* tree, float[:,:] pos_array) nogil:
             printf("[t-SNE] inserting point %i: [%f, %f]\n", i, row[0], row[1])
         err = insert(tree.root_node, row, i, 0, 1)
         if err != 0:
-            printf("[t-SNE] ERROR\n ")
+            printf("[t-SNE] ERROR\n")
             return err
         tree.num_part += 1
     return err
@@ -581,7 +589,7 @@ def calculate_edge(pos_output):
     left_edge = np.min(pos_output, axis=0)
     right_edge = np.max(pos_output, axis=0) 
     center = (right_edge + left_edge) * 0.5
-    width = np.subtract(right_edge, left_edge)
+    width = np.maximum(np.subtract(right_edge, left_edge), EPSILON)
     # Exagerate width to avoid boundary edge
     width = width.astype(np.float32) * 1.001
     left_edge = center - width / 2.0

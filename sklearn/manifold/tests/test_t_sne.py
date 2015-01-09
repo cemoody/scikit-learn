@@ -457,6 +457,7 @@ def test_quadtree_similar_point():
     Test will hang if it doesn't complete.
     """
     Xs = []
+
     # check the case where points are actually different
     Xs.append(np.array([[1, 2], [3, 4]]))
     # check the case where points are the same on X axis
@@ -469,6 +470,14 @@ def test_quadtree_similar_point():
     Xs.append(np.array([[-10.368728, 3.264339], [-11.368761, 3.264389]]))
     # check the case where points are arbitraryily close on both axes
     Xs.append(np.array([[-9.368761, 3.264389], [-9.368761, 3.264389]]))
+
+    # check the case where points are arbitraryily close on both axes
+    # close to machine epsilon - x axis
+    Xs.append(np.array([[1, 0.0003817754041], [2, 0.0003817753750]]))
+
+    # check the case where points are arbitraryily close on both axes
+    # close to machine epsilon - y axis
+    Xs.append(np.array([[-2.654234171, 1], [-2.654234409, 2]]))
 
     for X in Xs:
         counts = np.zeros(3, dtype='int64')
