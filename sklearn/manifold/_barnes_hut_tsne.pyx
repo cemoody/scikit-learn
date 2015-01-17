@@ -10,7 +10,7 @@
 
 from libc.stdlib cimport malloc, free
 from libc.stdio cimport printf
-from libc.math cimport sqrt
+from libc.math cimport sqrt, log
 cimport numpy as np
 import numpy as np
 
@@ -35,11 +35,17 @@ cdef extern from "time.h":
     double CLOCKS_PER_SEC
 
 
+cdef extern from "cblas.h":
+    float snrm2 "cblas_snrm2"(int N, float *X, int incX) nogil
+    void scopy "cblas_scopy"(int N, float* X, int incX, float* Y, int incY) nogil
+    void saxpy "cblas_saxpy"(int N, float alpha, float *X, int incX, float *Y, int incY) nogil
+
+
 cdef struct Node:
     # Keep track of the center of mass
-    float[3] cum_com
+    float* cum_com
     # If this is a leaf, the position of the particle within this leaf 
-    float[3] cur_pos
+    float* cur_pos
     # The number of particles including all 
     # nodes below this one
     long cum_size
@@ -51,18 +57,20 @@ cdef struct Node:
     # And each subdivision adds 1 to the level
     long level
     # Left edge of this node, normalized to [0,1]
-    float[3] le
+    float* le
     # The center of this node, equal to le + w/2.0
-    float[3] c
+    float* c
     # The width of this node -- used to calculate the opening
     # angle. Equal to width = re - le
-    float[3] w
+    float* w
+    # The value of the maximum width w
+    float max_width
 
     # Does this node have children?
     # Default to leaf until we add particles
     int is_leaf
-    # Keep pointers to the child nodes
-    Node *children[2][2][2]
+    # Array of pointers to pointers of children
+    Node **children
     # Keep a pointer to the parent
     Node *parent
     # Pointer to the tree this node belongs too
@@ -79,6 +87,8 @@ cdef struct Tree:
     long num_part
     # Spit out diagnostic information?
     int verbose
+    # How many cells per node? Should go as 2 ** dimensions
+    int ncell
 
 cdef Tree* init_tree(float[:] left_edge, float[:] width, int dimension, 
                      int verbose) nogil:
@@ -91,6 +101,7 @@ cdef Tree* init_tree(float[:] left_edge, float[:] width, int dimension,
     tree.root_node = create_root(left_edge, width, dimension)
     tree.root_node.tree = tree
     tree.num_cells += 1
+    tree.ncell = 2 ** dimension
     if DEBUGFLAG:
         printf("[t-SNE] Tree initialised. Left_edge = (%1.9e, %1.9e, %1.9e)\n",
                left_edge[0], left_edge[1], left_edge[2])
@@ -101,6 +112,7 @@ cdef Tree* init_tree(float[:] left_edge, float[:] width, int dimension,
 cdef Node* create_root(float[:] left_edge, float[:] width, int dimension) nogil:
     # Create a default root node
     cdef int ax
+    cdef int ncell = 2 ** dimension
     # root is freed by free_tree
     root = <Node*> malloc(sizeof(Node))
     root.is_leaf = 1
@@ -109,12 +121,21 @@ cdef Node* create_root(float[:] left_edge, float[:] width, int dimension) nogil:
     root.cum_size = 0
     root.size = 0
     root.point_index = -1
+    root.max_width = 0.0
+    root.w = <float*> malloc(sizeof(float) * dimension)
+    root.le = <float*> malloc(sizeof(float) * dimension)
+    root.c = <float*> malloc(sizeof(float) * dimension)
+    root.cum_com = <float*> malloc(sizeof(float) * dimension)
+    root.cur_pos= <float*> malloc(sizeof(float) * dimension)
+    root.children = NULL
     for ax in range(dimension):
         root.w[ax] = width[ax]
         root.le[ax] = left_edge[ax]
         root.c[ax] = 0.0
         root.cum_com[ax] = 0.
-        root.cur_pos[ax] = -1.
+        root.cur_pos[ax] = -1
+    for ax in range(dimension):
+        root.max_width = max(root.max_width, root.w[ax])
     if DEBUGFLAG:
         printf("[t-SNE] Created root node %p\n", root)
     return root
@@ -131,53 +152,89 @@ cdef Node* create_child(Node *parent, int[3] offset) nogil:
     child.cum_size = 0
     child.point_index = -1
     child.tree = parent.tree
+    child.max_width = 0.0
+    child.w = <float*> malloc(sizeof(float) * parent.tree.dimension)
+    child.le = <float*> malloc(sizeof(float) * parent.tree.dimension)
+    child.c = <float*> malloc(sizeof(float) * parent.tree.dimension)
+    child.cum_com = <float*> malloc(sizeof(float) * parent.tree.dimension)
+    child.cur_pos = <float*> malloc(sizeof(float) * parent.tree.dimension)
+    child.children = NULL
     for ax in range(parent.tree.dimension):
         child.w[ax] = parent.w[ax] / 2.0
         child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0
         child.c[ax] = child.le[ax] + child.w[ax] / 2.0
         child.cum_com[ax] = 0.
         child.cur_pos[ax] = -1.
+    for ax in range(parent.tree.dimension):
+        child.max_width = max(child.max_width, child.w[ax])
     child.tree.num_cells += 1
     return child
 
 cdef Node* select_child(Node *node, float[3] pos, long index) nogil:
     # Find which sub-node a position should go into
     # And return the appropriate node
-    cdef int[3] offset
-    cdef int ax
+    cdef int* offset = <int*> malloc(sizeof(int) * node.tree.dimension)
+    cdef int ax, idx
     cdef Node* child
     cdef int error
-    # In case we don't have 3D data, set it to zero
-    for ax in range(3):
-        offset[ax] = 0
     for ax in range(node.tree.dimension):
         offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
-    child = node.children[offset[0]][offset[1]][offset[2]]
+    idx = offset2index(offset, node.tree.dimension)
+    child = node.children[idx]
     if DEBUGFLAG:
         printf("[t-SNE] Offset [%i, %i] with LE [%f, %f]\n",
                offset[0], offset[1], child.le[0], child.le[1])
+    free(offset)
     return child
 
+
+cdef inline void index2offset(int* offset, int index, int dimension) nogil:
+    # Convert a 1D index into N-D index; useful for indexing
+    # children of a quadtree, octree, N-tree
+    # Quite likely there's a fancy bitshift way of doing this
+    # since the offset is equivalent to the binary representation
+    # of the integer index
+    # We read the the offset array left-to-right 
+    # such that the least significat bit is on the right
+    cdef int rem, k, shift
+    for k in range(dimension):
+        shift = dimension -k -1
+        rem = ((index >> shift) << shift)
+        offset[k] = rem > 0
+        if DEBUGFLAG:
+            printf("i2o index %i k %i rem %i offset", index, k, rem)
+            for j in range(dimension):
+                printf(" %i", offset[j])
+            printf(" dimension %i\n", dimension)
+        index -= rem
+
+
+cdef inline int offset2index(int* offset, int dimension) nogil:
+    # Calculate the 1:1 index for a given offset array
+    # We read the the offset array right-to-left
+    # such that the least significat bit is on the right
+    cdef int dim
+    cdef int index = 0
+    for dim in range(dimension):
+        index += (2 ** dim) * offset[dimension - dim - 1]
+        if DEBUGFLAG:
+            printf("o2i index %i dim %i            offset", index, dim)
+            for j in range(dimension):
+                printf(" %i", offset[j])
+            printf(" dimension %i\n", dimension)
+    return index
+
+
 cdef void subdivide(Node* node) nogil:
-    # This instantiates 4 or 8 nodes for the current node
-    cdef int i = 0
-    cdef int j = 0
-    cdef int k = 0
-    cdef int[3] offset
+    # This instantiates 2**dimension = ncell nodes for the current node
+    cdef int idx = 0
+    cdef int* offset = <int*> malloc(sizeof(int) * node.tree.dimension)
     node.is_leaf = False
-    for ax in range(3):
-        offset[ax] = 0
-    if node.tree.dimension > 2:
-        krange = 2
-    else:
-        krange = 1
-    for i in range(2):
-        offset[0] = i
-        for j in range(2):
-            offset[1] = j
-            for k in range(krange):
-                offset[2] = k
-                node.children[i][j][k] = create_child(node, offset)
+    node.children = <Node**> malloc(sizeof(Node*) * node.tree.ncell)
+    for idx in range(node.tree.ncell):
+        index2offset(offset, idx, node.tree.dimension)
+        node.children[idx] = create_child(node, offset)
+    free(offset)
 
 
 cdef int insert(Node *root, float pos[3], long point_index, long depth, long
@@ -192,7 +249,7 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth, long
     cdef int not_identical = 1
     cdef int dimension = root.tree.dimension
     if DEBUGFLAG:
-        printf("[t-SNE] [d=%i] Inserting pos %i [%f, %f] duplicate_count=%i"
+        printf("[t-SNE] [d=%i] Inserting pos %i [%f, %f] duplicate_count=%i "
                 "into child %p\n", depth, point_index, pos[0], pos[1],
                 duplicate_count, root)    
     # Increment the total number points including this
@@ -318,25 +375,25 @@ cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:
     # Free up all of the tree nodes recursively
     # while counting the number of nodes visited
     # and total number of data points removed
-    cdef int i, j, krange
-    cdef int k = 0
+    cdef int idx
     cdef Node* child
-    if root.tree.dimension > 2:
-        krange = 2
-    else:
-        krange = 1
     if not root.is_leaf:
-        for i in range(2):
-            for j in range(2):
-                for k in range(krange):
-                    child = root.children[i][j][k]
-                    free_recursive(tree, child, counts)
-                    counts[0] += 1
-                    if child.is_leaf:
-                        counts[1] += 1
-                        if child.size > 0:
-                            counts[2] +=1
-                    free(child)
+        for idx in range(tree.ncell):
+            child = root.children[idx]
+            free_recursive(tree, child, counts)
+            counts[0] += 1
+            if child.is_leaf:
+                counts[1] += 1
+                if child.size > 0:
+                    counts[2] +=1
+            else:
+                free(child.children)
+            free(child.w)
+            free(child.le)
+            free(child.c)
+            free(child.cum_com)
+            free(child.cur_pos)
+            free(child)
 
 
 cdef long count_points(Node* root, long count) nogil:
@@ -345,51 +402,44 @@ cdef long count_points(Node* root, long count) nogil:
     if DEBUGFLAG:
         printf("[t-SNE] Counting nodes at root node %p\n", root)
     cdef Node* child
-    cdef int i, j
-    if root.tree.dimension > 2:
-        krange = 2
-    else:
-        krange = 1
-    for i in range(2):
-        for j in range(2):
-            for k in range(krange):
-                # if this is a leaf node, there will be no children
-                if root.is_leaf:
-                    count += root.size
-                    if DEBUGFLAG : 
-                        printf("[t-SNE] %p is a leaf node, no children\n", root)
-                        printf("[t-SNE] %i particles in node %p\n", count, root)
-                    return count
-                # otherwise, get the children
-                else:
-                    child = root.children[i][j][k]
-                if DEBUGFLAG:
-                    printf("[t-SNE] Counting points for child %p\n", child)
-                if child.is_leaf and child.size > 0:
-                    if DEBUGFLAG:
-                        printf("[t-SNE] Child has size %d\n", child.size)
-                    count += child.size
-                elif not child.is_leaf:
-                    if DEBUGFLAG:
-                        printf("[t-SNE] Child is not a leaf. Descending\n")
-                    count = count_points(child, count)
-                # else case is we have an empty leaf node
-                # which happens when we create a quadtree for
-                # one point, and then the other neighboring cells
-                # don't get filled in
+    cdef int idx
+    if root.is_leaf:
+        count += root.size
+        if DEBUGFLAG : 
+            printf("[t-SNE] %p is a leaf node, no children\n", root)
+            printf("[t-SNE] %i particles in node %p\n", count, root)
+        return count
+    # Otherwise, get the children
+    for idx in range(root.tree.ncell):
+        child = root.children[idx]
+        if DEBUGFLAG:
+            printf("[t-SNE] Counting points for child %p\n", child)
+        if child.is_leaf and child.size > 0:
+            if DEBUGFLAG:
+                printf("[t-SNE] Child has size %d\n", child.size)
+            count += child.size
+        elif not child.is_leaf:
+            if DEBUGFLAG:
+                printf("[t-SNE] Child is not a leaf. Descending\n")
+            count = count_points(child, count)
+        # else case is we have an empty leaf node
+        # which happens when we create a quadtree for
+        # one point, and then the other neighboring cells
+        # don't get filled in
     if DEBUGFLAG:
         printf("[t-SNE] %i particles in this node\n", count)
     return count
 
 
-cdef void compute_gradient(float[:,:] val_P,
-                           float[:,:] pos_reference,
-                           long[:,:] neighbors,
-                           float[:,:] tot_force,
-                           Node* root_node,
-                           float theta,
-                           long start,
-                           long stop) nogil:
+cdef float compute_gradient(float[:,:] val_P,
+                            float[:,:] pos_reference,
+                            long[:,:] neighbors,
+                            float[:,:] tot_force,
+                            Node* root_node,
+                            float theta,
+                            float dof,
+                            long start,
+                            long stop) nogil:
     # Having created the tree, calculate the gradient
     # in two components, the positive and negative forces
     cdef long i, coord
@@ -401,69 +451,45 @@ cdef void compute_gradient(float[:,:] val_P,
                 n * dimension * 2)
     cdef float* sum_Q = <float*> malloc(sizeof(float))
     cdef float* neg_f = <float*> malloc(sizeof(float) * n * dimension)
+    cdef float* neg_f_fast = <float*> malloc(sizeof(float) * n * dimension)
     cdef float* pos_f = <float*> malloc(sizeof(float) * n * dimension)
     cdef clock_t t1, t2
+    cdef float sQ, error
 
     sum_Q[0] = 0.0
-    if root_node.tree.verbose > 11:
-        printf("[t-SNE] Computing positive gradient\n")
     t1 = clock()
-    compute_gradient_positive_nn(val_P, pos_reference, neighbors, pos_f,
-            dimension, start)
+    compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q,
+                              dof, theta, start, stop)
     t2 = clock()
     if root_node.tree.verbose > 15:
-        printf("[t-SNE]  nn pos: %e ticks\n", ((float) (t2 - t1)))
-    if root_node.tree.verbose > 11:
-        printf("[t-SNE] Computing negative gradient\n")
+        printf("[t-SNE] Computing negative gradient: %e ticks\n", ((float) (t2 - t1)))
+    sQ = sum_Q[0]
     t1 = clock()
-    compute_gradient_negative(val_P, pos_reference, neg_f, root_node, sum_Q, 
-                              theta, start, stop)
+    error = compute_gradient_positive(val_P, pos_reference, neighbors, pos_f,
+                              dimension, dof, sQ, start, root_node.tree.verbose)
     t2 = clock()
     if root_node.tree.verbose > 15:
-        printf("[t-SNE] Negative: %e ticks\n", ((float) (t2 - t1)))
+        printf("[t-SNE] Computing positive gradient: %e ticks\n", ((float) (t2 - t1)))
     for i in range(start, n):
         for ax in range(dimension):
             coord = i * dimension + ax
             tot_force[i, ax] = pos_f[coord] - (neg_f[coord] / sum_Q[0])
     free(sum_Q)
     free(neg_f)
+    free(neg_f_fast)
     free(pos_f)
-
-cdef void compute_gradient_positive(float[:,:] val_P,
-                                    float[:,:] pos_reference,
-                                    float* pos_f,
-                                    int dimension) nogil:
-    # Sum over the following expression for i not equal to j
-    # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
-    # This is equivalent to compute_edge_forces in the authors' code
-    cdef:
-        int ax
-        long i, j, temp
-        long n = val_P.shape[0]
-        float buff[3]
-        float D
-    for i in range(n):
-        for ax in range(dimension):
-            pos_f[i * dimension + ax] = 0.0
-        for j in range(n):
-            if i == j : 
-                continue
-            D = 0.0
-            for ax in range(dimension):
-                buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
-                D += buff[ax] ** 2.0  
-            D = val_P[i, j] / (1.0 + D)
-            for ax in range(dimension):
-                pos_f[i * dimension + ax] += D * buff[ax]
-                temp = i * dimension + ax
+    return sQ
 
 
-cdef void compute_gradient_positive_nn(float[:,:] val_P,
-                                       float[:,:] pos_reference,
-                                       long[:,:] neighbors,
-                                       float* pos_f,
-                                       int dimension,
-                                       long start) nogil:
+cdef float compute_gradient_positive(float[:,:] val_P,
+                                     float[:,:] pos_reference,
+                                     long[:,:] neighbors,
+                                     float* pos_f,
+                                     int dimension,
+                                     float dof,
+                                     float sum_Q,
+                                     long start,
+                                     int verbose) nogil:
     # Sum over the following expression for i not equal to j
     # grad_i = p_ij (1 + ||y_i - y_j||^2)^-1 (y_i - y_j)
     # This is equivalent to compute_edge_forces in the authors' code
@@ -475,7 +501,11 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
         long K = neighbors.shape[1]
         long n = val_P.shape[0]
         float[3] buff
-        float D
+        float D, Q, pij
+        float C = 0.0
+        float exponent = (dof + 1.0) / -2.0
+    cdef clock_t t1, t2
+    t1 = clock()
     for i in range(start, n):
         for ax in range(dimension):
             pos_f[i * dimension + ax] = 0.0
@@ -484,12 +514,22 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
             # we don't need to exclude the i==j case since we've 
             # already thrown it out from the list of neighbors
             D = 0.0
+            Q = 0.0
+            pij = val_P[i, j]
             for ax in range(dimension):
                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
                 D += buff[ax] ** 2.0  
-            D = val_P[i, j] / (1.0 + D)
+            Q = (((1.0 + D) / dof) ** exponent)
+            D = pij * Q
+            Q /= sum_Q
+            C += pij * log((pij + EPSILON) / (Q + EPSILON))
             for ax in range(dimension):
                 pos_f[i * dimension + ax] += D * buff[ax]
+    t2 = clock()
+    dt = ((float) (t2 - t1))
+    if verbose > 10:
+        printf("[t-SNE] Computed error=%1.4f in %1.1e ticks\n", C, dt)
+    return C
 
 
 
@@ -498,6 +538,7 @@ cdef void compute_gradient_negative(float[:,:] val_P,
                                     float* neg_f,
                                     Node *root_node,
                                     float* sum_Q,
+                                    float dof,
                                     float theta, 
                                     long start, 
                                     long stop) nogil:
@@ -505,98 +546,161 @@ cdef void compute_gradient_negative(float[:,:] val_P,
         stop = pos_reference.shape[0] 
     cdef:
         int ax
-        long i
+        long i, j
         long n = stop - start
         float* force
         float* iQ 
         float* pos
+        float* dist2s
+        long* sizes
+        float* deltas
+        long* l
         int dimension = root_node.tree.dimension
+        float qijZ, mult
+        long idx, 
+        long dta = 0
+        long dtb = 0
+        clock_t t1, t2, t3
+        float* neg_force
 
     iQ = <float*> malloc(sizeof(float))
     force = <float*> malloc(sizeof(float) * dimension)
     pos = <float*> malloc(sizeof(float) * dimension)
+    dist2s = <float*> malloc(sizeof(float) * n)
+    sizes = <long*> malloc(sizeof(long) * n)
+    deltas = <float*> malloc(sizeof(float) * n * dimension)
+    l = <long*> malloc(sizeof(long))
+    neg_force= <float*> malloc(sizeof(float) * dimension)
+
     for i in range(start, stop):
         # Clear the arrays
-        for ax in range(dimension): 
+        for ax in range(dimension):
             force[ax] = 0.0
+            neg_force[ax] = 0.0
             pos[ax] = pos_reference[i, ax]
         iQ[0] = 0.0
-        compute_non_edge_forces(root_node, theta, iQ, i,
-                                pos, force)
-        sum_Q[0] += iQ[0]
-        # Save local force into global
-        for ax in range(dimension): 
-            neg_f[i * dimension + ax] = force[ax]
+        l[0] = 0
+        # Find which nodes are summarizing and collect their centers of mass
+        # deltas, and sizes, into vectorized arrays
+        t1 = clock()
+        compute_non_edge_forces(root_node, theta, i, pos, force, dist2s,
+                                     sizes, deltas, l)
+        t2 = clock()
+        # Compute the t-SNE negative force
+        # for the digits dataset, walking the tree
+        # is about 10-15x more expensive than the 
+        # following for loop
+        exponent = (dof + 1.0) / -2.0
+        for j in range(l[0]):
+            qijZ = ((1.0 + dist2s[j]) / dof) ** exponent
+            sum_Q[0] += sizes[j] * qijZ
+            mult = sizes[j] * qijZ * qijZ
+            for ax in range(dimension):
+                idx = j * dimension + ax
+                neg_force[ax] += mult * deltas[idx]
+        t3 = clock()
+        for ax in range(dimension):
+            neg_f[i * dimension + ax] = neg_force[ax]
+        dta += t2 - t1
+        dtb += t3 - t2
+    if root_node.tree.verbose > 20:
+        printf("[t-SNE] Tree: %i clock ticks | ", dta)
+        printf("Force computation: %i clock ticks\n", dtb)
     free(iQ)
     free(force)
     free(pos)
+    free(dist2s)
+    free(sizes)
+    free(deltas)
+    free(l)
+    free(neg_force)
 
 
 cdef void compute_non_edge_forces(Node* node, 
                                   float theta,
-                                  float* sum_Q,
                                   long point_index,
                                   float* pos,
-                                  float* force) nogil:
+                                  float* force,
+                                  float* dist2s,
+                                  long* sizes,
+                                  float* deltas,
+                                  long* l) nogil:
     # Compute the t-SNE force on the point in pos given by point_index
     cdef:
         Node* child
-        int i, j, krange
-        int summary = 0
+        int i, j
         int dimension = node.tree.dimension
-        float dist2, mult, qijZ
-        float wmax = 0.0
-        float* delta  = <float*> malloc(sizeof(float) * dimension)
+        long idx, idx1
+        float dist_check
     
-    if node.tree.dimension > 2:
-        krange = 2
-    else:
-        krange = 1
-
-    for i in range(dimension):
-        delta[i] = 0.0
-
     # There are no points below this node if cum_size == 0
     # so do not bother to calculate any force contributions
     # Also do not compute self-interactions
     if node.cum_size > 0 and not (node.is_leaf and (node.point_index ==
         point_index)):
-        dist2 = 0.0
         # Compute distance between node center of mass and the reference point
-        for i in range(dimension):
-            delta[i] += pos[i] - node.cum_com[i] 
-            dist2 += delta[i]**2.0
+        # I've tried rewriting this in terms of BLAS functions, but it's about
+        # 1.5x worse when we do so, probbaly because the vectors are small
+        idx1 = l[0] * dimension
+        deltas[idx1] = pos[0] - node.cum_com[0]
+        idx = idx1
+        for i in range(1, dimension):
+            idx += 1
+            deltas[idx] = pos[i] - node.cum_com[i] 
+        # do np.sqrt(np.sum(deltas**2.0))
+        dist2s[l[0]] = snrm2(dimension, &deltas[idx1], 1)
         # Check whether we can use this node as a summary
         # It's a summary node if the angular size as measured from the point
         # is relatively small (w.r.t. to theta) or if it is a leaf node.
         # If it can be summarized, we use the cell center of mass 
         # Otherwise, we go a higher level of resolution and into the leaves.
-        for i in range(dimension):
-            wmax = max(wmax, node.w[i])
-
-        summary = (wmax / sqrt(dist2) < theta)
-
-        if node.is_leaf or summary:
+        if node.is_leaf or ((node.max_width / dist2s[l[0]]) < theta):
             # Compute the t-SNE force between the reference point and the
             # current node
-            qijZ = 1.0 / (1.0 + dist2)
-            sum_Q[0] += node.cum_size * qijZ
-            mult = node.cum_size * qijZ * qijZ
-            for ax in range(dimension):
-                force[ax] += mult * delta[ax]
+            sizes[l[0]] = node.cum_size
+            dist2s[l[0]] = dist2s[l[0]] * dist2s[l[0]]
+            l[0] += 1
         else:
             # Recursively apply Barnes-Hut to child nodes
-            for i in range(dimension):
-                for j in range(dimension):
-                    for k in range(krange):
-                        child = node.children[i][j][k]
-                        if child.cum_size == 0: 
-                            continue
-                        compute_non_edge_forces(child, theta, sum_Q, 
-                                                     point_index,
-                                                     pos, force)
+            for idx in range(node.tree.ncell):
+                child = node.children[idx]
+                if child.cum_size == 0: 
+                    continue
+                compute_non_edge_forces(child, theta,
+                        point_index, pos, force, dist2s, sizes, deltas,
+                        l)
 
-    free(delta)
+
+cdef float compute_error(float[:, :] val_P,
+                        float[:, :] pos_reference,
+                        long[:,:] neighbors,
+                        float sum_Q,
+                        int dimension,
+                        int verbose) nogil:
+    cdef int i, j, ax
+    cdef int I = neighbors.shape[0]
+    cdef int K = neighbors.shape[1]
+    cdef float pij, Q
+    cdef float C = 0.0
+    cdef clock_t t1, t2
+    cdef float dt, delta
+    t1 = clock()
+    for i in range(I):
+        for k in range(K):
+            j = neighbors[i, k]
+            pij = val_P[i, j]
+            Q = 0.0
+            for ax in range(dimension):
+                delta = (pos_reference[i, ax] - pos_reference[j, ax])
+                Q += delta * delta
+            Q = (1.0 / (sum_Q + Q * sum_Q))
+            C += pij * log((pij + EPSILON) / (Q + EPSILON))
+    t2 = clock()
+    dt = ((float) (t2 - t1))
+    if verbose > 10:
+        printf("[t-SNE] Computed error=%1.4f in %1.1e ticks\n", C, dt)
+    return C
+
 
 def calculate_edge(pos_output):
     # Make the boundaries slightly outside of the data
@@ -618,10 +722,12 @@ def gradient(float[:,:] pij_input,
              float theta,
              int dimension,
              int verbose,
+             float dof = 1.0,
              long skip_num_points=0):
     # This function is designed to be called from external Python
     # it passes the 'forces' array by reference and fills thats array
     # up in-place
+    cdef float C
     n = pos_output.shape[0]
     left_edge, right_edge, width = calculate_edge(pos_output)
     assert width.itemsize == 4
@@ -638,8 +744,6 @@ def gradient(float[:,:] pij_input,
     assert n == pij_input.shape[0], m
     m = "Pij and pos_output shapes are incompatible"
     assert n == pij_input.shape[1], m
-    m = "Only 2D and 3D embeddings supported. Width array must be size 2 or 3"
-    assert width.shape[0] <= 3, m
     if verbose > 10:
         printf("[t-SNE] Initializing tree of dimension %i\n", dimension)
     cdef Tree* qt = init_tree(left_edge, width, dimension, verbose)
@@ -649,8 +753,10 @@ def gradient(float[:,:] pij_input,
     assert err == 0, "[t-SNE] Insertion failed"
     if verbose > 10:
         printf("[t-SNE] Computing gradient\n")
-    compute_gradient(pij_input, pos_output, neighbors, forces, qt.root_node, 
-                     theta, skip_num_points, -1)
+    sum_Q = compute_gradient(pij_input, pos_output, neighbors, forces,
+                             qt.root_node, theta, dof, skip_num_points, -1)
+    C = compute_error(pij_input, pos_output, neighbors, sum_Q, dimension,
+                      verbose)
     if verbose > 10:
         printf("[t-SNE] Checking tree consistency \n")
     cdef long count = count_points(qt.root_node, 0)
@@ -660,6 +766,8 @@ def gradient(float[:,:] pij_input,
     m = "Tree consistency failed: unexpected number of points on the tree"
     assert count == qt.num_part, m
     free_tree(qt)
+    return C
+
 
 # Helper functions
 def check_quadtree(X, long[:] counts):
@@ -680,3 +788,43 @@ def check_quadtree(X, long[:] counts):
     counts[2] = qt.num_part
     free_tree(qt)
     return counts
+
+
+cdef int helper_test_index2offset(int* check, int index, int dimension):
+    cdef int* offset = <int*> malloc(sizeof(int) * dimension)
+    cdef int error_check = 1
+    for i in range(dimension):
+        offset[i] = 0
+    index2offset(offset, index, dimension)
+    for i in range(dimension):
+        error_check &= offset[i] == check[i]
+    free(offset)
+    return error_check
+
+
+def test_index2offset():
+    ret = 1
+    ret &= helper_test_index2offset([1, 0, 1], 5, 3) == 1
+    ret &= helper_test_index2offset([0, 0, 0], 0, 3) == 1
+    ret &= helper_test_index2offset([0, 0, 1], 1, 3) == 1
+    ret &= helper_test_index2offset([0, 1, 0], 2, 3) == 1
+    ret &= helper_test_index2offset([0, 1, 1], 3, 3) == 1
+    ret &= helper_test_index2offset([1, 0, 0], 4, 3) == 1
+    return ret
+
+
+def test_index_offset():
+    cdef int dimension, idx, tidx, k
+    cdef int error_check = 1
+    cdef int* offset 
+    for dimension in range(2, 10):
+        offset = <int*> malloc(sizeof(int) * dimension)
+        for k in range(dimension):
+            offset[k] = 0
+        for idx in range(2 ** dimension):
+            index2offset(offset, idx, dimension)
+            tidx = offset2index(offset, dimension)
+            error_check &= tidx == idx
+            assert error_check == 1
+        free(offset)
+    return error_check

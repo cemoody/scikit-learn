@@ -286,13 +286,14 @@ def _kl_divergence_bh(params, P, neighbors, degrees_of_freedom, n_samples,
 
     dimension = X_embedded.shape[1]
     grad = np.zeros(X_embedded.shape, dtype=np.float32)
-    _barnes_hut_tsne.gradient(sP, X_embedded, neighbors,
-                              grad, angle, dimension, verbose)
+    error = _barnes_hut_tsne.gradient(sP, X_embedded, neighbors,
+                                      grad, angle, dimension, verbose,
+                                      dof=degrees_of_freedom)
     c = 2.0 * (degrees_of_freedom + 1.0) / degrees_of_freedom
     grad = grad.ravel()
     grad *= c
 
-    return None, grad
+    return error, grad
 
 
 def _gradient_descent(objective, p0, it, n_iter, objective_error=None,
@@ -663,9 +664,6 @@ class TSNE(BaseEstimator):
             raise ValueError("'method' must be 'barnes_hut' or 'exact'")
         if self.angle < 0.0 or self.angle > 1.0:
             raise ValueError("'angle' must be between 0.0 - 1.0")
-        if self.method == 'barnes_hut' and self.n_components > 3:
-            raise ValueError("method='barnes_hut' only available for "
-                             "n_components < 4.")
         if self.method == 'barnes_hut' and sp.issparse(X):
             raise TypeError('A sparse matrix was passed, but dense '
                             'data is required for method="barnes_hut". Use '

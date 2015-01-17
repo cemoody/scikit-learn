@@ -229,16 +229,18 @@ def test_trustworthiness():
 def test_preserve_trustworthiness_approximately():
     """Nearest neighbors should be preserved approximately."""
     random_state = check_random_state(0)
-    X = random_state.randn(100, 2).astype(np.float32)
     # The Barnes-Hut approximation uses a different method to estimate
     # P_ij using only a a number of nearest neighbors instead of all
     # particles (so that k = 3 * perplexity). As a result we set the
     # perplexity=5, so that the number of neighbors is 5%.
+    n_components = 2
     methods = ['exact', 'barnes_hut']
+    X = random_state.randn(100, n_components).astype(np.float32)
     for init in ('random', 'pca'):
         for method in methods:
-            tsne = TSNE(n_components=2, perplexity=30, learning_rate=100.0,
-                        init=init, random_state=0, method=method)
+            tsne = TSNE(n_components=n_components, perplexity=50,
+                        learning_rate=100.0, init=init, random_state=0,
+                        method=method)
             X_embedded = tsne.fit_transform(X)
             T = trustworthiness(X, X_embedded, n_neighbors=1)
             assert_almost_equal(T, 1.0, decimal=1)
@@ -435,16 +437,6 @@ def test_no_sparse_on_barnes_hut():
                          tsne.fit_transform, X_csr)
 
 
-def test_no_4D_on_barnes_hut():
-    """No embeddings of dimension greater than 3 when method='barnes_hut'."""
-    random_state = check_random_state(0)
-    X = random_state.randn(5, 2)
-    for nc in [4, 100]:
-        tsne = TSNE(n_iter=199, method='barnes_hut', n_components=nc)
-        m = ".*method='barnes_hut' only available for.*"
-        assert_raises_regexp(ValueError, m, tsne.fit_transform, X)
-
-
 def test_64bit():
     """Ensure 64bit arrays are handled correctly."""
     random_state = check_random_state(0)
@@ -486,30 +478,32 @@ def test_barnes_hut_angle():
     angle = 0.0
     perplexity = 10
     n_samples = 100
-    n_components = 2
-    n_features = 5
-    degrees_of_freedom = float(n_components - 1.0)
+    for n_components in [2, 3]:
+        n_features = 5
+        degrees_of_freedom = float(n_components - 1.0)
 
-    random_state = check_random_state(0)
-    distances = random_state.randn(n_samples, n_features).astype(np.float32)
-    distances = distances.dot(distances.T)
-    np.fill_diagonal(distances, 0.0)
-    params = random_state.randn(n_samples, n_components)
-    P = _joint_probabilities(distances, perplexity, False)
-    kl, gradex = _kl_divergence(params, P, degrees_of_freedom, n_samples,
-                                n_components)
+        random_state = check_random_state(0)
+        distances = random_state.randn(n_samples, n_features)
+        distances = distances.astype(np.float32)
+        distances = distances.dot(distances.T)
+        np.fill_diagonal(distances, 0.0)
+        params = random_state.randn(n_samples, n_components)
+        P = _joint_probabilities(distances, perplexity, False)
+        kl, gradex = _kl_divergence(params, P, degrees_of_freedom, n_samples,
+                                    n_components)
 
-    k = n_samples - 1
-    bt = BallTree(distances)
-    distances_nn, neighbors_nn = bt.query(distances, k=k+1)
-    neighbors_nn = neighbors_nn[:, 1:]
-    Pbh = _joint_probabilities_nn(distances, neighbors_nn,
-                                  perplexity, False)
-    kl, gradbh = _kl_divergence_bh(params, Pbh, neighbors_nn,
-                                   degrees_of_freedom, n_samples, n_components,
-                                   angle=angle, skip_num_points=0,
-                                   verbose=False)
-    assert_array_almost_equal(gradex, gradbh, decimal=5)
+        k = n_samples - 1
+        bt = BallTree(distances)
+        distances_nn, neighbors_nn = bt.query(distances, k=k+1)
+        neighbors_nn = neighbors_nn[:, 1:]
+        Pbh = _joint_probabilities_nn(distances, neighbors_nn,
+                                      perplexity, False)
+        kl, gradbh = _kl_divergence_bh(params, Pbh, neighbors_nn,
+                                       degrees_of_freedom, n_samples,
+                                       n_components, angle=angle,
+                                       skip_num_points=0, verbose=False)
+        assert_array_almost_equal(Pbh, P, decimal=5)
+        assert_array_almost_equal(gradex, gradbh, decimal=5)
 
 
 def test_quadtree_similar_point():
@@ -547,3 +541,9 @@ def test_quadtree_similar_point():
         assert_equal(counts[0], counts[1], m)
         m = "Tree consistency failed: unexpected number of points on the tree"
         assert_equal(counts[0], counts[2], m)
+
+
+def test_index_offset():
+    """Make sure translating between 1D and N-D indices are preserved"""
+    assert_equal(_barnes_hut_tsne.test_index2offset(), 1)
+    assert_equal(_barnes_hut_tsne.test_index_offset(), 1)
