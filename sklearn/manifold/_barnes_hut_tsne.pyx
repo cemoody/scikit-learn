@@ -35,7 +35,7 @@ cdef extern from "time.h":
     double CLOCKS_PER_SEC
 
 
-cdef struct Node:
+cdef struct QuadOctNode:
     # Keep track of the center of mass
     float[3] cum_com
     # If this is a leaf, the position of the particle within this leaf 
@@ -51,46 +51,50 @@ cdef struct Node:
     # And each subdivision adds 1 to the level
     long level
     # Left edge of this node, normalized to [0,1]
-    float[3] le
-    # The center of this node, equal to le + w/2.0
-    float[3] c
+    float[3] left_edge
+    # The center of this node, equal to left_edge + w/2.0
+    float[3] center     
     # The width of this node -- used to calculate the opening
-    # angle. Equal to width = re - le
-    float[3] w
+    # angle.
+    float[3] width
+    # The half width of this node -- used to speed up certain calculations.
+    float[3] half_width
 
     # Does this node have children?
     # Default to leaf until we add particles
     int is_leaf
     # Keep pointers to the child nodes
-    Node *children[2][2][2]
+    # For a QuadTree, only the first two elements are used,
+    # whereas for an OctTree, all three are used.
+    QuadOctNode *children[2][2][2]
     # Keep a pointer to the parent
-    Node *parent
+    QuadOctNode *parent
     # Pointer to the tree this node belongs too
-    Tree* tree
+    QuadOctTree* tree
 
-cdef struct Tree:
+cdef struct QuadOctTree:
     # Holds a pointer to the root node
-    Node* root_node 
+    QuadOctNode* root_node 
     # Number of dimensions in the ouput
     int dimension
     # Total number of cells
-    long num_cells
+    long n_cells
     # Total number of particles
-    long num_part
+    long n_particles
     # Spit out diagnostic information?
     int verbose
 
-cdef Tree* init_tree(float[:] left_edge, float[:] width, int dimension, 
+cdef QuadOctTree* init_tree(float[:] left_edge, float[:] width, int dimension, 
                      int verbose) nogil:
     # tree is freed by free_tree
-    cdef Tree* tree = <Tree*> malloc(sizeof(Tree))
+    cdef QuadOctTree* tree = <QuadOctTree*> malloc(sizeof(QuadOctTree))
     tree.dimension = dimension
-    tree.num_cells = 0
-    tree.num_part = 0
+    tree.n_cells = 0
+    tree.n_particles = 0
     tree.verbose = verbose
     tree.root_node = create_root(left_edge, width, dimension)
     tree.root_node.tree = tree
-    tree.num_cells += 1
+    tree.n_cells += 1
     if DEBUGFLAG:
         printf("[t-SNE] Tree initialised. Left_edge = (%1.9e, %1.9e, %1.9e)\n",
                left_edge[0], left_edge[1], left_edge[2])
@@ -98,11 +102,11 @@ cdef Tree* init_tree(float[:] left_edge, float[:] width, int dimension,
                 width[0], width[1], width[2])
     return tree
 
-cdef Node* create_root(float[:] left_edge, float[:] width, int dimension) nogil:
+cdef QuadOctNode* create_root(float[:] left_edge, float[:] width, int dimension) nogil:
     # Create a default root node
     cdef int ax
     # root is freed by free_tree
-    root = <Node*> malloc(sizeof(Node))
+    root = <QuadOctNode*> malloc(sizeof(QuadOctNode))
     root.is_leaf = 1
     root.parent = NULL
     root.level = 0
@@ -110,20 +114,21 @@ cdef Node* create_root(float[:] left_edge, float[:] width, int dimension) nogil:
     root.size = 0
     root.point_index = -1
     for ax in range(dimension):
-        root.w[ax] = width[ax]
-        root.le[ax] = left_edge[ax]
-        root.c[ax] = 0.0
+        root.width[ax] = width[ax]
+        root.half_width[ax] = width[ax] / 2.0
+        root.left_edge[ax] = left_edge[ax]
+        root.center[ax] = 0.0
         root.cum_com[ax] = 0.
         root.cur_pos[ax] = -1.
     if DEBUGFLAG:
         printf("[t-SNE] Created root node %p\n", root)
     return root
 
-cdef Node* create_child(Node *parent, int[3] offset) nogil:
+cdef QuadOctNode* create_child(QuadOctNode *parent, int[3] offset) nogil:
     # Create a new child node with default parameters
     cdef int ax
     # these children are freed by free_recursive
-    child = <Node *> malloc(sizeof(Node))
+    child = <QuadOctNode *> malloc(sizeof(QuadOctNode))
     child.is_leaf = 1
     child.parent = parent
     child.level = parent.level + 1
@@ -132,33 +137,34 @@ cdef Node* create_child(Node *parent, int[3] offset) nogil:
     child.point_index = -1
     child.tree = parent.tree
     for ax in range(parent.tree.dimension):
-        child.w[ax] = parent.w[ax] / 2.0
-        child.le[ax] = parent.le[ax] + offset[ax] * parent.w[ax] / 2.0
-        child.c[ax] = child.le[ax] + child.w[ax] / 2.0
+        child.width[ax] = parent.half_width[ax]
+        child.half_width[ax] = parent.half_width[ax] / 2.0
+        child.left_edge[ax] = parent.left_edge[ax] + offset[ax] * parent.half_width[ax]
+        child.center[ax] = child.left_edge[ax] + child.half_width[ax]
         child.cum_com[ax] = 0.
         child.cur_pos[ax] = -1.
-    child.tree.num_cells += 1
+    child.tree.n_cells += 1
     return child
 
-cdef Node* select_child(Node *node, float[3] pos, long index) nogil:
+cdef QuadOctNode* select_child(QuadOctNode *node, float[3] pos, long index) nogil:
     # Find which sub-node a position should go into
     # And return the appropriate node
     cdef int[3] offset
     cdef int ax
-    cdef Node* child
+    cdef QuadOctNode* child
     cdef int error
     # In case we don't have 3D data, set it to zero
     for ax in range(3):
         offset[ax] = 0
     for ax in range(node.tree.dimension):
-        offset[ax] = (pos[ax] - (node.le[ax] + node.w[ax] / 2.0)) > 0.
+        offset[ax] = (pos[ax] - (node.left_edge[ax] + node.half_width[ax])) > 0.
     child = node.children[offset[0]][offset[1]][offset[2]]
     if DEBUGFLAG:
         printf("[t-SNE] Offset [%i, %i] with LE [%f, %f]\n",
-               offset[0], offset[1], child.le[0], child.le[1])
+               offset[0], offset[1], child.left_edge[0], child.left_edge[1])
     return child
 
-cdef void subdivide(Node* node) nogil:
+cdef void subdivide(QuadOctNode* node) nogil:
     # This instantiates 4 or 8 nodes for the current node
     cdef int i = 0
     cdef int j = 0
@@ -180,13 +186,13 @@ cdef void subdivide(Node* node) nogil:
                 node.children[i][j][k] = create_child(node, offset)
 
 
-cdef int insert(Node *root, float pos[3], long point_index, long depth, long
+cdef int insert(QuadOctNode *root, float pos[3], long point_index, long depth, long
         duplicate_count) nogil:
     # Introduce a new point into the tree
     # by recursively inserting it and subdividng as necessary
     # Carefully treat the case of identical points at the same node
     # by increasing the root.size and tracking duplicate_count
-    cdef Node *child
+    cdef QuadOctNode *child
     cdef long i
     cdef int ax
     cdef int not_identical = 1
@@ -209,13 +215,13 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth, long
     # Assert that the point is inside the left & right edges
     for ax in range(dimension):
         root.cum_com[ax] *= frac_seen
-        if (pos[ax] > (root.le[ax] + root.w[ax] + EPSILON)):
+        if (pos[ax] > (root.left_edge[ax] + root.width[ax] + EPSILON)):
             printf("[t-SNE] Error: point (%1.9e) is above right edge of node "
-                    "(%1.9e)\n", pos[ax], root.le[ax] + root.w[ax])
+                    "(%1.9e)\n", pos[ax], root.left_edge[ax] + root.width[ax])
             return -1
-        if (pos[ax] < root.le[ax] - EPSILON):
+        if (pos[ax] < root.left_edge[ax] - EPSILON):
             printf("[t-SNE] Error: point (%1.9e) is below left edge of node "
-                   "(%1.9e)\n", pos[ax], root.le[ax])
+                   "(%1.9e)\n", pos[ax], root.left_edge[ax])
             return -1
     for ax in range(dimension):
         root.cum_com[ax] += pos[ax] * frac_new
@@ -282,7 +288,7 @@ cdef int insert(Node *root, float pos[3], long point_index, long depth, long
             root.point_index = -1            
         return insert(child, pos, point_index, depth + 1, 1)
 
-cdef int insert_many(Tree* tree, float[:,:] pos_array) nogil:
+cdef int insert_many(QuadOctTree* tree, float[:,:] pos_array) nogil:
     # Insert each data point into the tree one at a time
     cdef long nrows = pos_array.shape[0]
     cdef long i
@@ -298,10 +304,10 @@ cdef int insert_many(Tree* tree, float[:,:] pos_array) nogil:
         if err != 0:
             printf("[t-SNE] ERROR\n")
             return err
-        tree.num_part += 1
+        tree.n_particles += 1
     return err
 
-cdef int free_tree(Tree* tree) nogil:
+cdef int free_tree(QuadOctTree* tree) nogil:
     cdef int check
     cdef long* cnt = <long*> malloc(sizeof(long) * 3)
     for i in range(3):
@@ -309,18 +315,18 @@ cdef int free_tree(Tree* tree) nogil:
     free_recursive(tree, tree.root_node, cnt)
     free(tree.root_node)
     free(tree)
-    check = cnt[0] == tree.num_cells
-    check &= cnt[2] == tree.num_part
+    check = cnt[0] == tree.n_cells
+    check &= cnt[2] == tree.n_particles
     free(cnt)
     return check
 
-cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:
+cdef void free_recursive(QuadOctTree* tree, QuadOctNode *root, long* counts) nogil:
     # Free up all of the tree nodes recursively
     # while counting the number of nodes visited
     # and total number of data points removed
     cdef int i, j, krange
     cdef int k = 0
-    cdef Node* child
+    cdef QuadOctNode* child
     if root.tree.dimension > 2:
         krange = 2
     else:
@@ -339,12 +345,12 @@ cdef void free_recursive(Tree* tree, Node *root, long* counts) nogil:
                     free(child)
 
 
-cdef long count_points(Node* root, long count) nogil:
+cdef long count_points(QuadOctNode* root, long count) nogil:
     # Walk through the whole tree and count the number 
     # of points at the leaf nodes
     if DEBUGFLAG:
         printf("[t-SNE] Counting nodes at root node %p\n", root)
-    cdef Node* child
+    cdef QuadOctNode* child
     cdef int i, j
     if root.tree.dimension > 2:
         krange = 2
@@ -386,7 +392,7 @@ cdef void compute_gradient(float[:,:] val_P,
                            float[:,:] pos_reference,
                            long[:,:] neighbors,
                            float[:,:] tot_force,
-                           Node* root_node,
+                           QuadOctNode* root_node,
                            float theta,
                            long start,
                            long stop) nogil:
@@ -496,7 +502,7 @@ cdef void compute_gradient_positive_nn(float[:,:] val_P,
 cdef void compute_gradient_negative(float[:,:] val_P, 
                                     float[:,:] pos_reference,
                                     float* neg_f,
-                                    Node *root_node,
+                                    QuadOctNode *root_node,
                                     float* sum_Q,
                                     float theta, 
                                     long start, 
@@ -532,7 +538,7 @@ cdef void compute_gradient_negative(float[:,:] val_P,
     free(pos)
 
 
-cdef void compute_non_edge_forces(Node* node, 
+cdef void compute_non_edge_forces(QuadOctNode* node, 
                                   float theta,
                                   float* sum_Q,
                                   long point_index,
@@ -540,7 +546,7 @@ cdef void compute_non_edge_forces(Node* node,
                                   float* force) nogil:
     # Compute the t-SNE force on the point in pos given by point_index
     cdef:
-        Node* child
+        QuadOctNode* child
         int i, j, krange
         int summary = 0
         int dimension = node.tree.dimension
@@ -572,7 +578,7 @@ cdef void compute_non_edge_forces(Node* node,
         # If it can be summarized, we use the cell center of mass 
         # Otherwise, we go a higher level of resolution and into the leaves.
         for i in range(dimension):
-            wmax = max(wmax, node.w[i])
+            wmax = max(wmax, node.width[i])
 
         summary = (wmax / sqrt(dist2) < theta)
 
@@ -602,7 +608,7 @@ def calculate_edge(pos_output):
     # Make the boundaries slightly outside of the data
     # to avoid floating point error near the edge
     left_edge = np.min(pos_output, axis=0)
-    right_edge = np.max(pos_output, axis=0) 
+    right_edge = np.max(pos_output, axis=0)
     center = (right_edge + left_edge) * 0.5
     width = np.maximum(np.subtract(right_edge, left_edge), EPSILON)
     # Exagerate width to avoid boundary edge
@@ -642,7 +648,7 @@ def gradient(float[:,:] pij_input,
     assert width.shape[0] <= 3, m
     if verbose > 10:
         printf("[t-SNE] Initializing tree of dimension %i\n", dimension)
-    cdef Tree* qt = init_tree(left_edge, width, dimension, verbose)
+    cdef QuadOctTree* qt = init_tree(left_edge, width, dimension, verbose)
     if verbose > 10:
         printf("[t-SNE] Inserting %i points\n", pos_output.shape[0])
     err = insert_many(qt, pos_output)
@@ -658,7 +664,7 @@ def gradient(float[:,:] pij_input,
          "at root node=%i" % (count, qt.root_node.cum_size))
     assert count == qt.root_node.cum_size, m 
     m = "Tree consistency failed: unexpected number of points on the tree"
-    assert count == qt.num_part, m
+    assert count == qt.n_particles, m
     free_tree(qt)
 
 # Helper functions
@@ -677,6 +683,69 @@ def check_quadtree(X, long[:] counts):
     cdef long count = count_points(qt.root_node, 0)
     counts[0] = count
     counts[1] = qt.root_node.cum_size
-    counts[2] = qt.num_part
+    counts[2] = qt.n_particles
     free_tree(qt)
     return counts
+
+cdef void get_quadtree_params(QuadOctNode *root,
+                              np.ndarray[np.float64_t, ndim=1] width_maxima,
+                              np.ndarray[np.float64_t, ndim=1] width_minima,
+                              np.ndarray[np.int64_t, ndim=1] level_max):
+    """
+    Traverse the tree, keeping track of the parameters as we descend.
+    """
+    cdef int i, j, krange
+    cdef int k = 0
+    cdef QuadOctNode* child
+    if root.tree.dimension > 2:
+        krange = 2
+    else:
+        krange = 1
+
+    # update the maximum depth of the tree (the level)
+    if root.level > level_max[0]:
+        level_max[0] = root.level
+
+    # update the width maxima and minima
+    for ix in range(root.tree.dimension):
+        if root.width[ix] > width_maxima[ix]:
+            width_maxima[ix] = root.width[ix]
+        if root.width[ix] < width_minima[ix]:
+            width_minima[ix] = root.width[ix]
+
+    # recursively descend if this is not a leaf node
+    for i in range(2):
+        for j in range(2):
+            for k in range(krange):
+                if not root.is_leaf:
+                    child = root.children[i][j][k]
+                    get_quadtree_params(child, width_maxima, width_minima, level_max)
+
+def check_quadtree_api(X):
+    """
+    Helper function to test the functionality of quadtree API.
+    Returns a dictionary object of the quadtree.
+    """
+
+    X = X.astype(np.float32)
+    left_edge, right_edge, width = calculate_edge(X)
+    # Initialise a tree
+    qt = init_tree(left_edge, width, X.shape[1], 2)
+    # Insert data into the tree
+    insert_many(qt, X)
+
+    properties = {}
+    properties['n_cells'] = qt.n_cells
+    properties['n_particles'] = qt.n_particles
+    properties['dimension'] = qt.dimension
+    width_maxima = np.zeros(qt.dimension, dtype=np.float64)
+    width_minima = np.array(width, dtype=np.float64)
+    level_max = np.zeros(1, dtype=np.int64)
+    get_quadtree_params(qt.root_node, width_maxima, width_minima, level_max)
+    properties['width_max'] = width_maxima
+    properties['width_min'] = width_minima
+    properties['level_max'] = level_max
+
+    free_tree(qt)
+
+    return properties

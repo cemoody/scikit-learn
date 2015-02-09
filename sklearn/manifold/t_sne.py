@@ -284,10 +284,9 @@ def _kl_divergence_bh(params, P, neighbors, degrees_of_freedom, n_samples,
     else:
         sP = P.astype(np.float32)
 
-    dimension = X_embedded.shape[1]
     grad = np.zeros(X_embedded.shape, dtype=np.float32)
     _barnes_hut_tsne.gradient(sP, X_embedded, neighbors,
-                              grad, angle, dimension, verbose)
+                              grad, angle, n_components, verbose)
     c = 2.0 * (degrees_of_freedom + 1.0) / degrees_of_freedom
     grad = grad.ravel()
     grad *= c
