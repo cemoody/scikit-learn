@@ -30,7 +30,7 @@ MACHINE_EPSILON = np.finfo(np.double).eps
 
 
 def _joint_probabilities(distances, desired_perplexity, verbose,
-                         neighbors=None):
+                         use_neighbors=None):
     """Compute joint probabilities p_ij from distances.
 
     When `neighbors` is specified, we don't excplicitly calculate all
@@ -60,15 +60,15 @@ def _joint_probabilities(distances, desired_perplexity, verbose,
     # Compute conditional probabilities such that they approximately match
     # the desired perplexity
     distances = astype(distances, np.float32, copy=False)
-    if neighbors is not None:
-        neighbors = astype(neighbors, np.int64, copy=False)
+    if use_neighbors is None:
+        use_neighbors = 0
     conditional_P = _utils._binary_search_perplexity(
-        distances, neighbors, desired_perplexity, verbose)
+        distances, desired_perplexity, verbose, use_neighbors)
     m = "All probabilities should be finite"
     assert np.all(np.isfinite(conditional_P)), m
     P = conditional_P + conditional_P.T
     sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
-    P = np.maximum(squareform(P) / sum_P, MACHINE_EPSILON)
+    P = np.maximum(P / sum_P, MACHINE_EPSILON)
     assert np.all(np.abs(P) <= 1.0)
     return P
 
@@ -205,10 +205,10 @@ def _kl_divergence_bh(params, P, neighbors, degrees_of_freedom, n_samples,
     params : array, shape (n_params,)
         Unraveled embedding.
 
-    P : array, shape (n_samples * (n_samples-1) / 2,)
+    P : array, shape (n_samples, n_neighbors)
         Condensed joint probability matrix.
 
-    neighbors: int64 array, shape (n_samples, K)
+    neighbors: int64 array, shape (n_samples, n_neighbors)
         Array with element [i, j] giving the index for the jth
         closest neighbor to point i.
 
@@ -250,13 +250,9 @@ def _kl_divergence_bh(params, P, neighbors, degrees_of_freedom, n_samples,
     params = astype(params, np.float32, copy=False)
     X_embedded = params.reshape(n_samples, n_components)
     neighbors = astype(neighbors, np.int64, copy=False)
-    if len(P.shape) == 1:
-        sP = squareform(P).astype(np.float32)
-    else:
-        sP = P.astype(np.float32)
 
     grad = np.zeros(X_embedded.shape, dtype=np.float32)
-    error = _barnes_hut_tsne.gradient(sP, X_embedded, neighbors,
+    error = _barnes_hut_tsne.gradient(P, X_embedded, neighbors,
                                       grad, angle, n_components, verbose,
                                       dof=degrees_of_freedom)
     c = 2.0 * (degrees_of_freedom + 1.0) / degrees_of_freedom
@@ -680,20 +676,33 @@ class TSNE(BaseEstimator):
         degrees_of_freedom = max(self.n_components - 1.0, 1.0)
         n_samples = X.shape[0]
         self.training_data_ = X
-        # the number of nearest neighbors to find
-        k = min(n_samples - 1, int(3. * self.perplexity + 1))
 
         neighbors_nn = None
         if self.method == 'barnes_hut':
+            # the number of nearest neighbors to find
+            n_neighbors_ = min(n_samples - 1, int(3. * self.perplexity + 1))
+            # The distance and neighbor arrays are aligned such that
+            # the neighbors_nn[i, 0] indicates the index of the nearest
+            # neighbor to point j, neighbors_nn[i, 1] the second closest
+            # and so on. Similarly, the distances_nn[i, 0] array contains
+            # the closest distance and distances_nn[i, 1] is the next-closest
+            # distance to point i. The P matrix is similarly aligned.
+            # P[i, 0] is the same as p(j1|i) where j1 is the nearest
+            # neighbor to point i,  and P[i, 1] is the same as p(j2|i), where
+            # j2 is the next-nearest to point i.
             if self.verbose:
-                print("[t-SNE] Computing %i nearest neighbors..." % k)
+                print("[t-SNE] Computing %i nearest neighbors..." % n_neighbors_)
             if self.metric == 'precomputed':
                 # Use the precomputed distances to find neighbors
-                neighbors_nn = np.argsort(distances, axis=1)[:, :k]
+                neighbors_nn = np.argsort(distances, axis=1)
+                neighbors_nn = neighbors_nn[:, 1:n_neighbors + 1]
                 # Keep only k nearest neighbors and their distances
                 # not including the point itself
-                P = _joint_probabilities(distances, self.perplexity,
-                                         self.verbose, neighbors=neighbors_nn)
+                distances_nn = distances[neighbors_nn]
+                # this will produce a P(i|j) array of size (n_samples, k)
+                # which is aligned
+                P_nn = _joint_probabilities(distances_nn, self.perplexity,
+                                            self.verbose, use_neighbors=1)
             else:
                 # Find the nearest neighbors for every point
                 bt = BallTree(X)
@@ -701,23 +710,19 @@ class TSNE(BaseEstimator):
                 # And we add one to not count the data point itself
                 # In the event that we have very small # of points
                 # set the neighbors to n - 1
-                distances_nn, neighbors_nn = bt.query(X, k=k+1)
+                distances_nn, neighbors_nn = bt.query(X, k=n_neighbors_+1)
+                distances_nn = distances_nn[:, 1:]
                 neighbors_nn = neighbors_nn[:, 1:]
-                # The distances_nn[i, 0] array contains the closest distance
-                # and distances_nn[i, 1] is the next-closest distance
-                # to point i.
-                # The distance and neighbor arrays are aligned such that
-                # the neighbors_nn[i, 0] indicates the index of the nearest
-                # neighbor to point j, neighbors_nn[i, 1] the second closest
-                # and so on.
-                P = _joint_probabilities(distances, self.perplexity,
-                                         self.verbose, neighbors=neighbors_nn)
+                P_nn = _joint_probabilities(distances_nn, self.perplexity,
+                                            self.verbose, use_neighbors=1)
+            P = P_nn
         else:
-            P = _joint_probabilities(distances, self.perplexity, self.verbose)
+            P = _joint_probabilities(distances, self.perplexity, self.verbose,
+                                     use_neigbbors=0)
         assert np.all(np.isfinite(P)), "All probabilities should be finite"
         assert np.all(P >= 0), "All probabilities should be zero or positive"
-        assert np.all(P <= 1), ("All probabilities should be less "
-                                "or then equal to one")
+        assert np.all(P <= 1), ("All probabilities should be less than "
+                                "or equal to one")
 
         if self.init == 'pca':
             pca = RandomizedPCA(n_components=self.n_components,
@@ -762,11 +767,11 @@ class TSNE(BaseEstimator):
         if self.method == 'barnes_hut':
             m = "Must provide an array of neighbors to use Barnes-Hut"
             assert neighbors is not None, m
+            # n_neighbors_ = neighbors.shape[1]
             obj_func = _kl_divergence_bh
             objective_error = _kl_divergence_error
-            sP = squareform(P).astype(np.float32)
             neighbors = neighbors.astype(np.int64)
-            args = [sP, neighbors, degrees_of_freedom, n_samples,
+            args = [P, neighbors, degrees_of_freedom, n_samples,
                     self.n_components]
             opt_args['args'] = args
             opt_args['min_grad_norm'] = 1e-3

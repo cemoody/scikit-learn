@@ -13,26 +13,25 @@ cdef float PERPLEXITY_TOLERANCE = 1e-5
 @cython.boundscheck(True)
 cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(
         np.ndarray[np.float32_t, ndim=2] affinities,
-        np.ndarray[np.int64_t, ndim=2] neighbors,
         float desired_perplexity,
-        int verbose):
+        int verbose,
+        int use_neighbors):
     """Binary search for sigmas of conditional Gaussians.
 
-    This approximation reduces the computational complexity from O(N^2) to
-    O(uN).
 
     Parameters
     ----------
-    affinities : array-like, shape (n_samples, n_samples)
-        Distances between training samples.
-
-    neighbors : array-like, shape (n_samples, K) or None
-        Each row contains the indices to the K nearest neigbors. If this
-        array is None, then the perplexity is estimated over all pairs of
-        points and not just the nearest neighbors. This is not to be confused
-        with method='exact' in the TSNE code -- this approximation calculates
-        the perplexity to nearest neighbors, whereas the Barnes-Hut method
-        is approximation on the gradient calculation.
+    affinities : array-like, shape (n_samples, n_samples) or (n_samples, K)
+        Distances between training samples. If this matrix is square, then 
+        compute the full pair-wise P(i|j) for all i and j. If this matrix is 
+        not square then we compute a restricted set of P(i|j). For example,
+        we assume that affinities is defined such that affinities[i, 0] is
+        distance to the nearest neighbor to point `i` and affinities[i, 1] is 
+        the next closest. By only considering the nearest neighbors, we reduce 
+        the computational complexity from O(N) to O(uN) where u `u` is the 
+        fraction of points considered to be neighbors. The memory consumption
+        is also reduced. In practice, the number of nearest neighbors to 
+        include is a multiple of the perplexity, usually 3.
 
     desired_perplexity : float
         Desired perplexity (2^entropy) of the conditional Gaussians.
@@ -49,10 +48,6 @@ cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(
     cdef long n_steps = 100
 
     cdef long n_samples = affinities.shape[0]
-    # This array is later used as a 32bit array. It has multiple intermediate
-    # floating point additions that benefit from the extra precision
-    cdef np.ndarray[np.float64_t, ndim=2] P = np.zeros((n_samples, n_samples),
-                                                       dtype=np.float64)
     # Precisions of conditional Gaussian distrubutions
     cdef float beta
     cdef float beta_min
@@ -66,11 +61,13 @@ cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(
     cdef float sum_Pi
     cdef float sum_disti_Pi
     cdef long i, j, k, l = 0
-    cdef long K = n_samples
-    cdef int using_neighbors = neighbors is not None
 
-    if using_neighbors:
-        K = neighbors.shape[1]
+    cdef long K = affinities.shape[1]
+
+    # This array is later used as a 32bit array. It has multiple intermediate
+    # floating point additions that benefit from the extra precision
+    cdef np.ndarray[np.float64_t, ndim=2] P = np.zeros((n_samples, K),
+                                                       dtype=np.float64)
 
     for i in range(n_samples):
         beta_min = -NPY_INFINITY
@@ -78,38 +75,23 @@ cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(
         beta = 1.0
 
         # Binary search of precision for i-th conditional distribution
+        # Compute current entropy and corresponding probabilities
+        # computed just over the nearest neighbors or over all data
+        # if we're not using neighbors
         for l in range(n_steps):
-            # Compute current entropy and corresponding probabilities
-            # computed just over the nearest neighbors or over all data
-            # if we're not using neighbors
-            if using_neighbors:
-                for k in range(K):
-                    j = neighbors[i, k]
-                    P[i, j] = math.exp(-affinities[i, j] * beta)
-            else:
-                for j in range(K):
-                    P[i, j] = math.exp(-affinities[i, j] * beta)
-            P[i, i] = 0.0
+            for j in range(K):
+                P[i, j] = math.exp(-affinities[i, j] * beta)
+            if not use_neighbors:
+                P[i, i] = 0.0
             sum_Pi = 0.0
-            if using_neighbors:
-                for k in range(K):
-                    j = neighbors[i, k]
-                    sum_Pi += P[i, j]
-            else:
-                for j in range(K):
-                    sum_Pi += P[i, j]
+            for j in range(K):
+                sum_Pi += P[i, j]
             if sum_Pi == 0.0:
                 sum_Pi = EPSILON_DBL
             sum_disti_Pi = 0.0
-            if using_neighbors:
-                for k in range(K):
-                    j = neighbors[i, k]
-                    P[i, j] /= sum_Pi
-                    sum_disti_Pi += affinities[i, j] * P[i, j]
-            else:
-                for j in range(K):
-                    P[i, j] /= sum_Pi
-                    sum_disti_Pi += affinities[i, j] * P[i, j]
+            for j in range(K):
+                P[i, j] /= sum_Pi
+                sum_disti_Pi += affinities[i, j] * P[i, j]
             entropy = math.log(sum_Pi) + beta * sum_disti_Pi
             entropy_diff = entropy - desired_entropy
 

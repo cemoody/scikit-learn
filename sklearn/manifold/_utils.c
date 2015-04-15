@@ -1064,9 +1064,8 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, cha
 /* Module declarations from 'sklearn.manifold._utils' */
 static float __pyx_v_7sklearn_8manifold_6_utils_EPSILON_DBL;
 static float __pyx_v_7sklearn_8manifold_6_utils_PERPLEXITY_TOLERANCE;
-static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexity(PyArrayObject *, PyArrayObject *, float, int, int __pyx_skip_dispatch); /*proto*/
+static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexity(PyArrayObject *, float, int, int, int __pyx_skip_dispatch); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_float32_t = { "float32_t", NULL, sizeof(__pyx_t_5numpy_float32_t), { 0 }, 0, 'R', 0, 0 };
-static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t = { "int64_t", NULL, sizeof(__pyx_t_5numpy_int64_t), { 0 }, 0, IS_UNSIGNED(__pyx_t_5numpy_int64_t) ? 'U' : 'I', IS_UNSIGNED(__pyx_t_5numpy_int64_t), 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t = { "float64_t", NULL, sizeof(__pyx_t_5numpy_float64_t), { 0 }, 0, 'R', 0, 0 };
 #define __Pyx_MODULE_NAME "sklearn.manifold._utils"
 int __pyx_module_is_main_sklearn__manifold___utils = 0;
@@ -1075,7 +1074,7 @@ int __pyx_module_is_main_sklearn__manifold___utils = 0;
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_RuntimeError;
-static PyObject *__pyx_pf_7sklearn_8manifold_6_utils__binary_search_perplexity(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_affinities, PyArrayObject *__pyx_v_neighbors, float __pyx_v_desired_perplexity, int __pyx_v_verbose); /* proto */
+static PyObject *__pyx_pf_7sklearn_8manifold_6_utils__binary_search_perplexity(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_affinities, float __pyx_v_desired_perplexity, int __pyx_v_verbose, int __pyx_v_use_neighbors); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
 static char __pyx_k_B[] = "B";
@@ -1109,10 +1108,10 @@ static char __pyx_k_zeros[] = "zeros";
 static char __pyx_k_import[] = "__import__";
 static char __pyx_k_float64[] = "float64";
 static char __pyx_k_verbose[] = "verbose";
-static char __pyx_k_neighbors[] = "neighbors";
 static char __pyx_k_ValueError[] = "ValueError";
 static char __pyx_k_affinities[] = "affinities";
 static char __pyx_k_RuntimeError[] = "RuntimeError";
+static char __pyx_k_use_neighbors[] = "use_neighbors";
 static char __pyx_k_desired_perplexity[] = "desired_perplexity";
 static char __pyx_k_t_SNE_Mean_sigma_f[] = "[t-SNE] Mean sigma: %f";
 static char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
@@ -1138,7 +1137,6 @@ static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_mean;
 static PyObject *__pyx_kp_u_ndarray_is_not_C_contiguous;
 static PyObject *__pyx_kp_u_ndarray_is_not_Fortran_contiguou;
-static PyObject *__pyx_n_s_neighbors;
 static PyObject *__pyx_n_s_np;
 static PyObject *__pyx_n_s_numpy;
 static PyObject *__pyx_n_s_print;
@@ -1147,6 +1145,7 @@ static PyObject *__pyx_kp_s_t_SNE_Computed_conditional_prob;
 static PyObject *__pyx_kp_s_t_SNE_Mean_sigma_f;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
+static PyObject *__pyx_n_s_use_neighbors;
 static PyObject *__pyx_n_s_verbose;
 static PyObject *__pyx_n_s_zeros;
 static PyObject *__pyx_tuple_;
@@ -1161,14 +1160,13 @@ static PyObject *__pyx_tuple__6;
  * @cython.boundscheck(True)
  * cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(             # <<<<<<<<<<<<<<
  *         np.ndarray[np.float32_t, ndim=2] affinities,
- *         np.ndarray[np.int64_t, ndim=2] neighbors,
+ *         float desired_perplexity,
  */
 
 static PyObject *__pyx_pw_7sklearn_8manifold_6_utils_1_binary_search_perplexity(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexity(PyArrayObject *__pyx_v_affinities, PyArrayObject *__pyx_v_neighbors, float __pyx_v_desired_perplexity, int __pyx_v_verbose, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexity(PyArrayObject *__pyx_v_affinities, float __pyx_v_desired_perplexity, int __pyx_v_verbose, int __pyx_v_use_neighbors, CYTHON_UNUSED int __pyx_skip_dispatch) {
   long __pyx_v_n_steps;
   long __pyx_v_n_samples;
-  PyArrayObject *__pyx_v_P = 0;
   float __pyx_v_beta;
   float __pyx_v_beta_min;
   float __pyx_v_beta_max;
@@ -1180,16 +1178,13 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
   float __pyx_v_sum_disti_Pi;
   long __pyx_v_i;
   long __pyx_v_j;
-  long __pyx_v_k;
   CYTHON_UNUSED long __pyx_v_l;
   long __pyx_v_K;
-  int __pyx_v_using_neighbors;
+  PyArrayObject *__pyx_v_P = 0;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_P;
   __Pyx_Buffer __pyx_pybuffer_P;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_affinities;
   __Pyx_Buffer __pyx_pybuffer_affinities;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_neighbors;
-  __Pyx_Buffer __pyx_pybuffer_neighbors;
   PyArrayObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -1198,7 +1193,7 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
   PyObject *__pyx_t_4 = NULL;
   PyObject *__pyx_t_5 = NULL;
   PyArrayObject *__pyx_t_6 = NULL;
-  int __pyx_t_7;
+  long __pyx_t_7;
   long __pyx_t_8;
   long __pyx_t_9;
   long __pyx_t_10;
@@ -1206,10 +1201,10 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
   long __pyx_t_12;
   long __pyx_t_13;
   long __pyx_t_14;
-  long __pyx_t_15;
-  int __pyx_t_16;
+  int __pyx_t_15;
+  long __pyx_t_16;
   long __pyx_t_17;
-  long __pyx_t_18;
+  int __pyx_t_18;
   long __pyx_t_19;
   long __pyx_t_20;
   long __pyx_t_21;
@@ -1220,25 +1215,7 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
   long __pyx_t_26;
   long __pyx_t_27;
   long __pyx_t_28;
-  long __pyx_t_29;
-  long __pyx_t_30;
-  long __pyx_t_31;
-  long __pyx_t_32;
-  long __pyx_t_33;
-  long __pyx_t_34;
-  long __pyx_t_35;
-  long __pyx_t_36;
-  long __pyx_t_37;
-  long __pyx_t_38;
-  long __pyx_t_39;
-  long __pyx_t_40;
-  long __pyx_t_41;
-  long __pyx_t_42;
-  long __pyx_t_43;
-  long __pyx_t_44;
-  long __pyx_t_45;
-  long __pyx_t_46;
-  int __pyx_t_47;
+  int __pyx_t_29;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -1251,22 +1228,13 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
   __pyx_pybuffer_affinities.refcount = 0;
   __pyx_pybuffernd_affinities.data = NULL;
   __pyx_pybuffernd_affinities.rcbuffer = &__pyx_pybuffer_affinities;
-  __pyx_pybuffer_neighbors.pybuffer.buf = NULL;
-  __pyx_pybuffer_neighbors.refcount = 0;
-  __pyx_pybuffernd_neighbors.data = NULL;
-  __pyx_pybuffernd_neighbors.rcbuffer = &__pyx_pybuffer_neighbors;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_affinities.rcbuffer->pybuffer, (PyObject*)__pyx_v_affinities, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float32_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __pyx_pybuffernd_affinities.diminfo[0].strides = __pyx_pybuffernd_affinities.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_affinities.diminfo[0].shape = __pyx_pybuffernd_affinities.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_affinities.diminfo[1].strides = __pyx_pybuffernd_affinities.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_affinities.diminfo[1].shape = __pyx_pybuffernd_affinities.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_neighbors.rcbuffer->pybuffer, (PyObject*)__pyx_v_neighbors, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  }
-  __pyx_pybuffernd_neighbors.diminfo[0].strides = __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_neighbors.diminfo[0].shape = __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_neighbors.diminfo[1].strides = __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_neighbors.diminfo[1].shape = __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.shape[1];
 
-  /* "sklearn/manifold/_utils.pyx":46
+  /* "sklearn/manifold/_utils.pyx":48
  *     """
  *     # Maximum number of binary search steps
  *     cdef long n_steps = 100             # <<<<<<<<<<<<<<
@@ -1275,89 +1243,16 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
   __pyx_v_n_steps = 100;
 
-  /* "sklearn/manifold/_utils.pyx":48
+  /* "sklearn/manifold/_utils.pyx":50
  *     cdef long n_steps = 100
  * 
  *     cdef long n_samples = affinities.shape[0]             # <<<<<<<<<<<<<<
- *     # This array is later used as a 32bit array. It has multiple intermediate
- *     # floating point additions that benefit from the extra precision
- */
-  __pyx_v_n_samples = (__pyx_v_affinities->dimensions[0]);
-
-  /* "sklearn/manifold/_utils.pyx":51
- *     # This array is later used as a 32bit array. It has multiple intermediate
- *     # floating point additions that benefit from the extra precision
- *     cdef np.ndarray[np.float64_t, ndim=2] P = np.zeros((n_samples, n_samples),             # <<<<<<<<<<<<<<
- *                                                        dtype=np.float64)
- *     # Precisions of conditional Gaussian distrubutions
- */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_long(__pyx_v_n_samples); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_From_long(__pyx_v_n_samples); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_4);
-  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
-  __Pyx_GIVEREF(__pyx_t_1);
-  PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3);
-  __Pyx_GIVEREF(__pyx_t_3);
-  __pyx_t_1 = 0;
-  __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4);
-  __Pyx_GIVEREF(__pyx_t_4);
-  __pyx_t_4 = 0;
-  __pyx_t_4 = PyDict_New(); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_4);
-
-  /* "sklearn/manifold/_utils.pyx":52
- *     # floating point additions that benefit from the extra precision
- *     cdef np.ndarray[np.float64_t, ndim=2] P = np.zeros((n_samples, n_samples),
- *                                                        dtype=np.float64)             # <<<<<<<<<<<<<<
  *     # Precisions of conditional Gaussian distrubutions
  *     cdef float beta
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 52; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 52; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_v_n_samples = (__pyx_v_affinities->dimensions[0]);
 
-  /* "sklearn/manifold/_utils.pyx":51
- *     # This array is later used as a 32bit array. It has multiple intermediate
- *     # floating point additions that benefit from the extra precision
- *     cdef np.ndarray[np.float64_t, ndim=2] P = np.zeros((n_samples, n_samples),             # <<<<<<<<<<<<<<
- *                                                        dtype=np.float64)
- *     # Precisions of conditional Gaussian distrubutions
- */
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_6 = ((PyArrayObject *)__pyx_t_5);
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_P.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
-      __pyx_v_P = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_P.rcbuffer->pybuffer.buf = NULL;
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    } else {__pyx_pybuffernd_P.diminfo[0].strides = __pyx_pybuffernd_P.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_P.diminfo[0].shape = __pyx_pybuffernd_P.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_P.diminfo[1].strides = __pyx_pybuffernd_P.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_P.diminfo[1].shape = __pyx_pybuffernd_P.rcbuffer->pybuffer.shape[1];
-    }
-  }
-  __pyx_t_6 = 0;
-  __pyx_v_P = ((PyArrayObject *)__pyx_t_5);
-  __pyx_t_5 = 0;
-
-  /* "sklearn/manifold/_utils.pyx":57
+  /* "sklearn/manifold/_utils.pyx":55
  *     cdef float beta_min
  *     cdef float beta_max
  *     cdef float beta_sum = 0.0             # <<<<<<<<<<<<<<
@@ -1366,7 +1261,7 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
   __pyx_v_beta_sum = 0.0;
 
-  /* "sklearn/manifold/_utils.pyx":59
+  /* "sklearn/manifold/_utils.pyx":57
  *     cdef float beta_sum = 0.0
  *     # Now we go to log scale
  *     cdef float desired_entropy = math.log(desired_perplexity)             # <<<<<<<<<<<<<<
@@ -1375,66 +1270,107 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
   __pyx_v_desired_entropy = log(__pyx_v_desired_perplexity);
 
-  /* "sklearn/manifold/_utils.pyx":65
+  /* "sklearn/manifold/_utils.pyx":63
  *     cdef float sum_Pi
  *     cdef float sum_disti_Pi
  *     cdef long i, j, k, l = 0             # <<<<<<<<<<<<<<
- *     cdef long K = n_samples
- *     cdef int using_neighbors = neighbors is not None
+ * 
+ *     cdef long K = affinities.shape[1]
  */
   __pyx_v_l = 0;
 
-  /* "sklearn/manifold/_utils.pyx":66
- *     cdef float sum_disti_Pi
+  /* "sklearn/manifold/_utils.pyx":65
  *     cdef long i, j, k, l = 0
- *     cdef long K = n_samples             # <<<<<<<<<<<<<<
- *     cdef int using_neighbors = neighbors is not None
  * 
- */
-  __pyx_v_K = __pyx_v_n_samples;
-
-  /* "sklearn/manifold/_utils.pyx":67
- *     cdef long i, j, k, l = 0
- *     cdef long K = n_samples
- *     cdef int using_neighbors = neighbors is not None             # <<<<<<<<<<<<<<
+ *     cdef long K = affinities.shape[1]             # <<<<<<<<<<<<<<
  * 
- *     if using_neighbors:
+ *     # This array is later used as a 32bit array. It has multiple intermediate
  */
-  __pyx_t_7 = (((PyObject *)__pyx_v_neighbors) != Py_None);
-  __pyx_v_using_neighbors = __pyx_t_7;
+  __pyx_v_K = (__pyx_v_affinities->dimensions[1]);
 
   /* "sklearn/manifold/_utils.pyx":69
- *     cdef int using_neighbors = neighbors is not None
- * 
- *     if using_neighbors:             # <<<<<<<<<<<<<<
- *         K = neighbors.shape[1]
+ *     # This array is later used as a 32bit array. It has multiple intermediate
+ *     # floating point additions that benefit from the extra precision
+ *     cdef np.ndarray[np.float64_t, ndim=2] P = np.zeros((n_samples, K),             # <<<<<<<<<<<<<<
+ *                                                        dtype=np.float64)
  * 
  */
-  __pyx_t_7 = (__pyx_v_using_neighbors != 0);
-  if (__pyx_t_7) {
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyInt_From_long(__pyx_v_n_samples); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = __Pyx_PyInt_From_long(__pyx_v_K); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_4);
+  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3);
+  __Pyx_GIVEREF(__pyx_t_3);
+  __pyx_t_1 = 0;
+  __pyx_t_3 = 0;
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4);
+  __Pyx_GIVEREF(__pyx_t_4);
+  __pyx_t_4 = 0;
+  __pyx_t_4 = PyDict_New(); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_4);
 
-    /* "sklearn/manifold/_utils.pyx":70
- * 
- *     if using_neighbors:
- *         K = neighbors.shape[1]             # <<<<<<<<<<<<<<
+  /* "sklearn/manifold/_utils.pyx":70
+ *     # floating point additions that benefit from the extra precision
+ *     cdef np.ndarray[np.float64_t, ndim=2] P = np.zeros((n_samples, K),
+ *                                                        dtype=np.float64)             # <<<<<<<<<<<<<<
  * 
  *     for i in range(n_samples):
  */
-    __pyx_v_K = (__pyx_v_neighbors->dimensions[1]);
-    goto __pyx_L3;
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 70; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 70; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+  /* "sklearn/manifold/_utils.pyx":69
+ *     # This array is later used as a 32bit array. It has multiple intermediate
+ *     # floating point additions that benefit from the extra precision
+ *     cdef np.ndarray[np.float64_t, ndim=2] P = np.zeros((n_samples, K),             # <<<<<<<<<<<<<<
+ *                                                        dtype=np.float64)
+ * 
+ */
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = ((PyArrayObject *)__pyx_t_5);
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_P.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
+      __pyx_v_P = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_P.rcbuffer->pybuffer.buf = NULL;
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    } else {__pyx_pybuffernd_P.diminfo[0].strides = __pyx_pybuffernd_P.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_P.diminfo[0].shape = __pyx_pybuffernd_P.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_P.diminfo[1].strides = __pyx_pybuffernd_P.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_P.diminfo[1].shape = __pyx_pybuffernd_P.rcbuffer->pybuffer.shape[1];
+    }
   }
-  __pyx_L3:;
+  __pyx_t_6 = 0;
+  __pyx_v_P = ((PyArrayObject *)__pyx_t_5);
+  __pyx_t_5 = 0;
 
   /* "sklearn/manifold/_utils.pyx":72
- *         K = neighbors.shape[1]
+ *                                                        dtype=np.float64)
  * 
  *     for i in range(n_samples):             # <<<<<<<<<<<<<<
  *         beta_min = -NPY_INFINITY
  *         beta_max = NPY_INFINITY
  */
-  __pyx_t_8 = __pyx_v_n_samples;
-  for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
-    __pyx_v_i = __pyx_t_9;
+  __pyx_t_7 = __pyx_v_n_samples;
+  for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
+    __pyx_v_i = __pyx_t_8;
 
     /* "sklearn/manifold/_utils.pyx":73
  * 
@@ -1463,533 +1399,267 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
     __pyx_v_beta = 1.0;
 
-    /* "sklearn/manifold/_utils.pyx":78
- * 
- *         # Binary search of precision for i-th conditional distribution
+    /* "sklearn/manifold/_utils.pyx":81
+ *         # computed just over the nearest neighbors or over all data
+ *         # if we're not using neighbors
  *         for l in range(n_steps):             # <<<<<<<<<<<<<<
- *             # Compute current entropy and corresponding probabilities
- *             # computed just over the nearest neighbors or over all data
+ *             for j in range(K):
+ *                 P[i, j] = math.exp(-affinities[i, j] * beta)
  */
-    __pyx_t_10 = __pyx_v_n_steps;
-    for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
-      __pyx_v_l = __pyx_t_11;
+    __pyx_t_9 = __pyx_v_n_steps;
+    for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
+      __pyx_v_l = __pyx_t_10;
 
       /* "sklearn/manifold/_utils.pyx":82
- *             # computed just over the nearest neighbors or over all data
- *             # if we're not using neighbors
- *             if using_neighbors:             # <<<<<<<<<<<<<<
- *                 for k in range(K):
- *                     j = neighbors[i, k]
+ *         # if we're not using neighbors
+ *         for l in range(n_steps):
+ *             for j in range(K):             # <<<<<<<<<<<<<<
+ *                 P[i, j] = math.exp(-affinities[i, j] * beta)
+ *             if not use_neighbors:
  */
-      __pyx_t_7 = (__pyx_v_using_neighbors != 0);
-      if (__pyx_t_7) {
+      __pyx_t_11 = __pyx_v_K;
+      for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
+        __pyx_v_j = __pyx_t_12;
 
         /* "sklearn/manifold/_utils.pyx":83
- *             # if we're not using neighbors
- *             if using_neighbors:
- *                 for k in range(K):             # <<<<<<<<<<<<<<
- *                     j = neighbors[i, k]
- *                     P[i, j] = math.exp(-affinities[i, j] * beta)
+ *         for l in range(n_steps):
+ *             for j in range(K):
+ *                 P[i, j] = math.exp(-affinities[i, j] * beta)             # <<<<<<<<<<<<<<
+ *             if not use_neighbors:
+ *                 P[i, i] = 0.0
  */
-        __pyx_t_12 = __pyx_v_K;
-        for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
-          __pyx_v_k = __pyx_t_13;
-
-          /* "sklearn/manifold/_utils.pyx":84
- *             if using_neighbors:
- *                 for k in range(K):
- *                     j = neighbors[i, k]             # <<<<<<<<<<<<<<
- *                     P[i, j] = math.exp(-affinities[i, j] * beta)
- *             else:
- */
-          __pyx_t_14 = __pyx_v_i;
-          __pyx_t_15 = __pyx_v_k;
-          __pyx_t_16 = -1;
-          if (__pyx_t_14 < 0) {
-            __pyx_t_14 += __pyx_pybuffernd_neighbors.diminfo[0].shape;
-            if (unlikely(__pyx_t_14 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_14 >= __pyx_pybuffernd_neighbors.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_15 < 0) {
-            __pyx_t_15 += __pyx_pybuffernd_neighbors.diminfo[1].shape;
-            if (unlikely(__pyx_t_15 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_15 >= __pyx_pybuffernd_neighbors.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 84; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_v_j = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int64_t *, __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_neighbors.diminfo[0].strides, __pyx_t_15, __pyx_pybuffernd_neighbors.diminfo[1].strides));
-
-          /* "sklearn/manifold/_utils.pyx":85
- *                 for k in range(K):
- *                     j = neighbors[i, k]
- *                     P[i, j] = math.exp(-affinities[i, j] * beta)             # <<<<<<<<<<<<<<
- *             else:
- *                 for j in range(K):
- */
-          __pyx_t_17 = __pyx_v_i;
-          __pyx_t_18 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_17 < 0) {
-            __pyx_t_17 += __pyx_pybuffernd_affinities.diminfo[0].shape;
-            if (unlikely(__pyx_t_17 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_17 >= __pyx_pybuffernd_affinities.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_18 < 0) {
-            __pyx_t_18 += __pyx_pybuffernd_affinities.diminfo[1].shape;
-            if (unlikely(__pyx_t_18 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_18 >= __pyx_pybuffernd_affinities.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_t_19 = __pyx_v_i;
-          __pyx_t_20 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_19 < 0) {
-            __pyx_t_19 += __pyx_pybuffernd_P.diminfo[0].shape;
-            if (unlikely(__pyx_t_19 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_19 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_20 < 0) {
-            __pyx_t_20 += __pyx_pybuffernd_P.diminfo[1].shape;
-            if (unlikely(__pyx_t_20 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_20 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_P.diminfo[1].strides) = exp(((-(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float32_t *, __pyx_pybuffernd_affinities.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_affinities.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_affinities.diminfo[1].strides))) * __pyx_v_beta));
+        __pyx_t_13 = __pyx_v_i;
+        __pyx_t_14 = __pyx_v_j;
+        __pyx_t_15 = -1;
+        if (__pyx_t_13 < 0) {
+          __pyx_t_13 += __pyx_pybuffernd_affinities.diminfo[0].shape;
+          if (unlikely(__pyx_t_13 < 0)) __pyx_t_15 = 0;
+        } else if (unlikely(__pyx_t_13 >= __pyx_pybuffernd_affinities.diminfo[0].shape)) __pyx_t_15 = 0;
+        if (__pyx_t_14 < 0) {
+          __pyx_t_14 += __pyx_pybuffernd_affinities.diminfo[1].shape;
+          if (unlikely(__pyx_t_14 < 0)) __pyx_t_15 = 1;
+        } else if (unlikely(__pyx_t_14 >= __pyx_pybuffernd_affinities.diminfo[1].shape)) __pyx_t_15 = 1;
+        if (unlikely(__pyx_t_15 != -1)) {
+          __Pyx_RaiseBufferIndexError(__pyx_t_15);
+          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 83; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         }
-        goto __pyx_L8;
+        __pyx_t_16 = __pyx_v_i;
+        __pyx_t_17 = __pyx_v_j;
+        __pyx_t_15 = -1;
+        if (__pyx_t_16 < 0) {
+          __pyx_t_16 += __pyx_pybuffernd_P.diminfo[0].shape;
+          if (unlikely(__pyx_t_16 < 0)) __pyx_t_15 = 0;
+        } else if (unlikely(__pyx_t_16 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_15 = 0;
+        if (__pyx_t_17 < 0) {
+          __pyx_t_17 += __pyx_pybuffernd_P.diminfo[1].shape;
+          if (unlikely(__pyx_t_17 < 0)) __pyx_t_15 = 1;
+        } else if (unlikely(__pyx_t_17 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_15 = 1;
+        if (unlikely(__pyx_t_15 != -1)) {
+          __Pyx_RaiseBufferIndexError(__pyx_t_15);
+          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 83; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        }
+        *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_17, __pyx_pybuffernd_P.diminfo[1].strides) = exp(((-(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float32_t *, __pyx_pybuffernd_affinities.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_affinities.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_affinities.diminfo[1].strides))) * __pyx_v_beta));
       }
-      /*else*/ {
 
-        /* "sklearn/manifold/_utils.pyx":87
- *                     P[i, j] = math.exp(-affinities[i, j] * beta)
- *             else:
- *                 for j in range(K):             # <<<<<<<<<<<<<<
- *                     P[i, j] = math.exp(-affinities[i, j] * beta)
- *             P[i, i] = 0.0
- */
-        __pyx_t_12 = __pyx_v_K;
-        for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
-          __pyx_v_j = __pyx_t_13;
-
-          /* "sklearn/manifold/_utils.pyx":88
- *             else:
- *                 for j in range(K):
- *                     P[i, j] = math.exp(-affinities[i, j] * beta)             # <<<<<<<<<<<<<<
- *             P[i, i] = 0.0
+      /* "sklearn/manifold/_utils.pyx":84
+ *             for j in range(K):
+ *                 P[i, j] = math.exp(-affinities[i, j] * beta)
+ *             if not use_neighbors:             # <<<<<<<<<<<<<<
+ *                 P[i, i] = 0.0
  *             sum_Pi = 0.0
  */
-          __pyx_t_21 = __pyx_v_i;
-          __pyx_t_22 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_21 < 0) {
-            __pyx_t_21 += __pyx_pybuffernd_affinities.diminfo[0].shape;
-            if (unlikely(__pyx_t_21 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_21 >= __pyx_pybuffernd_affinities.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_22 < 0) {
-            __pyx_t_22 += __pyx_pybuffernd_affinities.diminfo[1].shape;
-            if (unlikely(__pyx_t_22 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_22 >= __pyx_pybuffernd_affinities.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 88; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_t_23 = __pyx_v_i;
-          __pyx_t_24 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_23 < 0) {
-            __pyx_t_23 += __pyx_pybuffernd_P.diminfo[0].shape;
-            if (unlikely(__pyx_t_23 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_23 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_24 < 0) {
-            __pyx_t_24 += __pyx_pybuffernd_P.diminfo[1].shape;
-            if (unlikely(__pyx_t_24 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_24 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 88; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_24, __pyx_pybuffernd_P.diminfo[1].strides) = exp(((-(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float32_t *, __pyx_pybuffernd_affinities.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_affinities.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_affinities.diminfo[1].strides))) * __pyx_v_beta));
-        }
-      }
-      __pyx_L8:;
+      __pyx_t_18 = ((!(__pyx_v_use_neighbors != 0)) != 0);
+      if (__pyx_t_18) {
 
-      /* "sklearn/manifold/_utils.pyx":89
- *                 for j in range(K):
- *                     P[i, j] = math.exp(-affinities[i, j] * beta)
- *             P[i, i] = 0.0             # <<<<<<<<<<<<<<
+        /* "sklearn/manifold/_utils.pyx":85
+ *                 P[i, j] = math.exp(-affinities[i, j] * beta)
+ *             if not use_neighbors:
+ *                 P[i, i] = 0.0             # <<<<<<<<<<<<<<
  *             sum_Pi = 0.0
- *             if using_neighbors:
+ *             for j in range(K):
  */
-      __pyx_t_12 = __pyx_v_i;
-      __pyx_t_13 = __pyx_v_i;
-      __pyx_t_16 = -1;
-      if (__pyx_t_12 < 0) {
-        __pyx_t_12 += __pyx_pybuffernd_P.diminfo[0].shape;
-        if (unlikely(__pyx_t_12 < 0)) __pyx_t_16 = 0;
-      } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_16 = 0;
-      if (__pyx_t_13 < 0) {
-        __pyx_t_13 += __pyx_pybuffernd_P.diminfo[1].shape;
-        if (unlikely(__pyx_t_13 < 0)) __pyx_t_16 = 1;
-      } else if (unlikely(__pyx_t_13 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_16 = 1;
-      if (unlikely(__pyx_t_16 != -1)) {
-        __Pyx_RaiseBufferIndexError(__pyx_t_16);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 89; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_11 = __pyx_v_i;
+        __pyx_t_12 = __pyx_v_i;
+        __pyx_t_15 = -1;
+        if (__pyx_t_11 < 0) {
+          __pyx_t_11 += __pyx_pybuffernd_P.diminfo[0].shape;
+          if (unlikely(__pyx_t_11 < 0)) __pyx_t_15 = 0;
+        } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_15 = 0;
+        if (__pyx_t_12 < 0) {
+          __pyx_t_12 += __pyx_pybuffernd_P.diminfo[1].shape;
+          if (unlikely(__pyx_t_12 < 0)) __pyx_t_15 = 1;
+        } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_15 = 1;
+        if (unlikely(__pyx_t_15 != -1)) {
+          __Pyx_RaiseBufferIndexError(__pyx_t_15);
+          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        }
+        *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_P.diminfo[1].strides) = 0.0;
+        goto __pyx_L9;
       }
-      *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_P.diminfo[1].strides) = 0.0;
+      __pyx_L9:;
 
-      /* "sklearn/manifold/_utils.pyx":90
- *                     P[i, j] = math.exp(-affinities[i, j] * beta)
- *             P[i, i] = 0.0
+      /* "sklearn/manifold/_utils.pyx":86
+ *             if not use_neighbors:
+ *                 P[i, i] = 0.0
  *             sum_Pi = 0.0             # <<<<<<<<<<<<<<
- *             if using_neighbors:
- *                 for k in range(K):
+ *             for j in range(K):
+ *                 sum_Pi += P[i, j]
  */
       __pyx_v_sum_Pi = 0.0;
 
-      /* "sklearn/manifold/_utils.pyx":91
- *             P[i, i] = 0.0
+      /* "sklearn/manifold/_utils.pyx":87
+ *                 P[i, i] = 0.0
  *             sum_Pi = 0.0
- *             if using_neighbors:             # <<<<<<<<<<<<<<
- *                 for k in range(K):
- *                     j = neighbors[i, k]
- */
-      __pyx_t_7 = (__pyx_v_using_neighbors != 0);
-      if (__pyx_t_7) {
-
-        /* "sklearn/manifold/_utils.pyx":92
- *             sum_Pi = 0.0
- *             if using_neighbors:
- *                 for k in range(K):             # <<<<<<<<<<<<<<
- *                     j = neighbors[i, k]
- *                     sum_Pi += P[i, j]
- */
-        __pyx_t_25 = __pyx_v_K;
-        for (__pyx_t_26 = 0; __pyx_t_26 < __pyx_t_25; __pyx_t_26+=1) {
-          __pyx_v_k = __pyx_t_26;
-
-          /* "sklearn/manifold/_utils.pyx":93
- *             if using_neighbors:
- *                 for k in range(K):
- *                     j = neighbors[i, k]             # <<<<<<<<<<<<<<
- *                     sum_Pi += P[i, j]
- *             else:
- */
-          __pyx_t_27 = __pyx_v_i;
-          __pyx_t_28 = __pyx_v_k;
-          __pyx_t_16 = -1;
-          if (__pyx_t_27 < 0) {
-            __pyx_t_27 += __pyx_pybuffernd_neighbors.diminfo[0].shape;
-            if (unlikely(__pyx_t_27 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_27 >= __pyx_pybuffernd_neighbors.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_28 < 0) {
-            __pyx_t_28 += __pyx_pybuffernd_neighbors.diminfo[1].shape;
-            if (unlikely(__pyx_t_28 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_28 >= __pyx_pybuffernd_neighbors.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_v_j = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int64_t *, __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.buf, __pyx_t_27, __pyx_pybuffernd_neighbors.diminfo[0].strides, __pyx_t_28, __pyx_pybuffernd_neighbors.diminfo[1].strides));
-
-          /* "sklearn/manifold/_utils.pyx":94
- *                 for k in range(K):
- *                     j = neighbors[i, k]
- *                     sum_Pi += P[i, j]             # <<<<<<<<<<<<<<
- *             else:
- *                 for j in range(K):
- */
-          __pyx_t_29 = __pyx_v_i;
-          __pyx_t_30 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_29 < 0) {
-            __pyx_t_29 += __pyx_pybuffernd_P.diminfo[0].shape;
-            if (unlikely(__pyx_t_29 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_29 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_30 < 0) {
-            __pyx_t_30 += __pyx_pybuffernd_P.diminfo[1].shape;
-            if (unlikely(__pyx_t_30 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_30 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 94; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_v_sum_Pi = (__pyx_v_sum_Pi + (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_29, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_30, __pyx_pybuffernd_P.diminfo[1].strides)));
-        }
-        goto __pyx_L13;
-      }
-      /*else*/ {
-
-        /* "sklearn/manifold/_utils.pyx":96
- *                     sum_Pi += P[i, j]
- *             else:
- *                 for j in range(K):             # <<<<<<<<<<<<<<
- *                     sum_Pi += P[i, j]
+ *             for j in range(K):             # <<<<<<<<<<<<<<
+ *                 sum_Pi += P[i, j]
  *             if sum_Pi == 0.0:
  */
-        __pyx_t_25 = __pyx_v_K;
-        for (__pyx_t_26 = 0; __pyx_t_26 < __pyx_t_25; __pyx_t_26+=1) {
-          __pyx_v_j = __pyx_t_26;
+      __pyx_t_19 = __pyx_v_K;
+      for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
+        __pyx_v_j = __pyx_t_20;
 
-          /* "sklearn/manifold/_utils.pyx":97
- *             else:
- *                 for j in range(K):
- *                     sum_Pi += P[i, j]             # <<<<<<<<<<<<<<
+        /* "sklearn/manifold/_utils.pyx":88
+ *             sum_Pi = 0.0
+ *             for j in range(K):
+ *                 sum_Pi += P[i, j]             # <<<<<<<<<<<<<<
  *             if sum_Pi == 0.0:
  *                 sum_Pi = EPSILON_DBL
  */
-          __pyx_t_31 = __pyx_v_i;
-          __pyx_t_32 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_31 < 0) {
-            __pyx_t_31 += __pyx_pybuffernd_P.diminfo[0].shape;
-            if (unlikely(__pyx_t_31 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_31 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_32 < 0) {
-            __pyx_t_32 += __pyx_pybuffernd_P.diminfo[1].shape;
-            if (unlikely(__pyx_t_32 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_32 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 97; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_v_sum_Pi = (__pyx_v_sum_Pi + (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_31, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_32, __pyx_pybuffernd_P.diminfo[1].strides)));
+        __pyx_t_21 = __pyx_v_i;
+        __pyx_t_22 = __pyx_v_j;
+        __pyx_t_15 = -1;
+        if (__pyx_t_21 < 0) {
+          __pyx_t_21 += __pyx_pybuffernd_P.diminfo[0].shape;
+          if (unlikely(__pyx_t_21 < 0)) __pyx_t_15 = 0;
+        } else if (unlikely(__pyx_t_21 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_15 = 0;
+        if (__pyx_t_22 < 0) {
+          __pyx_t_22 += __pyx_pybuffernd_P.diminfo[1].shape;
+          if (unlikely(__pyx_t_22 < 0)) __pyx_t_15 = 1;
+        } else if (unlikely(__pyx_t_22 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_15 = 1;
+        if (unlikely(__pyx_t_15 != -1)) {
+          __Pyx_RaiseBufferIndexError(__pyx_t_15);
+          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 88; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         }
+        __pyx_v_sum_Pi = (__pyx_v_sum_Pi + (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_P.diminfo[1].strides)));
       }
-      __pyx_L13:;
 
-      /* "sklearn/manifold/_utils.pyx":98
- *                 for j in range(K):
- *                     sum_Pi += P[i, j]
+      /* "sklearn/manifold/_utils.pyx":89
+ *             for j in range(K):
+ *                 sum_Pi += P[i, j]
  *             if sum_Pi == 0.0:             # <<<<<<<<<<<<<<
  *                 sum_Pi = EPSILON_DBL
  *             sum_disti_Pi = 0.0
  */
-      __pyx_t_7 = ((__pyx_v_sum_Pi == 0.0) != 0);
-      if (__pyx_t_7) {
+      __pyx_t_18 = ((__pyx_v_sum_Pi == 0.0) != 0);
+      if (__pyx_t_18) {
 
-        /* "sklearn/manifold/_utils.pyx":99
- *                     sum_Pi += P[i, j]
+        /* "sklearn/manifold/_utils.pyx":90
+ *                 sum_Pi += P[i, j]
  *             if sum_Pi == 0.0:
  *                 sum_Pi = EPSILON_DBL             # <<<<<<<<<<<<<<
  *             sum_disti_Pi = 0.0
- *             if using_neighbors:
+ *             for j in range(K):
  */
         __pyx_v_sum_Pi = __pyx_v_7sklearn_8manifold_6_utils_EPSILON_DBL;
-        goto __pyx_L18;
+        goto __pyx_L12;
       }
-      __pyx_L18:;
+      __pyx_L12:;
 
-      /* "sklearn/manifold/_utils.pyx":100
+      /* "sklearn/manifold/_utils.pyx":91
  *             if sum_Pi == 0.0:
  *                 sum_Pi = EPSILON_DBL
  *             sum_disti_Pi = 0.0             # <<<<<<<<<<<<<<
- *             if using_neighbors:
- *                 for k in range(K):
+ *             for j in range(K):
+ *                 P[i, j] /= sum_Pi
  */
       __pyx_v_sum_disti_Pi = 0.0;
 
-      /* "sklearn/manifold/_utils.pyx":101
+      /* "sklearn/manifold/_utils.pyx":92
  *                 sum_Pi = EPSILON_DBL
  *             sum_disti_Pi = 0.0
- *             if using_neighbors:             # <<<<<<<<<<<<<<
- *                 for k in range(K):
- *                     j = neighbors[i, k]
+ *             for j in range(K):             # <<<<<<<<<<<<<<
+ *                 P[i, j] /= sum_Pi
+ *                 sum_disti_Pi += affinities[i, j] * P[i, j]
  */
-      __pyx_t_7 = (__pyx_v_using_neighbors != 0);
-      if (__pyx_t_7) {
+      __pyx_t_19 = __pyx_v_K;
+      for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
+        __pyx_v_j = __pyx_t_20;
 
-        /* "sklearn/manifold/_utils.pyx":102
+        /* "sklearn/manifold/_utils.pyx":93
  *             sum_disti_Pi = 0.0
- *             if using_neighbors:
- *                 for k in range(K):             # <<<<<<<<<<<<<<
- *                     j = neighbors[i, k]
- *                     P[i, j] /= sum_Pi
- */
-        __pyx_t_25 = __pyx_v_K;
-        for (__pyx_t_26 = 0; __pyx_t_26 < __pyx_t_25; __pyx_t_26+=1) {
-          __pyx_v_k = __pyx_t_26;
-
-          /* "sklearn/manifold/_utils.pyx":103
- *             if using_neighbors:
- *                 for k in range(K):
- *                     j = neighbors[i, k]             # <<<<<<<<<<<<<<
- *                     P[i, j] /= sum_Pi
- *                     sum_disti_Pi += affinities[i, j] * P[i, j]
- */
-          __pyx_t_33 = __pyx_v_i;
-          __pyx_t_34 = __pyx_v_k;
-          __pyx_t_16 = -1;
-          if (__pyx_t_33 < 0) {
-            __pyx_t_33 += __pyx_pybuffernd_neighbors.diminfo[0].shape;
-            if (unlikely(__pyx_t_33 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_33 >= __pyx_pybuffernd_neighbors.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_34 < 0) {
-            __pyx_t_34 += __pyx_pybuffernd_neighbors.diminfo[1].shape;
-            if (unlikely(__pyx_t_34 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_34 >= __pyx_pybuffernd_neighbors.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 103; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_v_j = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int64_t *, __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.buf, __pyx_t_33, __pyx_pybuffernd_neighbors.diminfo[0].strides, __pyx_t_34, __pyx_pybuffernd_neighbors.diminfo[1].strides));
-
-          /* "sklearn/manifold/_utils.pyx":104
- *                 for k in range(K):
- *                     j = neighbors[i, k]
- *                     P[i, j] /= sum_Pi             # <<<<<<<<<<<<<<
- *                     sum_disti_Pi += affinities[i, j] * P[i, j]
- *             else:
- */
-          __pyx_t_35 = __pyx_v_i;
-          __pyx_t_36 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_35 < 0) {
-            __pyx_t_35 += __pyx_pybuffernd_P.diminfo[0].shape;
-            if (unlikely(__pyx_t_35 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_35 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_36 < 0) {
-            __pyx_t_36 += __pyx_pybuffernd_P.diminfo[1].shape;
-            if (unlikely(__pyx_t_36 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_36 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 104; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_35, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_36, __pyx_pybuffernd_P.diminfo[1].strides) /= __pyx_v_sum_Pi;
-
-          /* "sklearn/manifold/_utils.pyx":105
- *                     j = neighbors[i, k]
- *                     P[i, j] /= sum_Pi
- *                     sum_disti_Pi += affinities[i, j] * P[i, j]             # <<<<<<<<<<<<<<
- *             else:
- *                 for j in range(K):
- */
-          __pyx_t_37 = __pyx_v_i;
-          __pyx_t_38 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_37 < 0) {
-            __pyx_t_37 += __pyx_pybuffernd_affinities.diminfo[0].shape;
-            if (unlikely(__pyx_t_37 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_37 >= __pyx_pybuffernd_affinities.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_38 < 0) {
-            __pyx_t_38 += __pyx_pybuffernd_affinities.diminfo[1].shape;
-            if (unlikely(__pyx_t_38 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_38 >= __pyx_pybuffernd_affinities.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 105; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_t_39 = __pyx_v_i;
-          __pyx_t_40 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_39 < 0) {
-            __pyx_t_39 += __pyx_pybuffernd_P.diminfo[0].shape;
-            if (unlikely(__pyx_t_39 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_39 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_40 < 0) {
-            __pyx_t_40 += __pyx_pybuffernd_P.diminfo[1].shape;
-            if (unlikely(__pyx_t_40 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_40 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 105; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_v_sum_disti_Pi = (__pyx_v_sum_disti_Pi + ((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float32_t *, __pyx_pybuffernd_affinities.rcbuffer->pybuffer.buf, __pyx_t_37, __pyx_pybuffernd_affinities.diminfo[0].strides, __pyx_t_38, __pyx_pybuffernd_affinities.diminfo[1].strides)) * (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_39, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_40, __pyx_pybuffernd_P.diminfo[1].strides))));
-        }
-        goto __pyx_L19;
-      }
-      /*else*/ {
-
-        /* "sklearn/manifold/_utils.pyx":107
- *                     sum_disti_Pi += affinities[i, j] * P[i, j]
- *             else:
- *                 for j in range(K):             # <<<<<<<<<<<<<<
- *                     P[i, j] /= sum_Pi
- *                     sum_disti_Pi += affinities[i, j] * P[i, j]
- */
-        __pyx_t_25 = __pyx_v_K;
-        for (__pyx_t_26 = 0; __pyx_t_26 < __pyx_t_25; __pyx_t_26+=1) {
-          __pyx_v_j = __pyx_t_26;
-
-          /* "sklearn/manifold/_utils.pyx":108
- *             else:
- *                 for j in range(K):
- *                     P[i, j] /= sum_Pi             # <<<<<<<<<<<<<<
- *                     sum_disti_Pi += affinities[i, j] * P[i, j]
+ *             for j in range(K):
+ *                 P[i, j] /= sum_Pi             # <<<<<<<<<<<<<<
+ *                 sum_disti_Pi += affinities[i, j] * P[i, j]
  *             entropy = math.log(sum_Pi) + beta * sum_disti_Pi
  */
-          __pyx_t_41 = __pyx_v_i;
-          __pyx_t_42 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_41 < 0) {
-            __pyx_t_41 += __pyx_pybuffernd_P.diminfo[0].shape;
-            if (unlikely(__pyx_t_41 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_41 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_42 < 0) {
-            __pyx_t_42 += __pyx_pybuffernd_P.diminfo[1].shape;
-            if (unlikely(__pyx_t_42 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_42 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 108; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_41, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_42, __pyx_pybuffernd_P.diminfo[1].strides) /= __pyx_v_sum_Pi;
+        __pyx_t_23 = __pyx_v_i;
+        __pyx_t_24 = __pyx_v_j;
+        __pyx_t_15 = -1;
+        if (__pyx_t_23 < 0) {
+          __pyx_t_23 += __pyx_pybuffernd_P.diminfo[0].shape;
+          if (unlikely(__pyx_t_23 < 0)) __pyx_t_15 = 0;
+        } else if (unlikely(__pyx_t_23 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_15 = 0;
+        if (__pyx_t_24 < 0) {
+          __pyx_t_24 += __pyx_pybuffernd_P.diminfo[1].shape;
+          if (unlikely(__pyx_t_24 < 0)) __pyx_t_15 = 1;
+        } else if (unlikely(__pyx_t_24 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_15 = 1;
+        if (unlikely(__pyx_t_15 != -1)) {
+          __Pyx_RaiseBufferIndexError(__pyx_t_15);
+          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        }
+        *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_24, __pyx_pybuffernd_P.diminfo[1].strides) /= __pyx_v_sum_Pi;
 
-          /* "sklearn/manifold/_utils.pyx":109
- *                 for j in range(K):
- *                     P[i, j] /= sum_Pi
- *                     sum_disti_Pi += affinities[i, j] * P[i, j]             # <<<<<<<<<<<<<<
+        /* "sklearn/manifold/_utils.pyx":94
+ *             for j in range(K):
+ *                 P[i, j] /= sum_Pi
+ *                 sum_disti_Pi += affinities[i, j] * P[i, j]             # <<<<<<<<<<<<<<
  *             entropy = math.log(sum_Pi) + beta * sum_disti_Pi
  *             entropy_diff = entropy - desired_entropy
  */
-          __pyx_t_43 = __pyx_v_i;
-          __pyx_t_44 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_43 < 0) {
-            __pyx_t_43 += __pyx_pybuffernd_affinities.diminfo[0].shape;
-            if (unlikely(__pyx_t_43 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_43 >= __pyx_pybuffernd_affinities.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_44 < 0) {
-            __pyx_t_44 += __pyx_pybuffernd_affinities.diminfo[1].shape;
-            if (unlikely(__pyx_t_44 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_44 >= __pyx_pybuffernd_affinities.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 109; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_t_45 = __pyx_v_i;
-          __pyx_t_46 = __pyx_v_j;
-          __pyx_t_16 = -1;
-          if (__pyx_t_45 < 0) {
-            __pyx_t_45 += __pyx_pybuffernd_P.diminfo[0].shape;
-            if (unlikely(__pyx_t_45 < 0)) __pyx_t_16 = 0;
-          } else if (unlikely(__pyx_t_45 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_16 = 0;
-          if (__pyx_t_46 < 0) {
-            __pyx_t_46 += __pyx_pybuffernd_P.diminfo[1].shape;
-            if (unlikely(__pyx_t_46 < 0)) __pyx_t_16 = 1;
-          } else if (unlikely(__pyx_t_46 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 109; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          __pyx_v_sum_disti_Pi = (__pyx_v_sum_disti_Pi + ((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float32_t *, __pyx_pybuffernd_affinities.rcbuffer->pybuffer.buf, __pyx_t_43, __pyx_pybuffernd_affinities.diminfo[0].strides, __pyx_t_44, __pyx_pybuffernd_affinities.diminfo[1].strides)) * (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_45, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_46, __pyx_pybuffernd_P.diminfo[1].strides))));
+        __pyx_t_25 = __pyx_v_i;
+        __pyx_t_26 = __pyx_v_j;
+        __pyx_t_15 = -1;
+        if (__pyx_t_25 < 0) {
+          __pyx_t_25 += __pyx_pybuffernd_affinities.diminfo[0].shape;
+          if (unlikely(__pyx_t_25 < 0)) __pyx_t_15 = 0;
+        } else if (unlikely(__pyx_t_25 >= __pyx_pybuffernd_affinities.diminfo[0].shape)) __pyx_t_15 = 0;
+        if (__pyx_t_26 < 0) {
+          __pyx_t_26 += __pyx_pybuffernd_affinities.diminfo[1].shape;
+          if (unlikely(__pyx_t_26 < 0)) __pyx_t_15 = 1;
+        } else if (unlikely(__pyx_t_26 >= __pyx_pybuffernd_affinities.diminfo[1].shape)) __pyx_t_15 = 1;
+        if (unlikely(__pyx_t_15 != -1)) {
+          __Pyx_RaiseBufferIndexError(__pyx_t_15);
+          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 94; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         }
+        __pyx_t_27 = __pyx_v_i;
+        __pyx_t_28 = __pyx_v_j;
+        __pyx_t_15 = -1;
+        if (__pyx_t_27 < 0) {
+          __pyx_t_27 += __pyx_pybuffernd_P.diminfo[0].shape;
+          if (unlikely(__pyx_t_27 < 0)) __pyx_t_15 = 0;
+        } else if (unlikely(__pyx_t_27 >= __pyx_pybuffernd_P.diminfo[0].shape)) __pyx_t_15 = 0;
+        if (__pyx_t_28 < 0) {
+          __pyx_t_28 += __pyx_pybuffernd_P.diminfo[1].shape;
+          if (unlikely(__pyx_t_28 < 0)) __pyx_t_15 = 1;
+        } else if (unlikely(__pyx_t_28 >= __pyx_pybuffernd_P.diminfo[1].shape)) __pyx_t_15 = 1;
+        if (unlikely(__pyx_t_15 != -1)) {
+          __Pyx_RaiseBufferIndexError(__pyx_t_15);
+          {__pyx_filename = __pyx_f[0]; __pyx_lineno = 94; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        }
+        __pyx_v_sum_disti_Pi = (__pyx_v_sum_disti_Pi + ((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float32_t *, __pyx_pybuffernd_affinities.rcbuffer->pybuffer.buf, __pyx_t_25, __pyx_pybuffernd_affinities.diminfo[0].strides, __pyx_t_26, __pyx_pybuffernd_affinities.diminfo[1].strides)) * (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_P.rcbuffer->pybuffer.buf, __pyx_t_27, __pyx_pybuffernd_P.diminfo[0].strides, __pyx_t_28, __pyx_pybuffernd_P.diminfo[1].strides))));
       }
-      __pyx_L19:;
 
-      /* "sklearn/manifold/_utils.pyx":110
- *                     P[i, j] /= sum_Pi
- *                     sum_disti_Pi += affinities[i, j] * P[i, j]
+      /* "sklearn/manifold/_utils.pyx":95
+ *                 P[i, j] /= sum_Pi
+ *                 sum_disti_Pi += affinities[i, j] * P[i, j]
  *             entropy = math.log(sum_Pi) + beta * sum_disti_Pi             # <<<<<<<<<<<<<<
  *             entropy_diff = entropy - desired_entropy
  * 
  */
       __pyx_v_entropy = (log(__pyx_v_sum_Pi) + (__pyx_v_beta * __pyx_v_sum_disti_Pi));
 
-      /* "sklearn/manifold/_utils.pyx":111
- *                     sum_disti_Pi += affinities[i, j] * P[i, j]
+      /* "sklearn/manifold/_utils.pyx":96
+ *                 sum_disti_Pi += affinities[i, j] * P[i, j]
  *             entropy = math.log(sum_Pi) + beta * sum_disti_Pi
  *             entropy_diff = entropy - desired_entropy             # <<<<<<<<<<<<<<
  * 
@@ -1997,37 +1667,37 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
       __pyx_v_entropy_diff = (__pyx_v_entropy - __pyx_v_desired_entropy);
 
-      /* "sklearn/manifold/_utils.pyx":113
+      /* "sklearn/manifold/_utils.pyx":98
  *             entropy_diff = entropy - desired_entropy
  * 
  *             if math.fabs(entropy_diff) <= PERPLEXITY_TOLERANCE:             # <<<<<<<<<<<<<<
  *                 break
  * 
  */
-      __pyx_t_7 = ((fabs(__pyx_v_entropy_diff) <= __pyx_v_7sklearn_8manifold_6_utils_PERPLEXITY_TOLERANCE) != 0);
-      if (__pyx_t_7) {
+      __pyx_t_18 = ((fabs(__pyx_v_entropy_diff) <= __pyx_v_7sklearn_8manifold_6_utils_PERPLEXITY_TOLERANCE) != 0);
+      if (__pyx_t_18) {
 
-        /* "sklearn/manifold/_utils.pyx":114
+        /* "sklearn/manifold/_utils.pyx":99
  * 
  *             if math.fabs(entropy_diff) <= PERPLEXITY_TOLERANCE:
  *                 break             # <<<<<<<<<<<<<<
  * 
  *             if entropy_diff > 0.0:
  */
-        goto __pyx_L7_break;
+        goto __pyx_L6_break;
       }
 
-      /* "sklearn/manifold/_utils.pyx":116
+      /* "sklearn/manifold/_utils.pyx":101
  *                 break
  * 
  *             if entropy_diff > 0.0:             # <<<<<<<<<<<<<<
  *                 beta_min = beta
  *                 if beta_max == NPY_INFINITY:
  */
-      __pyx_t_7 = ((__pyx_v_entropy_diff > 0.0) != 0);
-      if (__pyx_t_7) {
+      __pyx_t_18 = ((__pyx_v_entropy_diff > 0.0) != 0);
+      if (__pyx_t_18) {
 
-        /* "sklearn/manifold/_utils.pyx":117
+        /* "sklearn/manifold/_utils.pyx":102
  * 
  *             if entropy_diff > 0.0:
  *                 beta_min = beta             # <<<<<<<<<<<<<<
@@ -2036,17 +1706,17 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
         __pyx_v_beta_min = __pyx_v_beta;
 
-        /* "sklearn/manifold/_utils.pyx":118
+        /* "sklearn/manifold/_utils.pyx":103
  *             if entropy_diff > 0.0:
  *                 beta_min = beta
  *                 if beta_max == NPY_INFINITY:             # <<<<<<<<<<<<<<
  *                     beta *= 2.0
  *                 else:
  */
-        __pyx_t_7 = ((__pyx_v_beta_max == NPY_INFINITY) != 0);
-        if (__pyx_t_7) {
+        __pyx_t_18 = ((__pyx_v_beta_max == NPY_INFINITY) != 0);
+        if (__pyx_t_18) {
 
-          /* "sklearn/manifold/_utils.pyx":119
+          /* "sklearn/manifold/_utils.pyx":104
  *                 beta_min = beta
  *                 if beta_max == NPY_INFINITY:
  *                     beta *= 2.0             # <<<<<<<<<<<<<<
@@ -2054,11 +1724,11 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  *                     beta = (beta + beta_max) / 2.0
  */
           __pyx_v_beta = (__pyx_v_beta * 2.0);
-          goto __pyx_L26;
+          goto __pyx_L17;
         }
         /*else*/ {
 
-          /* "sklearn/manifold/_utils.pyx":121
+          /* "sklearn/manifold/_utils.pyx":106
  *                     beta *= 2.0
  *                 else:
  *                     beta = (beta + beta_max) / 2.0             # <<<<<<<<<<<<<<
@@ -2067,12 +1737,12 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
           __pyx_v_beta = ((__pyx_v_beta + __pyx_v_beta_max) / 2.0);
         }
-        __pyx_L26:;
-        goto __pyx_L25;
+        __pyx_L17:;
+        goto __pyx_L16;
       }
       /*else*/ {
 
-        /* "sklearn/manifold/_utils.pyx":123
+        /* "sklearn/manifold/_utils.pyx":108
  *                     beta = (beta + beta_max) / 2.0
  *             else:
  *                 beta_max = beta             # <<<<<<<<<<<<<<
@@ -2081,17 +1751,17 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
         __pyx_v_beta_max = __pyx_v_beta;
 
-        /* "sklearn/manifold/_utils.pyx":124
+        /* "sklearn/manifold/_utils.pyx":109
  *             else:
  *                 beta_max = beta
  *                 if beta_min == -NPY_INFINITY:             # <<<<<<<<<<<<<<
  *                     beta /= 2.0
  *                 else:
  */
-        __pyx_t_7 = ((__pyx_v_beta_min == (-NPY_INFINITY)) != 0);
-        if (__pyx_t_7) {
+        __pyx_t_18 = ((__pyx_v_beta_min == (-NPY_INFINITY)) != 0);
+        if (__pyx_t_18) {
 
-          /* "sklearn/manifold/_utils.pyx":125
+          /* "sklearn/manifold/_utils.pyx":110
  *                 beta_max = beta
  *                 if beta_min == -NPY_INFINITY:
  *                     beta /= 2.0             # <<<<<<<<<<<<<<
@@ -2099,11 +1769,11 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  *                     beta = (beta + beta_min) / 2.0
  */
           __pyx_v_beta = (__pyx_v_beta / 2.0);
-          goto __pyx_L27;
+          goto __pyx_L18;
         }
         /*else*/ {
 
-          /* "sklearn/manifold/_utils.pyx":127
+          /* "sklearn/manifold/_utils.pyx":112
  *                     beta /= 2.0
  *                 else:
  *                     beta = (beta + beta_min) / 2.0             # <<<<<<<<<<<<<<
@@ -2112,13 +1782,13 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
           __pyx_v_beta = ((__pyx_v_beta + __pyx_v_beta_min) / 2.0);
         }
-        __pyx_L27:;
+        __pyx_L18:;
       }
-      __pyx_L25:;
+      __pyx_L16:;
     }
-    __pyx_L7_break:;
+    __pyx_L6_break:;
 
-    /* "sklearn/manifold/_utils.pyx":129
+    /* "sklearn/manifold/_utils.pyx":114
  *                     beta = (beta + beta_min) / 2.0
  * 
  *         beta_sum += beta             # <<<<<<<<<<<<<<
@@ -2127,46 +1797,46 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  */
     __pyx_v_beta_sum = (__pyx_v_beta_sum + __pyx_v_beta);
 
-    /* "sklearn/manifold/_utils.pyx":131
+    /* "sklearn/manifold/_utils.pyx":116
  *         beta_sum += beta
  * 
  *         if verbose and ((i + 1) % 1000 == 0 or i + 1 == n_samples):             # <<<<<<<<<<<<<<
  *             print("[t-SNE] Computed conditional probabilities for sample "
  *                   "%d / %d" % (i + 1, n_samples))
  */
-    __pyx_t_47 = (__pyx_v_verbose != 0);
-    if (__pyx_t_47) {
-      goto __pyx_L30_next_and;
+    __pyx_t_29 = (__pyx_v_verbose != 0);
+    if (__pyx_t_29) {
+      goto __pyx_L21_next_and;
     } else {
-      __pyx_t_7 = __pyx_t_47;
-      goto __pyx_L29_bool_binop_done;
+      __pyx_t_18 = __pyx_t_29;
+      goto __pyx_L20_bool_binop_done;
     }
-    __pyx_L30_next_and:;
-    __pyx_t_47 = ((__Pyx_mod_long((__pyx_v_i + 1), 1000) == 0) != 0);
-    if (!__pyx_t_47) {
-      goto __pyx_L31_next_or;
+    __pyx_L21_next_and:;
+    __pyx_t_29 = ((__Pyx_mod_long((__pyx_v_i + 1), 1000) == 0) != 0);
+    if (!__pyx_t_29) {
+      goto __pyx_L22_next_or;
     } else {
-      __pyx_t_7 = __pyx_t_47;
-      goto __pyx_L29_bool_binop_done;
+      __pyx_t_18 = __pyx_t_29;
+      goto __pyx_L20_bool_binop_done;
     }
-    __pyx_L31_next_or:;
-    __pyx_t_47 = (((__pyx_v_i + 1) == __pyx_v_n_samples) != 0);
-    __pyx_t_7 = __pyx_t_47;
-    __pyx_L29_bool_binop_done:;
-    if (__pyx_t_7) {
+    __pyx_L22_next_or:;
+    __pyx_t_29 = (((__pyx_v_i + 1) == __pyx_v_n_samples) != 0);
+    __pyx_t_18 = __pyx_t_29;
+    __pyx_L20_bool_binop_done:;
+    if (__pyx_t_18) {
 
-      /* "sklearn/manifold/_utils.pyx":133
+      /* "sklearn/manifold/_utils.pyx":118
  *         if verbose and ((i + 1) % 1000 == 0 or i + 1 == n_samples):
  *             print("[t-SNE] Computed conditional probabilities for sample "
  *                   "%d / %d" % (i + 1, n_samples))             # <<<<<<<<<<<<<<
  * 
  *     if verbose:
  */
-      __pyx_t_5 = __Pyx_PyInt_From_long((__pyx_v_i + 1)); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 133; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = __Pyx_PyInt_From_long((__pyx_v_i + 1)); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 118; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_4 = __Pyx_PyInt_From_long(__pyx_v_n_samples); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 133; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_PyInt_From_long(__pyx_v_n_samples); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 118; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 133; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 118; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
       PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_5);
       __Pyx_GIVEREF(__pyx_t_5);
@@ -2174,35 +1844,35 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
       __Pyx_GIVEREF(__pyx_t_4);
       __pyx_t_5 = 0;
       __pyx_t_4 = 0;
-      __pyx_t_4 = __Pyx_PyString_Format(__pyx_kp_s_t_SNE_Computed_conditional_prob, __pyx_t_3); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 133; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_PyString_Format(__pyx_kp_s_t_SNE_Computed_conditional_prob, __pyx_t_3); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 118; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-      if (__Pyx_PrintOne(0, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 132; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      if (__Pyx_PrintOne(0, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 117; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      goto __pyx_L28;
+      goto __pyx_L19;
     }
-    __pyx_L28:;
+    __pyx_L19:;
   }
 
-  /* "sklearn/manifold/_utils.pyx":135
+  /* "sklearn/manifold/_utils.pyx":120
  *                   "%d / %d" % (i + 1, n_samples))
  * 
  *     if verbose:             # <<<<<<<<<<<<<<
  *         print("[t-SNE] Mean sigma: %f"
  *               % np.mean(math.sqrt(n_samples / beta_sum)))
  */
-  __pyx_t_7 = (__pyx_v_verbose != 0);
-  if (__pyx_t_7) {
+  __pyx_t_18 = (__pyx_v_verbose != 0);
+  if (__pyx_t_18) {
 
-    /* "sklearn/manifold/_utils.pyx":137
+    /* "sklearn/manifold/_utils.pyx":122
  *     if verbose:
  *         print("[t-SNE] Mean sigma: %f"
  *               % np.mean(math.sqrt(n_samples / beta_sum)))             # <<<<<<<<<<<<<<
  *     return P
  */
-    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 137; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 122; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_mean); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 137; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_mean); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 122; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (unlikely(__pyx_v_beta_sum == 0)) {
@@ -2213,9 +1883,9 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
       #ifdef WITH_THREAD
       PyGILState_Release(__pyx_gilstate_save);
       #endif
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 137; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 122; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
-    __pyx_t_3 = PyFloat_FromDouble(sqrt((__pyx_v_n_samples / __pyx_v_beta_sum))); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 137; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyFloat_FromDouble(sqrt((__pyx_v_n_samples / __pyx_v_beta_sum))); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 122; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_2 = NULL;
     if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_5))) {
@@ -2228,31 +1898,31 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
       }
     }
     if (!__pyx_t_2) {
-      __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 137; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 122; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __Pyx_GOTREF(__pyx_t_4);
     } else {
-      __pyx_t_1 = PyTuple_New(1+1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 137; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = PyTuple_New(1+1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 122; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_2); __Pyx_GIVEREF(__pyx_t_2); __pyx_t_2 = NULL;
       PyTuple_SET_ITEM(__pyx_t_1, 0+1, __pyx_t_3);
       __Pyx_GIVEREF(__pyx_t_3);
       __pyx_t_3 = 0;
-      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_1, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 137; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_1, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 122; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     }
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PyString_Format(__pyx_kp_s_t_SNE_Mean_sigma_f, __pyx_t_4); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 137; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyString_Format(__pyx_kp_s_t_SNE_Mean_sigma_f, __pyx_t_4); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 122; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (__Pyx_PrintOne(0, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 136; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (__Pyx_PrintOne(0, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 121; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    goto __pyx_L32;
+    goto __pyx_L23;
   }
-  __pyx_L32:;
+  __pyx_L23:;
 
-  /* "sklearn/manifold/_utils.pyx":138
+  /* "sklearn/manifold/_utils.pyx":123
  *         print("[t-SNE] Mean sigma: %f"
  *               % np.mean(math.sqrt(n_samples / beta_sum)))
  *     return P             # <<<<<<<<<<<<<<
@@ -2267,7 +1937,7 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
  * @cython.boundscheck(True)
  * cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(             # <<<<<<<<<<<<<<
  *         np.ndarray[np.float32_t, ndim=2] affinities,
- *         np.ndarray[np.int64_t, ndim=2] neighbors,
+ *         float desired_perplexity,
  */
 
   /* function exit code */
@@ -2281,7 +1951,6 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_P.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_affinities.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_neighbors.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
   __Pyx_AddTraceback("sklearn.manifold._utils._binary_search_perplexity", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
@@ -2289,7 +1958,6 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
   __pyx_L0:;
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_P.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_affinities.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_neighbors.rcbuffer->pybuffer);
   __pyx_L2:;
   __Pyx_XDECREF((PyObject *)__pyx_v_P);
   __Pyx_XGIVEREF((PyObject *)__pyx_r);
@@ -2299,12 +1967,12 @@ static PyArrayObject *__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexi
 
 /* Python wrapper */
 static PyObject *__pyx_pw_7sklearn_8manifold_6_utils_1_binary_search_perplexity(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_7sklearn_8manifold_6_utils__binary_search_perplexity[] = "Binary search for sigmas of conditional Gaussians.\n\n    This approximation reduces the computational complexity from O(N^2) to\n    O(uN). See the exact method '_binary_search_perplexity' for more details.\n\n    Parameters\n    ----------\n    affinities : array-like, shape (n_samples, n_samples)\n        Distances between training samples.\n\n    neighbors : array-like, shape (n_samples, K) or None\n        Each row contains the indices to the K nearest neigbors. If this\n        array is None, then the perplexity is estimated over all data\n        not just the nearest neighbors.\n\n    desired_perplexity : float\n        Desired perplexity (2^entropy) of the conditional Gaussians.\n\n    verbose : int\n        Verbosity level.\n\n    Returns\n    -------\n    P : array, shape (n_samples, n_samples)\n        Probabilities of conditional Gaussian distributions p_i|j.\n    ";
+static char __pyx_doc_7sklearn_8manifold_6_utils__binary_search_perplexity[] = "Binary search for sigmas of conditional Gaussians.\n\n\n    Parameters\n    ----------\n    affinities : array-like, shape (n_samples, n_samples) or (n_samples, K)\n        Distances between training samples. If this matrix is square, then \n        compute the full pair-wise P(i|j) for all i and j. If this matrix is \n        not square then we compute a restricted set of P(i|j). For example,\n        we assume that affinities is defined such that affinities[i, 0] is\n        distance to the nearest neighbor to point `i` and affinities[i, 1] is \n        the next closest. By only considering the nearest neighbors, we reduce \n        the computational complexity from O(N) to O(uN) where u `u` is the \n        fraction of points considered to be neighbors. The memory consumption\n        is also reduced. In practice, the number of nearest neighbors to \n        include is a multiple of the perplexity, usually 3.\n\n    desired_perplexity : float\n        Desired perplexity (2^entropy) of the conditional Gaussians.\n\n    verbose : int\n        Verbosity level.\n\n    Returns\n    -------\n    P : array, shape (n_samples, n_samples)\n        Probabilities of conditional Gaussian distributions p_i|j.\n    ";
 static PyObject *__pyx_pw_7sklearn_8manifold_6_utils_1_binary_search_perplexity(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_affinities = 0;
-  PyArrayObject *__pyx_v_neighbors = 0;
   float __pyx_v_desired_perplexity;
   int __pyx_v_verbose;
+  int __pyx_v_use_neighbors;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -2312,7 +1980,7 @@ static PyObject *__pyx_pw_7sklearn_8manifold_6_utils_1_binary_search_perplexity(
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("_binary_search_perplexity (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_affinities,&__pyx_n_s_neighbors,&__pyx_n_s_desired_perplexity,&__pyx_n_s_verbose,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_affinities,&__pyx_n_s_desired_perplexity,&__pyx_n_s_verbose,&__pyx_n_s_use_neighbors,0};
     PyObject* values[4] = {0,0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -2331,17 +1999,17 @@ static PyObject *__pyx_pw_7sklearn_8manifold_6_utils_1_binary_search_perplexity(
         if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_affinities)) != 0)) kw_args--;
         else goto __pyx_L5_argtuple_error;
         case  1:
-        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_neighbors)) != 0)) kw_args--;
+        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_desired_perplexity)) != 0)) kw_args--;
         else {
           __Pyx_RaiseArgtupleInvalid("_binary_search_perplexity", 1, 4, 4, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
-        if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_desired_perplexity)) != 0)) kw_args--;
+        if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_verbose)) != 0)) kw_args--;
         else {
           __Pyx_RaiseArgtupleInvalid("_binary_search_perplexity", 1, 4, 4, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  3:
-        if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_verbose)) != 0)) kw_args--;
+        if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_use_neighbors)) != 0)) kw_args--;
         else {
           __Pyx_RaiseArgtupleInvalid("_binary_search_perplexity", 1, 4, 4, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
@@ -2358,9 +2026,9 @@ static PyObject *__pyx_pw_7sklearn_8manifold_6_utils_1_binary_search_perplexity(
       values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
     }
     __pyx_v_affinities = ((PyArrayObject *)values[0]);
-    __pyx_v_neighbors = ((PyArrayObject *)values[1]);
-    __pyx_v_desired_perplexity = __pyx_PyFloat_AsFloat(values[2]); if (unlikely((__pyx_v_desired_perplexity == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 17; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_verbose = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_verbose == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_desired_perplexity = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_desired_perplexity == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_verbose = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_verbose == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 17; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_use_neighbors = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_use_neighbors == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
@@ -2371,8 +2039,7 @@ static PyObject *__pyx_pw_7sklearn_8manifold_6_utils_1_binary_search_perplexity(
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_affinities), __pyx_ptype_5numpy_ndarray, 1, "affinities", 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_neighbors), __pyx_ptype_5numpy_ndarray, 1, "neighbors", 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_r = __pyx_pf_7sklearn_8manifold_6_utils__binary_search_perplexity(__pyx_self, __pyx_v_affinities, __pyx_v_neighbors, __pyx_v_desired_perplexity, __pyx_v_verbose);
+  __pyx_r = __pyx_pf_7sklearn_8manifold_6_utils__binary_search_perplexity(__pyx_self, __pyx_v_affinities, __pyx_v_desired_perplexity, __pyx_v_verbose, __pyx_v_use_neighbors);
 
   /* function exit code */
   goto __pyx_L0;
@@ -2383,11 +2050,9 @@ static PyObject *__pyx_pw_7sklearn_8manifold_6_utils_1_binary_search_perplexity(
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_7sklearn_8manifold_6_utils__binary_search_perplexity(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_affinities, PyArrayObject *__pyx_v_neighbors, float __pyx_v_desired_perplexity, int __pyx_v_verbose) {
+static PyObject *__pyx_pf_7sklearn_8manifold_6_utils__binary_search_perplexity(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_affinities, float __pyx_v_desired_perplexity, int __pyx_v_verbose, int __pyx_v_use_neighbors) {
   __Pyx_LocalBuf_ND __pyx_pybuffernd_affinities;
   __Pyx_Buffer __pyx_pybuffer_affinities;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_neighbors;
-  __Pyx_Buffer __pyx_pybuffer_neighbors;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2399,22 +2064,13 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6_utils__binary_search_perplexity(C
   __pyx_pybuffer_affinities.refcount = 0;
   __pyx_pybuffernd_affinities.data = NULL;
   __pyx_pybuffernd_affinities.rcbuffer = &__pyx_pybuffer_affinities;
-  __pyx_pybuffer_neighbors.pybuffer.buf = NULL;
-  __pyx_pybuffer_neighbors.refcount = 0;
-  __pyx_pybuffernd_neighbors.data = NULL;
-  __pyx_pybuffernd_neighbors.rcbuffer = &__pyx_pybuffer_neighbors;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_affinities.rcbuffer->pybuffer, (PyObject*)__pyx_v_affinities, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float32_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __pyx_pybuffernd_affinities.diminfo[0].strides = __pyx_pybuffernd_affinities.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_affinities.diminfo[0].shape = __pyx_pybuffernd_affinities.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_affinities.diminfo[1].strides = __pyx_pybuffernd_affinities.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_affinities.diminfo[1].shape = __pyx_pybuffernd_affinities.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_neighbors.rcbuffer->pybuffer, (PyObject*)__pyx_v_neighbors, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  }
-  __pyx_pybuffernd_neighbors.diminfo[0].strides = __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_neighbors.diminfo[0].shape = __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_neighbors.diminfo[1].strides = __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_neighbors.diminfo[1].shape = __pyx_pybuffernd_neighbors.rcbuffer->pybuffer.shape[1];
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = ((PyObject *)__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexity(__pyx_v_affinities, __pyx_v_neighbors, __pyx_v_desired_perplexity, __pyx_v_verbose, 0)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = ((PyObject *)__pyx_f_7sklearn_8manifold_6_utils__binary_search_perplexity(__pyx_v_affinities, __pyx_v_desired_perplexity, __pyx_v_verbose, __pyx_v_use_neighbors, 0)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -2426,14 +2082,12 @@ static PyObject *__pyx_pf_7sklearn_8manifold_6_utils__binary_search_perplexity(C
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_affinities.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_neighbors.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
   __Pyx_AddTraceback("sklearn.manifold._utils._binary_search_perplexity", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_affinities.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_neighbors.rcbuffer->pybuffer);
   __pyx_L2:;
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
@@ -4494,7 +4148,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_mean, __pyx_k_mean, sizeof(__pyx_k_mean), 0, 0, 1, 1},
   {&__pyx_kp_u_ndarray_is_not_C_contiguous, __pyx_k_ndarray_is_not_C_contiguous, sizeof(__pyx_k_ndarray_is_not_C_contiguous), 0, 1, 0, 0},
   {&__pyx_kp_u_ndarray_is_not_Fortran_contiguou, __pyx_k_ndarray_is_not_Fortran_contiguou, sizeof(__pyx_k_ndarray_is_not_Fortran_contiguou), 0, 1, 0, 0},
-  {&__pyx_n_s_neighbors, __pyx_k_neighbors, sizeof(__pyx_k_neighbors), 0, 0, 1, 1},
   {&__pyx_n_s_np, __pyx_k_np, sizeof(__pyx_k_np), 0, 0, 1, 1},
   {&__pyx_n_s_numpy, __pyx_k_numpy, sizeof(__pyx_k_numpy), 0, 0, 1, 1},
   {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
@@ -4503,6 +4156,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_t_SNE_Mean_sigma_f, __pyx_k_t_SNE_Mean_sigma_f, sizeof(__pyx_k_t_SNE_Mean_sigma_f), 0, 0, 1, 0},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_kp_u_unknown_dtype_code_in_numpy_pxd, __pyx_k_unknown_dtype_code_in_numpy_pxd, sizeof(__pyx_k_unknown_dtype_code_in_numpy_pxd), 0, 1, 0, 0},
+  {&__pyx_n_s_use_neighbors, __pyx_k_use_neighbors, sizeof(__pyx_k_use_neighbors), 0, 0, 1, 1},
   {&__pyx_n_s_verbose, __pyx_k_verbose, sizeof(__pyx_k_verbose), 0, 0, 1, 1},
   {&__pyx_n_s_zeros, __pyx_k_zeros, sizeof(__pyx_k_zeros), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
