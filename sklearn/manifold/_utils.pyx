@@ -12,12 +12,12 @@ cdef float PERPLEXITY_TOLERANCE = 1e-5
 
 @cython.boundscheck(False)
 cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(
-        np.ndarray[np.float32_t, ndim=2] affinities, 
-        np.ndarray[np.int64_t, ndim=2] neighbors, 
+        np.ndarray[np.float32_t, ndim=2] affinities,
+        np.ndarray[np.int64_t, ndim=2] neighbors,
         float desired_perplexity,
         int verbose):
-    """Binary search for sigmas of conditional Gaussians. 
-    
+    t""Binary search for sigmas of conditional Gaussians.
+
     This approximation reduces the computational complexity from O(N^2) to
     O(uN). See the exact method '_binary_search_perplexity' for more details.
 

@@ -720,6 +720,7 @@ class TSNE(BaseEstimator):
                 # Use the precomputed distances to find
                 # the k nearest neighbors and their distances
                 neighbors_nn = np.argsort(distances, axis=1)[:, :k]
+                distances_nn = distances
             else:
                 # Find the nearest neighbors for every point
                 bt = BallTree(X)
@@ -729,7 +730,7 @@ class TSNE(BaseEstimator):
                 # set the neighbors to n - 1
                 distances_nn, neighbors_nn = bt.query(X, k=k+1)
                 neighbors_nn = neighbors_nn[:, 1:]
-            P = _joint_probabilities_nn(distances, neighbors_nn,
+            P = _joint_probabilities_nn(distances_nn, neighbors_nn,
                                         self.perplexity, self.verbose)
         else:
             P = _joint_probabilities(distances, self.perplexity, self.verbose)
