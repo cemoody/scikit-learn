@@ -480,7 +480,8 @@ t-SNE (:class:`TSNE`) converts affinities of data points to probabilities.
 The affinities in the original space are represented by Gaussian joint
 probabilities and the affinities in the embedded space are represented by
 Student's t-distributions. This allows t-SNE to be particularly sensitive
-to local structure and has a few other advantages over existing techniques:
+to local structure and has a few other advantages over existing techniques
+(see van der Maaten et al. 2008):
 
 * Revealing the structure at many scales on a single map
 * Revealing data that lie in multiple, different, manifolds or clusters

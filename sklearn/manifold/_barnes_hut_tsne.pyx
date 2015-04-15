@@ -515,7 +515,8 @@ cdef float compute_gradient_positive(float[:,:] val_P,
             # already thrown it out from the list of neighbors
             D = 0.0
             Q = 0.0
-            pij = val_P[i, j]
+            # pij = val_P[i, j]
+            pij = val_P[i, k]
             for ax in range(n_dimensions):
                 buff[ax] = pos_reference[i, ax] - pos_reference[j, ax]
                 D += buff[ax] ** 2.0
@@ -688,7 +689,8 @@ cdef float compute_error(float[:, :] val_P,
     for i in range(I):
         for k in range(K):
             j = neighbors[i, k]
-            pij = val_P[i, j]
+            # pij = val_P[i, j]
+            pij = val_P[i, k]
             Q = 0.0
             for ax in range(n_dimensions):
                 delta = (pos_reference[i, ax] - pos_reference[j, ax])

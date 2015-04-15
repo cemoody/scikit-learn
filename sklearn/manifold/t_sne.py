@@ -29,45 +29,15 @@ from ..utils.fixes import astype
 MACHINE_EPSILON = np.finfo(np.double).eps
 
 
-def _joint_probabilities(distances, desired_perplexity, verbose):
+def _joint_probabilities(distances, desired_perplexity, verbose,
+                         neighbors=None):
     """Compute joint probabilities p_ij from distances.
 
-    Parameters
-    ----------
-    distances : array, shape (n_samples * (n_samples-1) / 2,)
-        Distances of samples are stored as condensed matrices, i.e.
-        we omit the diagonal and duplicate entries and store everything
-        in a one-dimensional array.
-
-    desired_perplexity : float
-        Desired perplexity of the joint probability distributions.
-
-    verbose : int
-        Verbosity level.
-
-    Returns
-    -------
-    P : array, shape (n_samples * (n_samples-1) / 2,)
-        Condensed joint probability matrix.
-    """
-    # Compute conditional probabilities such that they approximately match
-    # the desired perplexity
-    distances = astype(distances, np.float32, copy=False)
-    conditional_P = _utils._binary_search_perplexity(
-        distances, None, desired_perplexity, verbose)
-    P = conditional_P + conditional_P.T
-    sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
-    P = np.maximum(squareform(P) / sum_P, MACHINE_EPSILON)
-    return P
-
-
-def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
-    """Compute joint probabilities p_ij from distances using just nearest
-    neighbors.
-
-    This method is approximately equal to _joint_probabilities. The latter
-    is O(N), but limiting the joint probability to nearest neighbors improves
-    this substantially to O(uN).
+    When `neighbors` is specified, we don't excplicitly calculate all
+    all of the pairwise P(i|j) entries. Instead, we only calculate
+    this over the nearest neighbors as specified. This should be approximate
+    the P(i|j) matrix but computed in O(uN) time instead of O(N) time where
+    u indicates the fraction of points considered to be neighbors.
 
     Parameters
     ----------
@@ -90,7 +60,8 @@ def _joint_probabilities_nn(distances, neighbors, desired_perplexity, verbose):
     # Compute conditional probabilities such that they approximately match
     # the desired perplexity
     distances = astype(distances, np.float32, copy=False)
-    neighbors = astype(neighbors, np.int64, copy=False)
+    if neighbors is not None:
+        neighbors = astype(neighbors, np.int64, copy=False)
     conditional_P = _utils._binary_search_perplexity(
         distances, neighbors, desired_perplexity, verbose)
     m = "All probabilities should be finite"
@@ -642,7 +613,7 @@ class TSNE(BaseEstimator):
         Note that sparse arrays can only be handled by method='exact'.
         It is recommended that you convert your sparse array to dense
         (e.g. `X.toarray()`) if it fits in memory, or otherwise using a
-        dimensionality reduction technique (e.g. TrucnatedSVD).
+        dimensionality reduction technique (e.g. TruncatedSVD).
 
         Parameters
         ----------
@@ -717,10 +688,12 @@ class TSNE(BaseEstimator):
             if self.verbose:
                 print("[t-SNE] Computing %i nearest neighbors..." % k)
             if self.metric == 'precomputed':
-                # Use the precomputed distances to find
-                # the k nearest neighbors and their distances
+                # Use the precomputed distances to find neighbors
                 neighbors_nn = np.argsort(distances, axis=1)[:, :k]
-                distances_nn = distances
+                # Keep only k nearest neighbors and their distances
+                # not including the point itself
+                P = _joint_probabilities(distances, self.perplexity,
+                                         self.verbose, neighbors=neighbors_nn)
             else:
                 # Find the nearest neighbors for every point
                 bt = BallTree(X)
@@ -730,8 +703,15 @@ class TSNE(BaseEstimator):
                 # set the neighbors to n - 1
                 distances_nn, neighbors_nn = bt.query(X, k=k+1)
                 neighbors_nn = neighbors_nn[:, 1:]
-            P = _joint_probabilities_nn(distances_nn, neighbors_nn,
-                                        self.perplexity, self.verbose)
+                # The distances_nn[i, 0] array contains the closest distance
+                # and distances_nn[i, 1] is the next-closest distance
+                # to point i.
+                # The distance and neighbor arrays are aligned such that
+                # the neighbors_nn[i, 0] indicates the index of the nearest
+                # neighbor to point j, neighbors_nn[i, 1] the second closest
+                # and so on.
+                P = _joint_probabilities(distances, self.perplexity,
+                                         self.verbose, neighbors=neighbors_nn)
         else:
             P = _joint_probabilities(distances, self.perplexity, self.verbose)
         assert np.all(np.isfinite(P)), "All probabilities should be finite"
@@ -814,7 +794,7 @@ class TSNE(BaseEstimator):
             print("[t-SNE] Error after %d iterations with early "
                   "exaggeration: %f" % (it + 1, error))
         # Save the final number of iterations
-        self.n_iter_final = it
+        self.n_iter_ = it
 
         # Final optimization
         P /= self.early_exaggeration
@@ -828,7 +808,7 @@ class TSNE(BaseEstimator):
 
         return X_embedded
 
-    def fit_transform(self, X):
+    def fit_transform(self, X, y=None):
         """Fit X into an embedded space and return that transformed
         output.
 
@@ -847,18 +827,6 @@ class TSNE(BaseEstimator):
         self.embedding_ = embedding
         return self.embedding_
 
-    def fit(self, X):
-        """Fit X into an embedded space.
-
-        Parameters
-        ----------
-        X : array, shape (n_samples, n_features) or (n_samples, n_samples)
-            If the metric is 'precomputed' X must be a square distance
-            matrix. Otherwise it contains a sample per row. If the method
-            is 'exact', X may be a sparse matrix of type 'csr', 'csc'
-            or 'coo'.
-        """
-        self.fit_transform(X)
 
     def _check_fitted(self):
         if self.embedding_ is None:

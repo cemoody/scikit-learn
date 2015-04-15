@@ -4270,7 +4270,7 @@ static long __pyx_f_7sklearn_8manifold_16_barnes_hut_tsne_count_points(struct __
  *     cdef int idx
  *     if root.is_leaf:             # <<<<<<<<<<<<<<
  *         count += root.size
- *         if DEBUGFLAG :
+ *         if DEBUGFLAG:
  */
   __pyx_t_1 = (__pyx_v_root->is_leaf != 0);
   if (__pyx_t_1) {
@@ -4279,7 +4279,7 @@ static long __pyx_f_7sklearn_8manifold_16_barnes_hut_tsne_count_points(struct __
  *     cdef int idx
  *     if root.is_leaf:
  *         count += root.size             # <<<<<<<<<<<<<<
- *         if DEBUGFLAG :
+ *         if DEBUGFLAG:
  *             printf("[t-SNE] %p is a leaf node, no children\n", root)
  */
     __pyx_v_count = (__pyx_v_count + __pyx_v_root->size);
@@ -4287,7 +4287,7 @@ static long __pyx_f_7sklearn_8manifold_16_barnes_hut_tsne_count_points(struct __
     /* "sklearn/manifold/_barnes_hut_tsne.pyx":408
  *     if root.is_leaf:
  *         count += root.size
- *         if DEBUGFLAG :             # <<<<<<<<<<<<<<
+ *         if DEBUGFLAG:             # <<<<<<<<<<<<<<
  *             printf("[t-SNE] %p is a leaf node, no children\n", root)
  *             printf("[t-SNE] %i points in node %p\n", count, root)
  */
@@ -4295,7 +4295,7 @@ static long __pyx_f_7sklearn_8manifold_16_barnes_hut_tsne_count_points(struct __
 
       /* "sklearn/manifold/_barnes_hut_tsne.pyx":409
  *         count += root.size
- *         if DEBUGFLAG :
+ *         if DEBUGFLAG:
  *             printf("[t-SNE] %p is a leaf node, no children\n", root)             # <<<<<<<<<<<<<<
  *             printf("[t-SNE] %i points in node %p\n", count, root)
  *         return count
@@ -4303,7 +4303,7 @@ static long __pyx_f_7sklearn_8manifold_16_barnes_hut_tsne_count_points(struct __
       printf(__pyx_k_t_SNE_p_is_a_leaf_node_no_child, __pyx_v_root);
 
       /* "sklearn/manifold/_barnes_hut_tsne.pyx":410
- *         if DEBUGFLAG :
+ *         if DEBUGFLAG:
  *             printf("[t-SNE] %p is a leaf node, no children\n", root)
  *             printf("[t-SNE] %i points in node %p\n", count, root)             # <<<<<<<<<<<<<<
  *         return count

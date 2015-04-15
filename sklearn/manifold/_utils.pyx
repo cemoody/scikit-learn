@@ -10,16 +10,16 @@ cdef extern from "numpy/npy_math.h":
 cdef float EPSILON_DBL = 1e-8
 cdef float PERPLEXITY_TOLERANCE = 1e-5
 
-@cython.boundscheck(False)
+@cython.boundscheck(True)
 cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(
         np.ndarray[np.float32_t, ndim=2] affinities,
         np.ndarray[np.int64_t, ndim=2] neighbors,
         float desired_perplexity,
         int verbose):
-    t""Binary search for sigmas of conditional Gaussians.
+    """Binary search for sigmas of conditional Gaussians.
 
     This approximation reduces the computational complexity from O(N^2) to
-    O(uN). See the exact method '_binary_search_perplexity' for more details.
+    O(uN).
 
     Parameters
     ----------
@@ -28,8 +28,11 @@ cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(
 
     neighbors : array-like, shape (n_samples, K) or None
         Each row contains the indices to the K nearest neigbors. If this
-        array is None, then the perplexity is estimated over all data
-        not just the nearest neighbors.
+        array is None, then the perplexity is estimated over all pairs of
+        points and not just the nearest neighbors. This is not to be confused
+        with method='exact' in the TSNE code -- this approximation calculates
+        the perplexity to nearest neighbors, whereas the Barnes-Hut method
+        is approximation on the gradient calculation.
 
     desired_perplexity : float
         Desired perplexity (2^entropy) of the conditional Gaussians.
