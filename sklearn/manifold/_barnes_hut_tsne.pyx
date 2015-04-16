@@ -717,7 +717,9 @@ def calculate_edge(pos_output):
     right_edge = center + width / 2.0
     return left_edge, right_edge, width
 
-def gradient(float[:,:] pij_input,
+def gradient(int[:,:] pij_indices,
+             int[:,:] pij_indptr,
+             int[:,:] pij_data,
              float[:,:] pos_output,
              long[:,:] neighbors,
              float[:,:] forces,
@@ -733,7 +735,9 @@ def gradient(float[:,:] pij_input,
     n = pos_output.shape[0]
     left_edge, right_edge, width = calculate_edge(pos_output)
     assert width.itemsize == 4
-    assert pij_input.itemsize == 4
+    assert pij_itemsize.itemsize == 4
+    assert pij_indptr.itemsize == 4
+    assert pij_data.itemsize == 4
     assert pos_output.itemsize == 4
     assert forces.itemsize == 4
     m = "Number of neighbors must be < # of points - 1"
@@ -743,9 +747,7 @@ def gradient(float[:,:] pij_input,
     m = "Forces array and pos_output shapes are incompatible"
     assert n == forces.shape[0], m
     m = "Pij and pos_output shapes are incompatible"
-    assert n == pij_input.shape[0], m
-    m = "Pij and pos_output shapes are incompatible"
-    assert n == pij_input.shape[1], m
+    assert n == pij_indices.shape[0], m
     if verbose > 10:
         printf("[t-SNE] Initializing tree of n_dimensions %i\n", n_dimensions)
     cdef Tree* qt = init_tree(left_edge, width, n_dimensions, verbose)
@@ -755,9 +757,10 @@ def gradient(float[:,:] pij_input,
     assert err == 0, "[t-SNE] Insertion failed"
     if verbose > 10:
         printf("[t-SNE] Computing gradient\n")
-    sum_Q = compute_gradient(pij_input, pos_output, neighbors, forces,
-                             qt.root_node, theta, dof, skip_num_points, -1)
-    C = compute_error(pij_input, pos_output, neighbors, sum_Q, n_dimensions,
+    sum_Q = compute_gradient(pij_indices, pij_indptr, pij_data, pos_output, 
+                             neighbors, forces, qt.root_node, theta, dof, 
+                             skip_num_points, -1)
+    C = compute_error(pij_indices, pij_indptr, pij_data, pos_output, neighbors, sum_Q, n_dimensions,
                       verbose)
     if verbose > 10:
         printf("[t-SNE] Checking tree consistency \n")
