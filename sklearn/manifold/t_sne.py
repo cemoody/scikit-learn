@@ -24,13 +24,35 @@ from ..metrics.pairwise import pairwise_distances
 from . import _utils
 from . import _barnes_hut_tsne
 from ..utils.fixes import astype
-
+from scipy.sparse import csr_matrix
 
 MACHINE_EPSILON = np.finfo(np.double).eps
 
 
+def _symmetrize(conditional_P, neighbors):
+    cols = []
+    rows = []
+    data = []
+    for i in range(conditional_P.shape[1]):
+        rows.append(np.arange(conditional_P.shape[0]))
+        cols.append(neighbors[:, i])
+        data.append(conditional_P[:, i])
+    rows = np.concatenate(rows)
+    cols = np.concatenate(cols)
+    data = np.concatenate(data)
+    cP  = csr_matrix(rows, cols, data)
+    cPT = csr_matrix(cols, rows, data)
+    symmP = cP + cPT
+    shape = (neighbors.shape[0], neighbors.shape[1] * 2)
+    P = np.zeros(shape, dtype=np.float32)
+    new_neighbors = np.zeros(shape, dtype=np.int32)
+    _utils._uncompress_sparse(symmP.indices, symmP.indptr, symmP.data, P, 
+                              new_neighbors)
+    return P, new_neighbors
+
+
 def _joint_probabilities(distances, desired_perplexity, verbose,
-                         use_neighbors=None):
+                         neighbors=None):
     """Compute joint probabilities p_ij from distances.
 
     When `neighbors` is specified, we don't excplicitly calculate all
@@ -60,17 +82,25 @@ def _joint_probabilities(distances, desired_perplexity, verbose,
     # Compute conditional probabilities such that they approximately match
     # the desired perplexity
     distances = astype(distances, np.float32, copy=False)
-    if use_neighbors is None:
+    use_neighbors = 1
+    if neighbors is None:
         use_neighbors = 0
     conditional_P = _utils._binary_search_perplexity(
         distances, desired_perplexity, verbose, use_neighbors)
     m = "All probabilities should be finite"
     assert np.all(np.isfinite(conditional_P)), m
-    P = conditional_P + conditional_P.T
+    if use_neighbors:
+        # symmetrize P
+        P, new_neighbors = _symmetrize(conditional_P, neighbors)
+    else:
+        P = conditional_P + conditional_P.T
     sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
     P = np.maximum(P / sum_P, MACHINE_EPSILON)
     assert np.all(np.abs(P) <= 1.0)
-    return P
+    if use_neighbors:
+        return P, new_neighbors
+    else:
+        return P
 
 
 def _kl_divergence(params, P, degrees_of_freedom, n_samples, n_components,
@@ -701,8 +731,10 @@ class TSNE(BaseEstimator):
                 distances_nn = distances[neighbors_nn]
                 # this will produce a P(i|j) array of size (n_samples, k)
                 # which is aligned
-                P_nn = _joint_probabilities(distances_nn, self.perplexity,
-                                            self.verbose, use_neighbors=1)
+                ret = _joint_probabilities(distances_nn, self.perplexity,
+                                           self.verbose, 
+                                           neighbors=neighbors_nn)
+                P, neighbors_nn = ret
             else:
                 # Find the nearest neighbors for every point
                 bt = BallTree(X)
@@ -713,12 +745,12 @@ class TSNE(BaseEstimator):
                 distances_nn, neighbors_nn = bt.query(X, k=n_neighbors_+1)
                 distances_nn = distances_nn[:, 1:]
                 neighbors_nn = neighbors_nn[:, 1:]
-                P_nn = _joint_probabilities(distances_nn, self.perplexity,
-                                            self.verbose, use_neighbors=1)
-            P = P_nn
+                ret = _joint_probabilities(distances_nn, self.perplexity,
+                                           self.verbose, 
+                                           neighbors=neighbors_nn)
+                P, neighbors_nn = ret
         else:
-            P = _joint_probabilities(distances, self.perplexity, self.verbose,
-                                     use_neigbbors=0)
+            P = _joint_probabilities(distances, self.perplexity, self.verbose)
         assert np.all(np.isfinite(P)), "All probabilities should be finite"
         assert np.all(P >= 0), "All probabilities should be zero or positive"
         assert np.all(P <= 1), ("All probabilities should be less than "

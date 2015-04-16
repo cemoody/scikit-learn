@@ -22,15 +22,15 @@ cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(
     Parameters
     ----------
     affinities : array-like, shape (n_samples, n_samples) or (n_samples, K)
-        Distances between training samples. If this matrix is square, then 
-        compute the full pair-wise P(i|j) for all i and j. If this matrix is 
+        Distances between training samples. If this matrix is square, then
+        compute the full pair-wise P(i|j) for all i and j. If this matrix is
         not square then we compute a restricted set of P(i|j). For example,
         we assume that affinities is defined such that affinities[i, 0] is
-        distance to the nearest neighbor to point `i` and affinities[i, 1] is 
-        the next closest. By only considering the nearest neighbors, we reduce 
-        the computational complexity from O(N) to O(uN) where u `u` is the 
+        distance to the nearest neighbor to point `i` and affinities[i, 1] is
+        the next closest. By only considering the nearest neighbors, we reduce
+        the computational complexity from O(N) to O(uN) where u `u` is the
         fraction of points considered to be neighbors. The memory consumption
-        is also reduced. In practice, the number of nearest neighbors to 
+        is also reduced. In practice, the number of nearest neighbors to
         include is a multiple of the perplexity, usually 3.
 
     desired_perplexity : float
@@ -121,3 +121,17 @@ cpdef np.ndarray[np.float32_t, ndim=2] _binary_search_perplexity(
         print("[t-SNE] Mean sigma: %f"
               % np.mean(math.sqrt(n_samples / beta_sum)))
     return P
+
+def _uncompress_sparse(np.ndarray[np.int32_t, ndim=1] indices, 
+                       np.ndarray[np.int32_t, ndim=1] indptr,
+                       np.ndarray[np.float32_t, ndim=1] data, 
+                       np.ndarray[np.float32_t, ndim=2] P, 
+                       np.ndarray[np.int32_t, ndim=2] neighbors):
+    # This expands a CSR matrix so that each row is a fixed size
+    # and we can use normal dense numpy arrays
+    cdef int rows = indices.shape[0]
+    cdef int row, j, idx
+    for row in range(rows):
+        for j, idx in enumerate(range(indptr[row], indptr[row + 1])):
+            P[row, j] = data[idx]
+            neighbors[row, j] = indices[idx]
