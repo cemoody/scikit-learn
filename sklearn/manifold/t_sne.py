@@ -18,6 +18,7 @@ from ..neighbors import BallTree
 from ..base import BaseEstimator
 from ..utils import check_array
 from ..utils import check_random_state
+from ..utils import assert_all_finite
 from ..utils.extmath import _ravel
 from ..decomposition import RandomizedPCA
 from ..metrics.pairwise import pairwise_distances
@@ -27,28 +28,6 @@ from ..utils.fixes import astype
 from scipy.sparse import csr_matrix
 
 MACHINE_EPSILON = np.finfo(np.double).eps
-
-
-def _symmetrize(conditional_P, neighbors):
-    cols = []
-    rows = []
-    data = []
-    for i in range(conditional_P.shape[1]):
-        rows.append(np.arange(conditional_P.shape[0]))
-        cols.append(neighbors[:, i])
-        data.append(conditional_P[:, i])
-    rows = np.concatenate(rows)
-    cols = np.concatenate(cols)
-    data = np.concatenate(data)
-    cP  = csr_matrix(rows, cols, data)
-    cPT = csr_matrix(cols, rows, data)
-    symmP = cP + cPT
-    shape = (neighbors.shape[0], neighbors.shape[1] * 2)
-    P = np.zeros(shape, dtype=np.float32)
-    new_neighbors = np.zeros(shape, dtype=np.int32)
-    _utils._uncompress_sparse(symmP.indices, symmP.indptr, symmP.data, P, 
-                              new_neighbors)
-    return P, new_neighbors
 
 
 def _joint_probabilities(distances, desired_perplexity, verbose,
@@ -64,9 +43,17 @@ def _joint_probabilities(distances, desired_perplexity, verbose,
     Parameters
     ----------
     distances : array, shape (n_samples * (n_samples-1) / 2,)
+                or array, shape (n_samples, n_neighbors)
         Distances of samples are stored as condensed matrices, i.e.
         we omit the diagonal and duplicate entries and store everything
-        in a one-dimensional array.
+        in a one-dimensional array. Alternatively, the distance array
+        can be limited to the nearest neighbors and the return array
+        will be sparse. In this case the `neighbors` keyword must be
+        used.
+
+    neighbors : array, shape (n_sample, n_neighbors)
+        neighbor[i, j] corresponds to the index of the j-th nearest neighbor
+        for point i.
 
     desired_perplexity : float
         Desired perplexity of the joint probability distributions.
@@ -77,6 +64,7 @@ def _joint_probabilities(distances, desired_perplexity, verbose,
     Returns
     -------
     P : array, shape (n_samples * (n_samples-1) / 2,)
+        or sparse CSR array, shape (n_samples, n_samples)
         Condensed joint probability matrix.
     """
     # Compute conditional probabilities such that they approximately match
@@ -85,22 +73,40 @@ def _joint_probabilities(distances, desired_perplexity, verbose,
     use_neighbors = 1
     if neighbors is None:
         use_neighbors = 0
+        m = "If using neighbors, the distance array should be shape"
+        m += "(n_samples, n_neighbors)"
+        assert len(distances.shape) == 2, m
     conditional_P = _utils._binary_search_perplexity(
         distances, desired_perplexity, verbose, use_neighbors)
     m = "All probabilities should be finite"
     assert np.all(np.isfinite(conditional_P)), m
     if use_neighbors:
+        # Convert the P array to a sparse array
+        # and compute P + P.T
+        shape = (neighbors.shape[0], neighbors.shape[1] * 2)
+        cols = []
+        rows = []
+        values = []
+        for i in range(conditional_P.shape[1]):
+            rows.append(np.arange(conditional_P.shape[0]))
+            cols.append(neighbors[:, i])
+            values.append(conditional_P[:, i])
+        sum_P = np.maximum(np.sum(values), MACHINE_EPSILON)
+        values = np.maximum(values / sum_P, MACHINE_EPSILON)
+        assert np.all(np.abs(values)  <= 1.0)
+        rows = np.concatenate(rows)
+        cols = np.concatenate(cols)
+        values = values.ravel()
+        cP  = csr_matrix((values, (rows, cols)))
+        cPT = csr_matrix((values, (cols, rows)))
         # symmetrize P
-        P, new_neighbors = _symmetrize(conditional_P, neighbors)
+        P = cP + cPT
     else:
         P = conditional_P + conditional_P.T
-    sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
-    P = np.maximum(P / sum_P, MACHINE_EPSILON)
-    assert np.all(np.abs(P) <= 1.0)
-    if use_neighbors:
-        return P, new_neighbors
-    else:
-        return P
+        sum_P = np.maximum(np.sum(P), MACHINE_EPSILON)
+        P = np.maximum(P / sum_P, MACHINE_EPSILON)
+        assert np.all(np.abs(P) <= 1.0)
+    return P
 
 
 def _kl_divergence(params, P, degrees_of_freedom, n_samples, n_components,
@@ -716,25 +722,20 @@ class TSNE(BaseEstimator):
             # neighbor to point j, neighbors_nn[i, 1] the second closest
             # and so on. Similarly, the distances_nn[i, 0] array contains
             # the closest distance and distances_nn[i, 1] is the next-closest
-            # distance to point i. The P matrix is similarly aligned.
-            # P[i, 0] is the same as p(j1|i) where j1 is the nearest
-            # neighbor to point i,  and P[i, 1] is the same as p(j2|i), where
-            # j2 is the next-nearest to point i.
+            # distance to point i.
+            # This will produce a P(i|j) sparse array where the filled in
+            # elements will be neighbors of point j
             if self.verbose:
                 print("[t-SNE] Computing %i nearest neighbors..." % n_neighbors_)
             if self.metric == 'precomputed':
                 # Use the precomputed distances to find neighbors
                 neighbors_nn = np.argsort(distances, axis=1)
-                neighbors_nn = neighbors_nn[:, 1:n_neighbors + 1]
+                neighbors_nn = neighbors_nn[:, 1:(n_neighbors_ + 1)]
                 # Keep only k nearest neighbors and their distances
                 # not including the point itself
-                distances_nn = distances[neighbors_nn]
-                # this will produce a P(i|j) array of size (n_samples, k)
-                # which is aligned
-                ret = _joint_probabilities(distances_nn, self.perplexity,
-                                           self.verbose, 
-                                           neighbors=neighbors_nn)
-                P, neighbors_nn = ret
+                distances_nn = np.sort(distances, axis=1)[:, 1:(n_neighbors_ + 1)]
+                P = _joint_probabilities(distances_nn, self.perplexity,
+                                         self.verbose, neighbors=neighbors_nn)
             else:
                 # Find the nearest neighbors for every point
                 bt = BallTree(X)
@@ -745,16 +746,21 @@ class TSNE(BaseEstimator):
                 distances_nn, neighbors_nn = bt.query(X, k=n_neighbors_+1)
                 distances_nn = distances_nn[:, 1:]
                 neighbors_nn = neighbors_nn[:, 1:]
-                ret = _joint_probabilities(distances_nn, self.perplexity,
-                                           self.verbose, 
-                                           neighbors=neighbors_nn)
-                P, neighbors_nn = ret
+                P = _joint_probabilities(distances_nn, self.perplexity,
+                                         self.verbose, neighbors=neighbors_nn)
+                assert np.all(P.data >= 0), ("All probabilities should be"
+                                             "zero or positive")
+                assert np.all(P.data <= 1), ("All probabilities should be less"
+                                             "than or equal to one")
         else:
+            # This will produce a P(i|j) dense array with all elements
+            # explicitly calculated
             P = _joint_probabilities(distances, self.perplexity, self.verbose)
-        assert np.all(np.isfinite(P)), "All probabilities should be finite"
-        assert np.all(P >= 0), "All probabilities should be zero or positive"
-        assert np.all(P <= 1), ("All probabilities should be less than "
-                                "or equal to one")
+            assert np.all(P >= 0), ("All probabilities should be zero or "
+                                    "positive")
+            assert np.all(P <= 1), ("All probabilities should be less than "
+                                    "or equal to one")
+        assert_all_finite(P)
 
         if self.init == 'pca':
             pca = RandomizedPCA(n_components=self.n_components,

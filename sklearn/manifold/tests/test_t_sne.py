@@ -104,8 +104,7 @@ def test_binary_search():
     distances = np.abs(distances.dot(distances.T))
     np.fill_diagonal(distances, 0.0)
     desired_perplexity = 25.0
-    P = _binary_search_perplexity(distances, None, desired_perplexity,
-                                  verbose=0)
+    P = _binary_search_perplexity(distances, desired_perplexity, 0, 0)
     P = np.maximum(P, np.finfo(np.double).eps)
     mean_perplexity = np.mean([np.exp(-np.sum(P[i] * np.log(P[i])))
                                for i in range(P.shape[0])])
